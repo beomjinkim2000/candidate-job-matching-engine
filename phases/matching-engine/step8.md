@@ -42,7 +42,7 @@ def main() -> None: ...            # 1~5
 python -m matching score \
     --posting data/postings/{posting_id} \
     --resumes data/resumes/{set} \
-    [--position "NW인프라운용"] \
+    [--position "B2C마케팅&세일즈"] \
     [--source local|saramin] \
     [--ocr-engine paddle|vision] \
     [--json] \
