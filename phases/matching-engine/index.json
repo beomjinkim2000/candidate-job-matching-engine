@@ -43,7 +43,7 @@
         "req2_image_parse": "pending"
       },
       "started_at": "2026-09-01T03:49:29+0900",
-      "completed_at": "2026-09-01T04:05:00+0900",
+      "completed_at": "2026-09-01T04:03:12+0900",
       "summary": "어댑터 코드 완성. SaraminSource는 키 미발급으로 실호출 미검증 — 요구 ① 실증은 step 3의 전제조건",
       "notes": [
         "src/matching/source/ 7파일 — base.py(PostingRef·PostingSource Protocol·SourceUnavailable/QuotaExceeded·경로 헬퍼) · saramin.py(QuotaLog·job_search·SaraminSource, list_postings만 API) · local.py · registry.py(PostingMeta·SaraminRegistry) · client_feed.py(인터페이스만) · provenance.py(write/verify) · __init__.py(get_source). CLI에 `acquire` 서브커맨드 추가. tests 26케이스 통과.",
