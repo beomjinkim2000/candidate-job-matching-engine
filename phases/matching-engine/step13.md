@@ -93,23 +93,30 @@ push하므로 크롤링 비용이 0이고, 대신 **수신 인터페이스 유�
 
 ### 13-D. 요구 ①~⑧ 상태 표 — **5분. 절대 버리지 않는다**
 
-전 step의 `requirement_status`와 AC 결과를 모아 **요구 ①~⑧이 각각 어디까지 갔는지 한 표로**
+전 step의 `requirement_status`와 AC 결과를 모아 **요구 ①~⑨가 각각 어디까지 갔는지 한 표로**
 만들어 `docs/DEMO.md`에 넣는다.
 
 **13-C(`DEMO.md`)를 버렸으면** 이 표는 `phases/matching-engine/index.json`의 **phase 레벨에
 `requirement_summary` 키**로 넣는다. 파일을 새로 만들지 마라 (`docs/SCHEDULE.md` 「step 13이
-밀릴 때」). **이 표가 없으면 제출물이 요구 8개 중 무엇을 충족했는지가 아무 데도 없다.**
+밀릴 때」). **이 표가 없으면 제출물이 요구 9개 중 무엇을 충족했는지가 아무 데도 없다.**
+
+**요구는 9개다.** 과제문에서 「CLI 또는 API 엔드포인트 하나로 실행」과 「결과를 확인할 수
+있는 간단한 UI」는 **나란한 독립 불릿**이다. ⑥에 묶어 세면 UI가 회계에서 사라진다.
 
 ```
-① API 크롤링      verified | unverified   ← 키 발급 여부에 달림
-② 이미지 파싱      verified                ← ocr.json + requirements.json 존재
-③ 0~100 + 랭킹    verified                ← result.json의 rank가 6명씩
-④ 랭킹 정렬        verified
+① API 크롤링      verified | unverified   ← data/.saramin_quota.json 의 200 응답
+② 이미지 파싱      verified                ← requirements.json 2개 (step3이 갱신)
+③ 0~100 + 근거     verified                ← result.json + explain() 출력 AC (step7)
+④ 랭킹 정렬        verified                ← ranked + gate_failed == 6 (step12 AC)
 ⑤ 직군 무관       verified                ← 직군 교차 테스트 실측 하락폭
-⑥ 단일 진입점     verified                ← python run.py
-⑦ 공고 2 × 6명    verified
-⑧ 법적 구조 설계만 verified                ← ClientFeedSource가 NotImplementedError
+⑥ 단일 진입점     verified                ← python run.py (step8)
+⑦ 결과 확인 UI    verified                ← step9 AC. 화면 구현은 사용자 담당
+⑧ 공고 2 × 6명    verified                ← step10 AC
+⑨ 법적 구조 설계만 verified                ← ClientFeedSource가 NotImplementedError
 ```
+
+**⑦의 판정 기준을 흐리지 마라.** 화면의 디자인은 사용자가 하지만, **`step9.md`의 AC가
+통과하는 최소 화면**은 하네스가 만든다. AC가 안 돌면 `⑦`은 `verified`가 아니다.
 
 **`unverified`를 `verified`로 올려 적지 마라.** 그게 R1에서 veto를 받은 바로 그 행동이다.
 
@@ -137,19 +144,19 @@ python3 - <<'PYEOF'
 import subprocess
 tracked = set(subprocess.run(["git","ls-files"], capture_output=True, text=True).stdout.split())
 def n(pat): return sum(1 for f in tracked if __import__("fnmatch").fnmatch(f, pat))
-checks = {
-    "data/postings/*/provenance.json":  2,   # 출처 증거
-    "data/postings/*/ocr.json":         2,   # 파싱 입력
-    "data/postings/*/requirements.json":2,   # 파싱 결과
+must_be_tracked = {
+    "data/postings/*/provenance.json":  2,   # 해시만. 원문 아님
+    "data/postings/*/requirements.json":2,   # 구조화된 조건 (= 산출물)
     "data/resumes/*/*.json":           14,   # 이력서 12 + index 2
-    "data/runs/*/result.json":          1,   # 실행 결과 (1개 이상)
+    "data/runs/*/result.json":          1,   # 실행 결과
 }
-bad = {p:(n(p),k) for p,k in checks.items() if n(p) < k}
+bad = {p:(n(p),k) for p,k in must_be_tracked.items() if n(p) < k}
 assert not bad, f"레포에 안 들어간 제출물: {bad}"
-# 이미지는 반대로 **들어가면 안 된다**
-imgs = [f for f in tracked if "/img_" in f]
-assert not imgs, f"공고 이미지가 커밋됐다: {imgs[:3]}"
-print("제출물 전부 tracked · 이미지 미포함")
+
+# 공고 본문은 그림이든 글자든 들어가면 안 된다
+leaked = [f for f in tracked if "/img_" in f or f.endswith("/ocr.json")]
+assert not leaked, f"공고 원문이 커밋됐다: {leaked[:3]}"
+print("산출물 전부 tracked · 공고 원문(이미지·전사본) 미포함")
 PYEOF
 ```
 
