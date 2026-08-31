@@ -78,10 +78,59 @@
 
 ---
 
+## 발견 3 — 하네스가 **한 step도 못 돌고 있었다**
+
+**심사위원 8명이 3라운드 동안 못 잡았다.** 그들이 받은 대상이 `step*.md`였고,
+`scripts/execute.py`와 레포 상태는 아무도 안 봤기 때문이다.
+
+```
+$ git rev-parse --is-inside-work-tree
+fatal: not a git repository
+```
+
+`execute.py:113` `_checkout_branch()`는 첫 줄에서 `git rev-parse --abbrev-ref HEAD`를
+부르고 **rc가 0이 아니면 `sys.exit(1)`**한다. 즉 `python3 scripts/execute.py matching-engine`은
+step 0을 시작조차 못 하고 죽는다.
+
+**`git init`만으로도 부족하다.** 커밋이 하나도 없는 레포에서 같은 명령은 **rc 128**이다
+(`fatal: ambiguous argument 'HEAD'`). **초기 커밋이 있어야 비로소 rc 0이 된다.**
+
+| | 이전 | 이후 |
+|---|---|---|
+| `git rev-parse --abbrev-ref HEAD` | rc **128** | rc **0** (`main`) |
+| `execute.py` 진입 | `sys.exit(1)` | 진행 |
+
+### 고친 것
+
+`git init` + 브랜치명을 `main`으로 + 초기 커밋 1개 (`0f32ea2`, 추적 파일 57개).
+
+무시 규칙을 **파일을 만들지 않고** 검사했다 (`git check-ignore --no-index`):
+
+| 경로 | 판정 |
+|---|---|
+| 키 파일 · 키 파일 변형 | 무시 ✓ |
+| `.claude/settings.json` · `harness.toml` · `hooks/` · `out/` | 무시 ✓ |
+| `data/postings/*/provenance.json` · `data/resumes/**` | **추적** ✓ (제출물이므로 맞다) |
+| `data/postings/*/img_*.png` | 현재 **추적** — `step0.md`가 무시 패턴을 넣는다 |
+
+마지막 행이 의도된 순서다. `step0.md`가 `.gitignore` 소유자이고, **이미지만 파일 단위로**
+빼도록 못박혀 있다 (veto V6 대응).
+
+### 이 발견이 말하는 것
+
+**「계획을 심사한다」와 「실행 가능한지 본다」는 다른 일이다.** 심사위원 8명이 3라운드에
+걸쳐 72점까지 끌어올린 계획이, 실행기 관점에서는 **0 step**이었다.
+
+`plan-review` 스킬이 대상을 계획문서로 한정하는 것은 옳지만, **그 계획을 나르는 도구는
+아무도 안 본다**는 사각이 생긴다. 이 문서가 그 사각을 메우려는 것이고,
+아래 「아직 검증 안 된 것」이 그 사각의 남은 부분이다.
+
 ## 아직 검증 안 된 것 — 정직하게 적는다
 
 | | 상태 |
 |---|---|
+| ~~git 전제조건~~ | **해소 (발견 3).** rc 0 확인 |
+| `claude` CLI 존재 | **확인.** `2.1.220 (Claude Code)` |
 | 실행기가 step을 **실제로 완주하는가** | **미검증.** `claude -p` 서브프로세스를 실제로 돌려봐야 안다 |
 | `_check_blockers`가 `blocked`에서 진짜 멈추는가 | 코드상 `sys.exit(2)` (`execute.py:281`). **실행 미확인** |
 | 2단계 커밋(`feat`/`chore` 분리)이 도는가 | 코드상 존재. **실행 미확인** |

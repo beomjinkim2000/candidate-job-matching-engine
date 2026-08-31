@@ -39,10 +39,16 @@ tests/
 - dev 의존성: `pytest`, `ruff`
 - `[project.scripts]` — `matching = "matching.api.cli:main"`
 
-**OCR을 선택 그룹으로 빼는 이유**: 파싱은 **데이터 준비 단계**이고 레포에는 그 결과물
-(`ocr.json` · `requirements.json`)이 커밋된다. 평가자는 `pip install -e .`만으로 채점을
-재현할 수 있고, 이미지를 직접 다시 파싱하고 싶을 때만 `pip install -e ".[ocr]"`을 한다.
+**OCR을 선택 그룹으로 빼는 이유**: 파싱은 **데이터 준비 단계**이고, 레포에는 그 **산출물인
+`requirements.json`**이 커밋된다 (`ocr.json`은 공고 본문이라 커밋하지 않는다 — 아래
+「`.gitignore`」 절). 평가자는 `pip install -e .`만으로 **채점을 재현**할 수 있고,
+이미지를 직접 다시 파싱하고 싶을 때만 `pip install -e ".[ocr]"`을 한다.
 paddle 계열은 설치가 무겁다(수백 MB) — 그걸 채점 재현의 전제로 만들면 안 된다.
+
+**단, 이미지를 재파싱하려면 이미지가 필요한데 그것도 레포에 없다.** 그래서 재파싱은
+**공고 이미지를 직접 확보한 사람만** 할 수 있고, `provenance.json`의 해시로 **같은
+이미지인지 확인**할 수 있다. 이게 「원문을 안 쌓으면서 재현 가능하게」의 한계선이다 —
+**완전한 재현은 불가능하고, 그 사실을 숨기지 않는다.**
 - `[tool.ruff]` — line-length 100, `select = ["E", "F", "I", "UP", "B"]`
 - `[tool.pytest.ini_options]` — `markers = ["live: 실제 OpenAI API를 호출하는 테스트"]`,
   `addopts = "-m 'not live'"`
@@ -65,10 +71,42 @@ SARAMIN_ACCESS_KEY=
 
 ```gitignore
 # data/ 는 통째로 무시하지 않는다. 무시할 파일만 지정한다.
-data/postings/*/img_*.png      # 공고 이미지 원본 — 저작권·DB권 문제로 레포에 안 넣는다
+data/postings/*/img_*.png      # 공고 이미지 원본
+data/postings/*/ocr.json       # 이미지의 전사본 = 공고 본문 그 자체
 data/.saramin_quota.json       # 호출 기록 (로컬 상태)
 data/.judge_usage.json         # 토큰·비용 누적 (로컬 상태)
 ```
+
+#### 왜 `ocr.json`도 빼는가 — 그림과 글자를 다르게 취급하지 않는다
+
+**이미지를 뺀 사유는 「그림 파일이라서」가 아니라 「그게 공고 본문이라서」다.**
+`ocr.json`은 그 이미지를 **글자 그대로 옮긴 것**이므로 같은 사유가 그대로 걸린다.
+이미지는 빼면서 전사본을 공개 레포에 올리면, 뺀 의미가 없을 뿐 아니라
+**검색 가능한 형태로 만들어 더 나쁘다.**
+
+세 문서가 이미 같은 말을 하고 있었고 이 줄만 어긋나 있었다:
+
+| 문서 | 문장 |
+|---|---|
+| `CLAUDE.md` (과제 CRITICAL) | 「공고 원문 텍스트 **복사·붙여넣기 금지**」 |
+| `src/CLAUDE.md` | 「원본을 적재하지 않는다 — 공고 이미지·이력서 원문·**OCR 텍스트**는 처리 후 파기하고, **구조화된 조건·루브릭·점수·Link만 남긴다**」 |
+| `docs/LEGAL_ARCHITECTURE.md` | 「원문을 쌓으면 그게 곧 DB 복제」 |
+
+#### 그러면 clone한 사람은 무엇으로 확인하나
+
+| 파일 | 커밋 | 무엇인가 |
+|---|---|---|
+| `img_*.png` | ✗ | 공고 본문 (그림) |
+| `ocr.json` | ✗ | 공고 본문 (글자). **같은 것이다** |
+| `provenance.json` | ✅ | **해시만.** 원문이 아니다 — 이미지를 가진 사람이 동일성만 대조 |
+| `requirements.json` | ✅ | **구조화된 조건** + 좌표 + `line_ids`. `src/CLAUDE.md`가 명시적으로 「남긴다」고 한 것 |
+| `data/resumes/**` · `data/runs/**` | ✅ | 우리가 만든 것 |
+
+**`requirements.json`은 전사본이 아니라 산출물이다.** 조건 단위로 잘리고 종류·근거등급·
+좌표가 붙은 구조이며, 이게 없으면 「이미지에서 파싱했다」를 보여줄 방법이 사라진다.
+`ocr.json`은 그 중간 산물이고 **로컬에만 있으면 된다** — UI도 로컬에서 돈다.
+
+**경계는 「원문이냐 산출물이냐」다.** 그림/글자가 아니다.
 
 > ⛔ **`data/`나 `data/postings/`를 통째로 무시하지 마라.** 그러면 다음이 전부 사라진다 —
 > `provenance.json`(출처 증거) · `ocr.json`(파싱 입력) · `requirements.json`(파싱 결과) ·
