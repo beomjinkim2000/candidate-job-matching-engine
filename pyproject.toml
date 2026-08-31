@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "matching-engine"
+version = "0.1.0"
+description = "지원자-공고 매칭 스코어링 엔진"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2",
+    "fastapi",
+    "uvicorn",
+    "openai",
+    "httpx",
+    "python-dotenv",
+    "pillow",
+]
+
+# OCR은 선택 그룹이다. `pip install -e .`만으로 채점이 재현되고,
+# 이미지를 직접 다시 파싱할 때만 `pip install -e ".[ocr]"`을 한다.
+# paddle 계열은 수백 MB라 채점 재현의 전제로 두면 안 된다 (phases/matching-engine/step0.md).
+[project.optional-dependencies]
+ocr = ["paddlepaddle", "paddleocr"]
+dev = ["pytest", "ruff"]
+
+[project.scripts]
+matching = "matching.api.cli:main"
+
+# 임포트 경로를 `matching`으로 고정한다 (`src.matching`이 아니다).
+# 평가자가 터미널에 붙여넣을 줄이 하나여야 한다.
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+# 우리 코드가 아니다 — scripts/는 하네스 실행기(외부 스켈레톤), spike/는 OCR 실측 스파이크(
+# docs/OCR_EVIDENCE.md §6의 재현 경로)다. 린트에 맞춰 고치면 재현 경로가 달라진다.
+extend-exclude = ["scripts", "spike"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["live: 실제 OpenAI API를 호출하는 테스트"]
+# 실물 API 호출은 기본 실행에서 뺀다 — 과제 예산이 $5뿐이다 (tests/CLAUDE.md).
+# 돌리려면 `pytest -m live`.
+addopts = "-m 'not live'"

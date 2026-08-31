@@ -3,20 +3,90 @@
   "phase": "matching-engine",
   "_order_note": "execute.py는 배열 순서로 돈다 (step 번호가 아니라). step10을 step4 앞에 둔 것은 의도다 — ① 전체 흐름이 끝까지 이어지는 시점을 앞당긴다(과제문: 「먼저 전체 흐름이 처음부터 끝까지 이어지도록」) ② 이력서를 쓸 때 rubric.json이 아직 없으므로 게이트 G3 독립성이 절차가 아니라 구조가 된다. 파일명은 step{step}.md 로 번호를 따르므로 번호는 바꾸지 않는다.",
   "steps": [
-    { "step": 0, "name": "project-setup", "status": "pending" },
-    { "step": 1, "name": "core-model", "status": "pending" },
-    { "step": 2, "name": "posting-source", "status": "pending",
-      "requirement_status": { "req1_api_crawl": "pending", "req2_image_parse": "pending" } },
-    { "step": 3, "name": "posting-parser", "status": "pending" },
-    { "step": 10, "name": "mock-resumes", "status": "pending" },
-    { "step": 4, "name": "rubric-builder", "status": "pending" },
-    { "step": 5, "name": "fact-scorer", "status": "pending" },
-    { "step": 6, "name": "judge-layer", "status": "pending" },
-    { "step": 7, "name": "aggregate-rank", "status": "pending" },
-    { "step": 8, "name": "entrypoint-api", "status": "pending" },
-    { "step": 9, "name": "result-ui", "status": "pending" },
-    { "step": 11, "name": "selected-tests", "status": "pending" },
-    { "step": 12, "name": "evidence-extensions", "status": "pending" },
-    { "step": 13, "name": "handoff", "status": "pending" }
-  ]
+    {
+      "step": 0,
+      "name": "project-setup",
+      "status": "completed",
+      "started_at": "2026-09-01T03:35:45+0900",
+      "completed_at": "2026-09-01T04:05:00+0900",
+      "summary": "src/matching 8개 서브패키지 뼈대 + config.py(가중치·게이트·임계값·모델·단가 외부화, 키 마스킹) + pyproject(ocr 선택그룹·live 마커·패키지루트 src) + .env.example + CI. AC 5종 전부 통과 (py3.13 venv).",
+      "notes": [
+        "gitignore에 줄 끝 주석이 없어 step0 문서의 data/ 블록 4줄이 무효였다 — 주석을 별도 줄로 올려 수정. 수정 전엔 img_*.png·ocr.json이 전혀 안 막혔다.",
+        "AC의 `'sk-' not in repr(s)`와 step0 본문의 마스킹 예시(`sk-***`)가 충돌해 AC를 따랐다. 마스킹 문자열은 `***set***`.",
+        "`.env.*`가 `.env.example`까지 막고 있어 `!.env.example` 예외를 추가했다.",
+        "제작 메타데이터(phases/·Plans.md·scripts/·docs/HARNESS_*.md·spike/ocr_check/.vision_ocr)는 .gitignore에 넣었으나 **이미 tracked라 그대로 추적된다.** 무시 규칙은 신규 파일에만 먹는다. 공개 레포에서 빼려면 push 전 `git rm --cached`가 따로 필요하다 — step0 범위 밖이라 하지 않았다.",
+        "CI의 `pytest -q`는 step 11 전까지 수집 0건(exit 5)이므로 그 코드만 허용하는 분기를 뒀다. `ruff check .`는 scripts/·spike/를 extend-exclude로 뺀다(우리 코드 아님)."
+      ]
+    },
+    {
+      "step": 1,
+      "name": "core-model",
+      "status": "pending"
+    },
+    {
+      "step": 2,
+      "name": "posting-source",
+      "status": "pending",
+      "requirement_status": {
+        "req1_api_crawl": "pending",
+        "req2_image_parse": "pending"
+      }
+    },
+    {
+      "step": 3,
+      "name": "posting-parser",
+      "status": "pending"
+    },
+    {
+      "step": 10,
+      "name": "mock-resumes",
+      "status": "pending"
+    },
+    {
+      "step": 4,
+      "name": "rubric-builder",
+      "status": "pending"
+    },
+    {
+      "step": 5,
+      "name": "fact-scorer",
+      "status": "pending"
+    },
+    {
+      "step": 6,
+      "name": "judge-layer",
+      "status": "pending"
+    },
+    {
+      "step": 7,
+      "name": "aggregate-rank",
+      "status": "pending"
+    },
+    {
+      "step": 8,
+      "name": "entrypoint-api",
+      "status": "pending"
+    },
+    {
+      "step": 9,
+      "name": "result-ui",
+      "status": "pending"
+    },
+    {
+      "step": 11,
+      "name": "selected-tests",
+      "status": "pending"
+    },
+    {
+      "step": 12,
+      "name": "evidence-extensions",
+      "status": "pending"
+    },
+    {
+      "step": 13,
+      "name": "handoff",
+      "status": "pending"
+    }
+  ],
+  "created_at": "2026-09-01T03:35:45+0900"
 }

@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: ruff
+        run: ruff check .
+      - name: pytest
+        # step 11 전까지는 테스트 파일이 없다. exit 5(수집된 테스트 0건)만 허용한다 —
+        # 실패(1)·내부오류(2~4)는 그대로 빨간불이다. 테스트가 생기면 이 분기는 저절로 죽는다.
+        run: pytest -q || [ $? -eq 5 ]
