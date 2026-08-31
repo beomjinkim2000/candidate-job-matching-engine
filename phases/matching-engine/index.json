@@ -37,11 +37,25 @@
     {
       "step": 2,
       "name": "posting-source",
-      "status": "pending",
+      "status": "completed",
       "requirement_status": {
-        "req1_api_crawl": "pending",
+        "req1_api_crawl": "unverified",
         "req2_image_parse": "pending"
-      }
+      },
+      "started_at": "2026-09-01T03:49:29+0900",
+      "completed_at": "2026-09-01T04:05:00+0900",
+      "summary": "어댑터 코드 완성. SaraminSource는 키 미발급으로 실호출 미검증 — 요구 ① 실증은 step 3의 전제조건",
+      "notes": [
+        "src/matching/source/ 7파일 — base.py(PostingRef·PostingSource Protocol·SourceUnavailable/QuotaExceeded·경로 헬퍼) · saramin.py(QuotaLog·job_search·SaraminSource, list_postings만 API) · local.py · registry.py(PostingMeta·SaraminRegistry) · client_feed.py(인터페이스만) · provenance.py(write/verify) · __init__.py(get_source). CLI에 `acquire` 서브커맨드 추가. tests 26케이스 통과.",
+        "검증 절차 §2의 grep이 registry.py 2줄에 걸린다 — 둘 다 요청 파라미터 `keywords`(docs/SARAMIN_API.md §2 「우리가 쓰는 것」)이고, §3이 금지한 응답 필드(공고 본문에서 뽑은 낱말 목록)와 이름이 겹칠 뿐이다. grep 패턴 `keyword`가 `keywords`의 부분 문자열이라 생기는 충돌이고, 그 grep이 지키려는 PostingMeta 필드 목록에는 조건성 필드가 하나도 없다(tests/test_source.py가 필드 집합을 고정하고 extra=forbid로 주입도 막는다). 동일성 확인(역할 ①)은 자유어 검색 없이는 성립하지 않으므로 파라미터를 뺄 수 없었다.",
+        "SaraminSource는 사람인 공고 ID를 그대로 posting_id로 쓰지 않는다 — posting_id가 디렉터리 이름이 되고 provenance.json에 실려 **커밋**되므로, 그대로 두면 금지사항(공고 ID·URL을 남기지 마라)을 어긴다. local_posting_id()가 sha256 앞 10자로 바꾼다. 되짚기 방지 장치는 아니다(짧은 숫자 ID는 전수 대조로 되짚힌다) — 산출물이 사람인 DB의 부분 복제가 되지 않게 하는 것이 목적이다.",
+        "공고 페이지 url은 프로세스 메모리에만 둔다(_page_urls). 그래서 fetch_images()는 같은 프로세스에서 list_postings()를 부른 뒤에만 돈다 — 디스크에 url을 쓰지 않으려고 치른 비용이다.",
+        "자체 쿼터 상한을 200회/일로 잡았다(공식 한도 500). 남는 300회는 실수 예산이다. SaraminSource와 SaraminRegistry가 같은 로그 파일을 공유한다 — 한도는 앱 단위이지 클래스 단위가 아니다.",
+        "PostingMeta의 posting_date·expiration_date는 posting-timestamp·expiration-timestamp에서 만든다. ISO 표기 필드는 fields= 로 따로 요청해야 나오는데 timestamp로 충분하다(docs/SARAMIN_API.md §3) — 한 번 덜 묻는 만큼 한도를 덜 쓴다.",
+        "fetch_images()의 <img> 정규식은 본문이 iframe·스크립트 안에 있으면 아무것도 못 찾는다. 키가 없어 실지면에서 검증하지 못했고, 그때는 경로 B(사람이 이미지를 놓고 acquire)로 간다 — docstring에 한계로 적었다.",
+        "verify_provenance는 「파일이 없다」를 전부 위반으로 세지 않는다. img_*.png·ocr.json은 커밋되지 않아 clone 직후에는 원래 없다. 장수 불일치(0장 ≠ 기록 n장)로 잡히고, 그게 「대조할 수 없다」는 사실 그대로다.",
+        "LocalSource의 PostingRef.title·company는 빈 문자열이다. 회사명·공고 제목을 저장하지 않기 때문이다(남기는 것은 해시와 대상 직무 라벨뿐). 동일성 확인은 SaraminRegistry.lookup()의 일이지 본문 어댑터의 일이 아니다."
+      ]
     },
     {
       "step": 3,
