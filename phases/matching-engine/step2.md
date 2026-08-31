@@ -196,8 +196,8 @@ def verify_provenance(posting_dir: Path) -> list[str]:
 ### CLI — 이미지를 놓은 사람이 부르는 명령
 
 ```bash
-python -m matching acquire --posting data/postings/kt-nw \
-    --source local --position "NW인프라운용"
+python -m matching acquire --posting data/postings/kt-b2c \
+    --source local --position "B2C마케팅&세일즈"
 ```
 
 `docs/SCHEDULE.md` §2의 **경로 B**(키 미발급 → 이미지 수동 확보)에서, 사람이 이미지를

@@ -136,7 +136,20 @@ assert 'python run.py' in d, '실행 한 줄이 없다'
 assert '못 하는 것' in d, '한계 목록이 없다'
 print('ok')
 "
-test ! -f README.md && echo "README 없음 — 정상" || (echo "README.md가 생겼다 — 위반" && exit 1)
+# README는 **사용자가 직접 쓴다**. 하네스가 만들지 않았는지만 본다.
+# 존재 자체는 위반이 아니다 — 과제 제출물이 「코드 + README」다.
+python3 - <<'PYEOF'
+import subprocess, pathlib
+p = pathlib.Path("README.md")
+if not p.exists():
+    print("README.md 없음 — 하네스는 만들지 않는다. 17:00 전까지 사용자가 작성한다")
+else:
+    log = subprocess.run(["git","log","--format=%an|%s","--","README.md"],
+                         capture_output=True, text=True).stdout
+    bad = [l for l in log.splitlines() if "Claude" in l]
+    assert not bad, f"하네스가 README를 만들었다 — 위반: {bad[:2]}"
+    print(f"README.md 존재 ({len(p.read_text())}자) — 사용자 작성. 정상")
+PYEOF
 git ls-files | grep -E "^\.env$|\.env\." && echo "키 파일 커밋됨 — 위반" && exit 1 || echo ".env 미포함"
 
 # --- 제출물이 실제로 레포에 들어갔는가 (clone한 사람이 보는 것) ---
@@ -180,6 +193,11 @@ PYEOF
 - **`README.md`를 만들지 마라.** 이 step이 만드는 건 `docs/` 아래 세 파일이다.
   README는 지원자 본인이 이 소재로 직접 쓴다. 「초안을 만들어 두면 편하겠다」는
   생각이 드는 자리가 정확히 여기다 — **만들지 마라.**
+- **동시에, 사용자가 쓴 `README.md`가 있다고 해서 실패시키지 마라.**
+  이유: 과제 제출물이 **「GitHub public 레포 링크 (코드 + README)」**이고
+  「README — 실행 방법과 함께, **설계 결정과 트레이드오프를 반드시 서술**해주세요」다.
+  **README가 없는 제출물이 오히려 요구 위반이다.** 금지 대상은 「하네스가 쓰는 것」이지
+  「파일이 존재하는 것」이 아니다 — 위 AC가 `git log`의 작성자로 그 둘을 가른다.
 - **`unverified`를 올려 적지 마라.** 이유: R1에서 veto 2건이 정확히 이 행동에서 나왔다.
 - **실측 없이 13-A를 채우지 마라.** 이유: 추정치를 실측 칸에 넣으면 그게 실측으로 읽힌다.
   완주 전이면 이 step은 `blocked`다.

@@ -39,7 +39,9 @@
 pytest tests/test_judge.py -m live -k repeat_stability -q   # 44회 호출. 완주 예산 밖
 ```
 
-실측 σ를 `index.json` step 11의 `summary`에 적고, 홀드아웃 테스트가 그 값을 읽는다.
+**σ의 저장 주소는 `index.json`의 step 6 `summary`, 키는 `repeat_sigma` 하나다.**
+step 6이 그 측정을 소유하므로 그 자리에 적는다 (`step6.md`). 이 step은 **읽기만** 한다 —
+두 곳에 적으면 홀드아웃 테스트가 어느 쪽을 볼지 모르고, 못 찾으면 조용히 skip된다.
 
 ### `tests/test_holdout.py` — 라벨이 안 건드린 지점 (신규)
 
@@ -50,7 +52,9 @@ def test_holdout_criteria_discriminate(repeat_sigma):
     """이력서 설계에서 제외한 조건 2개에서도 지원자별 점수가 갈리는가.
 
     **양변 모두 1~5 raw 척도다.** 가중 점수(0~100)로 재면 임계가 무의미해진다.
-    repeat_sigma: step 6이 index.json summary에 남긴 실측 σ. 없으면 이 테스트는 skip.
+    repeat_sigma: index.json의 step 6 summary["repeat_sigma"]. 없으면 이 테스트는 skip.
+                  상위 2명 × 판단항목 2개에서 잰 합동 표준편차이고, 6명 × 홀드아웃
+                  2조건에 적용하는 것은 근사다 (step6.md).
     """
     if repeat_sigma is None:
         pytest.skip("step 6의 반복 안정성 σ 실측이 없다 — 노이즈 기준선 없이 판정하지 않는다")
@@ -150,9 +154,32 @@ def test_verbosity_invariance():
 
 ```bash
 ruff check tests
-pytest -q                      # live 제외 (pyproject의 addopts)
-pytest -q -m live --collect-only   # live 케이스가 수집은 되는지
+pytest -q                          # live 제외 (pyproject의 addopts)
+pytest -q -m live --collect-only   # 나머지 live 케이스는 수집만 확인
+
+# 반복 안정성만 실제로 1회 돌린다 — 44회 호출. 완주 예산(≈117회) 밖이다.
+# 홀드아웃 테스트가 이 σ를 노이즈 기준선으로 쓰므로, 안 돌리면 그 테스트가 skip된다.
+pytest -q -m live -k repeat_stability tests/test_judge.py
+
+# σ가 실제로 저장됐는지 확인하고, 그 값으로 홀드아웃을 돌린다
+python3 -c "
+import json,pathlib
+d=json.loads(pathlib.Path('phases/matching-engine/index.json').read_text())
+s6=next(s for s in d['steps'] if s['step']==6)
+sig=(s6.get('summary_data') or {}).get('repeat_sigma')
+assert sig is not None, 'step 6 summary에 repeat_sigma가 없다 — 홀드아웃이 skip된다'
+print('repeat_sigma =', sig)
+"
+pytest -q tests/test_holdout.py
 ```
+
+**`--collect-only`로는 부족한 케이스가 하나 있다.** 반복 안정성은 다른 테스트의 **입력**을
+만든다 — 수집만 확인하면 σ가 안 생기고, 홀드아웃이 조용히 skip되며, **라벨 밖 측정 지점이
+직군 교차 하나만 남는다.** 그래서 이 하나만 실제로 돌린다.
+
+**44회 호출은 완주 예산 밖이다** (`docs/COST_BUDGET.md` §1은 ≈117회를 센다).
+예산이 모자라면 **이 테스트를 버리고, 버렸다는 사실과 그때 홀드아웃이 skip된다는 사실을
+`summary`에 적는다.** N을 줄이지 마라 — 11은 인용된 실측이다.
 
 **로컬에서 `pytest -q`를 반복 실행하지 마라.** 전체 검증은 push 후 CI에 맡긴다
 (`CLAUDE.md` 작업 규칙).
