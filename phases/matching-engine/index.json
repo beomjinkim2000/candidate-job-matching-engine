@@ -8,7 +8,7 @@
       "name": "project-setup",
       "status": "completed",
       "started_at": "2026-09-01T03:35:45+0900",
-      "completed_at": "2026-09-01T04:05:00+0900",
+      "completed_at": "2026-09-01T03:42:54+0900",
       "summary": "src/matching 8개 서브패키지 뼈대 + config.py(가중치·게이트·임계값·모델·단가 외부화, 키 마스킹) + pyproject(ocr 선택그룹·live 마커·패키지루트 src) + .env.example + CI. AC 5종 전부 통과 (py3.13 venv).",
       "notes": [
         "gitignore에 줄 끝 주석이 없어 step0 문서의 data/ 블록 4줄이 무효였다 — 주석을 별도 줄로 올려 수정. 수정 전엔 img_*.png·ocr.json이 전혀 안 막혔다.",
