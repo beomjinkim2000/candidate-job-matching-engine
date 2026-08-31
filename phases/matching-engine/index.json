@@ -23,7 +23,7 @@
       "name": "core-model",
       "status": "completed",
       "started_at": "2026-09-01T03:42:54+0900",
-      "completed_at": "2026-09-01T03:48:42+0900",
+      "completed_at": "2026-09-01T03:49:28+0900",
       "summary": "src/matching/model/ 4파일 — objects.py(BBox·Span·Requirement·Criterion·Evidence·Score·Link, rel 5종 고정, review_status 기본 draft) · graph.py(EvidenceGraph.add/link/out/index/get/trace, TRACE_CHAIN 4단계) · governance.py(Violation·check·enforce·GovernanceError, G1~G5) · render.py(render_rationale — 그래프에서 매번 생성). tests/test_model.py 23케이스 통과, ruff 통과.",
       "notes": [
         "G4·G5는 필드가 required라 `None`이 정상 경로로는 안 생긴다. 테스트는 `model_construct`로 재현하고, 더 현실적인 실패인 **넓이 0 bbox·기준 이미지 크기 0**도 G4가 잡게 했다 — 「필드만 채운 가짜 좌표」가 통과하면 G4가 증명하는 것이 없다.",
