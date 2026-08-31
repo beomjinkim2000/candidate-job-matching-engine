@@ -90,6 +90,18 @@ push하므로 크롤링 비용이 0이고, 대신 **수신 인터페이스 유�
    - 완주 1회에 몇 회 · 얼마인가 (→ `docs/COST_BUDGET.md` §4 실측)
 4. **못 하는 것 목록** — 표 셀 소속·시각 강조 신호 부재·순환을 못 끊은 것·
    외부 정답 데이터 없음. **묻기 전에 먼저 적는다**
+5. **README에 쓸 소재 목록** — 사용자가 자기 언어로 옮길 재료를 항목으로만 나열한다.
+   **문장으로 써 주지 마라.** 반드시 넣을 것:
+   - **계획을 심사위원 패널로 6라운드 돌렸고 veto가 10건 나왔다.** 그중 6건은
+     **앞의 veto를 고치다 새로 생긴 것**이었다 (`docs/HARNESS_SCOREBOARD.md`에 이력)
+   - 그 과정에서 **과제 CRITICAL을 스스로 어긴 것을 두 번 잡았다** —
+     `ocr.json` 커밋 강제(원문 적재)와 대상 직군 선택(둘 다 같은 대분류)
+   - 심사가 못 보는 자리가 있었다 — 심사위원은 계획문서만 읽으므로
+     **실행기와 레포 상태는 따로 검증**해야 했고 거기서 3건이 더 나왔다
+     (`docs/HARNESS_VALIDITY.md`)
+
+   **이 소재를 쓴 문서 둘(`HARNESS_SCOREBOARD.md`·`HARNESS_VALIDITY.md`)은 레포에 안 들어간다**
+   (`step0.md`). 그래서 README에 담기는 것은 **사용자가 정리한 결론**이지 로그가 아니다.
 
 ### 13-D. 요구 ①~⑧ 상태 표 — **5분. 절대 버리지 않는다**
 
@@ -169,7 +181,17 @@ assert not bad, f"레포에 안 들어간 제출물: {bad}"
 # 공고 본문은 그림이든 글자든 들어가면 안 된다
 leaked = [f for f in tracked if "/img_" in f or f.endswith("/ocr.json")]
 assert not leaked, f"공고 원문이 커밋됐다: {leaked[:3]}"
-print("산출물 전부 tracked · 공고 원문(이미지·전사본) 미포함")
+
+# 제작 과정 메타데이터는 제출물이 아니다 (step0.md「공개 레포에 무엇을 싣는가」)
+meta = [f for f in tracked if f.startswith(("phases/","scripts/"))
+        or f in ("Plans.md","docs/HARNESS_SCOREBOARD.md","docs/HARNESS_VALIDITY.md")]
+assert not meta, f"제작 과정 메타데이터가 커밋됐다: {meta[:4]}"
+
+# 반대로, 설계 근거 문서는 반드시 있어야 한다 — 「판단」의 실물이다
+for must in ("docs/TRADEOFFS.md","docs/LEGAL_ARCHITECTURE.md","docs/OCR_EVIDENCE.md",
+             "docs/COST_BUDGET.md","docs/DEMO.md","docs/OPERATIONS.md"):
+    assert must in tracked, f"설계 근거 문서 누락: {must}"
+print("산출물 tracked · 공고 원문 미포함 · 제작 메타 미포함 · 설계 근거 6종 포함")
 PYEOF
 ```
 

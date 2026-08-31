@@ -120,6 +120,45 @@ data/.judge_usage.json         # 토큰·비용 누적 (로컬 상태)
 `data/resumes/`와 `data/runs/`는 **무시 목록에 아예 넣지 않는다.** 전자는 과제가 요구한
 제출물이고, 후자는 「이 점수가 어떻게 나왔는가」의 유일한 기록이다.
 
+#### 공개 레포에 무엇을 싣는가 — 이 결정을 여기서 한다
+
+과제 제출물은 **「코드 + README + 목업 데이터셋 + 최소 테스트」**다. 그 범위를 정한다.
+
+```gitignore
+# --- 제작 과정 메타데이터. 제출물이 아니다 ---
+phases/                        # 하네스 step 정의 (작업 지시서)
+Plans.md                       # 진행 상황 추적
+docs/HARNESS_SCOREBOARD.md     # 계획 심사 이력
+docs/HARNESS_VALIDITY.md       # 실행기 검증 기록
+scripts/                       # 하네스 실행기 — 외부 스켈레톤이지 우리 코드가 아니다
+spike/.venv/                   # 스파이크 가상환경
+spike/ocr_check/.vision_ocr    # 컴파일 산출물
+```
+
+**`spike/ocr_check/`의 소스는 남긴다** (`*.py` · `*.swift` · `requirements.txt`).
+`docs/OCR_EVIDENCE.md` §6이 실측 재현 경로로 지목한 코드이고, **임계값 3개의 출처**다.
+
+##### 왜 빼는가 — 은폐가 아니라 범위다
+
+`.claude/`·`harness.toml`을 뺀 것과 **같은 이유**다. 이것들은 「이 프로젝트를 만드는 데
+쓴 도구」이지 「이 프로젝트」가 아니다. 남기면 평가자가 제출물과 작업 로그를 구분해야 한다.
+
+**동시에, 숨기는 것이 되면 안 된다.** 과제문은 「**AI 활용은 자유**이되 본인의 문제 정의와
+판단이 드러나야 한다」이다 — AI를 썼다는 사실은 감출 것이 아니다. 그래서:
+
+- **`docs/`의 설계 근거 문서는 전부 공개한다** — `TRADEOFFS.md`(결정/버린 것/틀리는 조건) ·
+  `LEGAL_ARCHITECTURE.md` · `OCR_EVIDENCE.md` · `COST_BUDGET.md` · `SCHEDULE.md` ·
+  `RUBRIC_DESIGN.md` · `DEMO.md` · `OPERATIONS.md`. **판단의 실물이 여기 있다**
+- **심사를 6라운드 돌렸다는 사실은 README에 사용자가 자기 언어로 쓴다.**
+  원본 로그를 그대로 올리는 것과, 「무엇을 배웠는지」를 본인이 정리하는 것은 다르다 —
+  **후자가 「본인의 판단」이다**
+
+##### 이 결정이 틀리는 조건
+
+평가자가 **「AI에게 무엇을 어떻게 지시했는가」 자체를 보고 싶어 하는** 경우.
+그때는 `phases/`를 공개하는 편이 낫다 — step 파일 14개가 **가장 구체적인 판단의 기록**이다.
+**되돌리기 쉽다**: 위 무시 목록에서 `phases/` 한 줄만 지우면 된다.
+
 ### `src/matching/config.py`
 
 `python-dotenv`로 `.env`를 읽는 설정 로더. 다음을 노출한다:
