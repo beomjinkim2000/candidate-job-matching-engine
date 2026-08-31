@@ -1,0 +1,19 @@
+{
+  "posting_id": "kt-nw",
+  "source_kind": "local",
+  "acquired_at": "2026-09-01T04:11:41.363640+09:00",
+  "target_position": "NW인프라운용",
+  "image_sha256": [
+    "efd37556dcc64cde38db4d5a71529f005a655f7e84b07da09ef12eba47b200d2"
+  ],
+  "image_size": [
+    [
+      860,
+      4920
+    ]
+  ],
+  "ocr_engine": null,
+  "ocr_sha256": null,
+  "api_verified": false,
+  "api_verified_at": null
+}
