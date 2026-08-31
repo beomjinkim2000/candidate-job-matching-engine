@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OCR 확인 — 공고 이미지가 구조로 갈리나</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#161a21; --line:#262c37; --fg:#e6e9ef; --mut:#8b94a5;
+    --badge:#ff6b6b; --item:#4c9aff; --cont:#3ecf8e; --maybe:#ffb454; --dict:#c084fc;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f7f8fa; --panel:#fff; --line:#e2e6ec; --fg:#1a1d23; --mut:#6b7280;
+           --badge:#dc2626; --item:#2563eb; --cont:#059669; --maybe:#b45309; --dict:#7c3aed; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.6 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;
+       background:var(--bg);color:var(--fg)}
+  header{padding:14px 24px;border-bottom:1px solid var(--line);display:flex;gap:14px;
+         align-items:center;flex-wrap:wrap}
+  h1{font-size:17px;margin:0;font-weight:700}
+  .sub{color:var(--mut);font-size:13px}
+  main{display:grid;grid-template-columns:minmax(320px,1fr) minmax(400px,1.1fr);
+       height:calc(100vh - 63px)}
+  @media (max-width:980px){ main{grid-template-columns:1fr;height:auto} }
+  .pane{overflow:auto;padding:18px 24px}
+  .pane + .pane{border-left:1px solid var(--line)}
+  @media (max-width:980px){ .pane + .pane{border-left:none;border-top:1px solid var(--line)} }
+
+  #drop{border:2px dashed var(--line);border-radius:12px;padding:40px 20px;text-align:center;
+        color:var(--mut);cursor:pointer}
+  #drop.hot{border-color:var(--item);color:var(--fg)}
+  canvas{max-width:100%;border-radius:8px;border:1px solid var(--line);display:block}
+
+  select,button{font:inherit;font-size:13px;background:var(--panel);color:var(--fg);
+                border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer}
+  .stats{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 14px}
+  .chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;
+        padding:4px 11px;font-size:13px}
+  .chip b{font-weight:700}
+  .k-badge b{color:var(--badge)} .k-item b{color:var(--item)}
+  .k-cont b{color:var(--cont)}   .k-maybe b{color:var(--maybe)}
+  .k-dict b{color:var(--dict)}
+  .sec h3 .role,.sec h3 .by{font-size:11px;font-weight:600;margin-left:8px;
+      padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mut)}
+  .sec h3 .role{color:var(--dict);border-color:var(--dict)}
+  .sec h3 .r-제외{color:var(--maybe);border-color:var(--maybe)}
+  .sec.dropped{opacity:.55}
+  .sec.dropped h3{color:var(--mut);text-decoration:line-through}
+
+  .ctl{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+       padding:12px 16px;margin-bottom:14px}
+  .ctl label{display:block;font-size:13px;color:var(--mut);margin:0 0 6px}
+  .ctl label b{color:var(--fg)}
+  .ctl + .ctl{margin-top:-6px}
+  input[type=range]{width:100%;margin:0}
+
+  .tabs{display:flex;gap:4px;margin-bottom:12px}
+  .tabs button.on{color:var(--fg);border-color:var(--item)}
+  .tabs button{color:var(--mut)}
+
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+      white-space:pre-wrap;word-break:break-word;
+      font:13px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;margin:0}
+  .sec{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+       padding:12px 16px;margin-bottom:10px}
+  .sec h3{margin:0 0 8px;font-size:15px;color:var(--badge)}
+  .sec h3.none{color:var(--mut);font-weight:500}
+  .sec ul{margin:0;padding-left:4px;list-style:none}
+  .sec li{margin:4px 0;padding-left:26px;text-indent:-26px}
+  .tag{display:inline-block;width:20px;font-size:11px;font-weight:700;text-indent:0}
+  .r-item .tag{color:var(--item)} .r-maybe .tag{color:var(--maybe)}
+  .r-maybe{color:var(--maybe)}
+  .meta{color:var(--mut);font-size:12px;text-indent:0}
+  .merged{color:var(--cont)}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mut);font-weight:600;position:sticky;top:0;background:var(--bg)}
+  td.n{font:12px ui-monospace,Menlo,monospace;color:var(--mut);white-space:nowrap}
+  tr.r-badge td{color:var(--badge);font-weight:700}
+  tr.r-cont  td{color:var(--cont)}
+  tr.r-maybe td{color:var(--maybe)}
+  .low{color:var(--maybe);font-weight:700}
+  .wrap{overflow-x:auto}
+  .muted{color:var(--mut);font-size:13px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>OCR 확인</h1>
+  <span class="sub"><b>들여쓰기와 불릿</b>으로 섹션·항목이 갈리는지 본다.</span>
+  <select id="engine" style="margin-left:auto">
+    <option value="vision">macOS Vision — 3초, 맥이 안 멈춘다</option>
+    <option value="paddle">PaddleOCR — 2분, 윈도우에서도 돎</option>
+  </select>
+  <input type="file" id="file" accept="image/*">
+</header>
+
+<main>
+  <section class="pane">
+    <div id="drop">이미지를 여기로 끌어다 놓거나, 오른쪽 위에서 고르세요</div>
+    <canvas id="cv" hidden></canvas>
+    <p class="muted" id="legend" hidden>
+      <span style="color:var(--dict)">■</span> 섹션 — 사전 &nbsp;<span style="color:var(--badge)">■</span> 섹션 — 좌표 &nbsp;
+      <span style="color:var(--item)">■</span> 항목 &nbsp;
+      <span style="color:var(--cont)">■</span> 이어지는 줄 &nbsp;
+      <span style="color:var(--maybe)">■</span> 애매 — LLM이 판정할 줄
+    </p>
+  </section>
+
+  <section class="pane">
+    <div class="stats" id="stats"></div>
+
+    <div class="ctl">
+      <label><input type="checkbox" id="useDict" checked style="width:auto;vertical-align:-2px">
+        <b>섹션 이름 사전</b>을 쓴다 — 자격요건·우대사항·복리후생 같은 말은 좌표를 안 보고 확정</label>
+      <span class="muted" style="font-size:12px">직무명·스킬명은 사전에 없다. 넣으면 직군 무관 일반화가 깨진다</span>
+    </div>
+    <div class="ctl">
+      <label>사전에 없으면 — x좌표가 <b id="bxLabel">100</b>px 미만일 때 <b>섹션 제목</b></label>
+      <input type="range" id="badgeX" min="0" max="300" step="5" value="100">
+    </div>
+    <div class="ctl">
+      <label>불릿 없이 앞 항목보다 <b id="ctLabel">4</b>px 이상 들여썼으면 <b>이어지는 줄</b></label>
+      <input type="range" id="contTol" min="0" max="40" step="1" value="4">
+    </div>
+
+    <div class="tabs">
+      <button data-tab="sec" class="on">섹션</button>
+      <button data-tab="text">텍스트</button>
+      <button data-tab="raw">줄 자료</button>
+    </div>
+
+    <div id="tab-sec"><p class="muted">이미지를 올리면 여기에 나옵니다.</p></div>
+    <div id="tab-text" hidden>
+      <button id="copy" style="margin-bottom:10px">텍스트 복사</button>
+      <pre id="plain"></pre>
+    </div>
+    <div id="tab-raw" hidden class="wrap"></div>
+  </section>
+</main>
+
+<script>
+const BULLET = /^\s*(?:[·•・▪◦○●∙*\-–—※☑✓]|\(?\d+[.)]|[①-⑳])/;
+const esc = s => String(s).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const $ = s => document.querySelector(s);
+let DATA = null, IMG = null;
+
+/* 섹션 이름 사전 — 문서 구조 어휘만 넣는다.
+   직무명·스킬명은 절대 넣지 않는다. 넣는 순간 「직군 무관 일반화」가 깨진다.
+   role 이 채점에서 하는 일:
+     필수/우대 → 배점이 다르다   맥락 → 조건으로 안 센다   제외 → 아예 안 읽는다 */
+const SECTION_DICT = [
+  ['필수', ['자격요건','지원자격','자격조건','응시자격','필수요건','필수사항',
+            '필수자격','기본자격','자격','필수']],
+  ['우대', ['우대사항','우대조건','우대요건','우대역량','우대']],
+  ['맥락', ['담당업무','주요업무','업무내용','수행업무','직무내용','모집분야',
+            '인재상','업무']],
+  ['스킬', ['기술스택','사용기술','스킬','스택']],
+  ['제외', ['복리후생','복지','근무조건','근무환경','근무지','근무시간','급여',
+            '전형절차','채용절차','채용전형','제출서류','접수방법','접수기간',
+            '기타사항','유의사항','회사소개']],
+];
+const norm = s => s.replace(/[\s:：·•\-–—\[\]()「」<>]/g, '');
+
+/* 짧은 줄만 본다. 「자격요건을 완화했습니다」 같은 문장을 제목으로 오인하면 안 된다. */
+function dictHit(text){
+  const n = norm(text);
+  for(const [role, terms] of SECTION_DICT)
+    for(const t of terms)
+      if(n.startsWith(t) && n.length <= t.length + 3) return {role, term:t};
+  return null;
+}
+
+/* 코드가 아는 것만 코드가 정한다. 남는 건 'maybe' 로 표시해 LLM에 넘긴다. */
+function sectionize(lines, badgeX, contTol, useDict){
+  const minX = Math.min(...lines.map(l=>l.x0));
+  const out = [];
+  let cur = null, lastItem = null;
+
+  for(const l of lines){
+    const bullet = BULLET.test(l.text);
+    l._merged = false; l._sec = null;
+
+    // ① 사전에 있는 말이면 무조건 섹션 제목. 좌표를 보지 않는다
+    const hit = useDict && !bullet ? dictHit(l.text) : null;
+    if(hit){
+      l._role = 'dict'; l._sec = hit.role;
+      cur = {header:l.text, role:hit.role, by:'사전', items:[]};
+      out.push(cur); lastItem = null;
+      continue;
+    }
+
+    // ② 사전에 없으면 좌표로 본다 — x가 공백 건너편이면 섹션
+    if(l.x0 < badgeX && !bullet){
+      l._role = 'badge';
+      cur = {header:l.text, role:null, by:'좌표', items:[]};
+      out.push(cur); lastItem = null;
+      continue;
+    }
+    if(!cur){ cur = {header:null, items:[]}; out.push(cur); }
+
+    if(!bullet && lastItem && l.x0 > lastItem.x0 + contTol){
+      l._role = 'cont'; l._merged = true;
+      lastItem.text += ' ' + l.text;
+      lastItem.parts += 1;
+      continue;
+    }
+
+    l._role = bullet ? 'item' : 'maybe';
+    lastItem = {text:l.text, x0:l.x0, conf:l.conf, height:l.height,
+                indent:Math.round(l.x0-minX), role:l._role, parts:1};
+    cur.items.push(lastItem);
+  }
+  return out;
+}
+
+function draw(){
+  if(!IMG || !DATA) return;
+  const cv = $('#cv'), ctx = cv.getContext('2d');
+  const W = Math.min(IMG.naturalWidth, 900), scale = W/IMG.naturalWidth;
+  cv.width = W; cv.height = IMG.naturalHeight*scale;
+  cv.hidden = false; $('#legend').hidden = false; $('#drop').hidden = true;
+  ctx.drawImage(IMG,0,0,cv.width,cv.height);
+  ctx.lineWidth = 2;
+  const C = {dict:'#c084fc', badge:'#ff6b6b', item:'#4c9aff', cont:'#3ecf8e', maybe:'#ffb454'};
+  for(const l of DATA.lines){
+    const [x0,y0,x1,y1] = l.bbox.map(v=>v*scale);
+    ctx.strokeStyle = C[l._role] || '#888';
+    ctx.strokeRect(x0,y0,x1-x0,y1-y0);
+  }
+}
+
+function render(){
+  if(!DATA) return;
+  const badgeX = +$('#badgeX').value, contTol = +$('#contTol').value;
+  const useDict = $('#useDict').checked;
+  $('#bxLabel').textContent = badgeX;
+  $('#ctLabel').textContent = contTol;
+
+  const secs = sectionize(DATA.lines, badgeX, contTol, useDict);
+  const n = r => DATA.lines.filter(l=>l._role===r).length;
+  const low = DATA.lines.filter(l=>l.conf<0.5).length;
+
+  $('#stats').innerHTML =
+    `<span class="chip">엔진 <b>${esc(DATA.engine)}</b></span>` +
+    `<span class="chip">줄 <b>${DATA.line_count}</b></span>` +
+    `<span class="chip">평균신뢰 <b>${DATA.avg_conf}</b></span>` +
+    `<span class="chip k-dict">사전 <b>${n('dict')}</b></span>` +
+    `<span class="chip k-badge">좌표 <b>${n('badge')}</b></span>` +
+    `<span class="chip k-item">항목 <b>${n('item')}</b></span>` +
+    `<span class="chip k-cont">이어짐 <b>${n('cont')}</b></span>` +
+    `<span class="chip k-maybe">애매 <b>${n('maybe')}</b></span>` +
+    `<span class="chip">신뢰 0.5 미만 <b>${low}</b></span>` +
+    `<span class="chip">처리 <b>${DATA.elapsed_sec}초</b></span>` +
+    `<span class="chip">이미지 <b>${DATA.width}×${DATA.height}</b></span>`;
+
+  $('#plain').textContent = DATA.lines.map(l=>l.text).join('\n') || '(아무것도 못 읽음)';
+
+  const ROLE_NOTE = {필수:'배점 높음', 우대:'배점 낮음',
+                     맥락:'조건으로 안 셈', 스킬:'조건', 제외:'채점에서 뺀다'};
+  $('#tab-sec').innerHTML = secs.map(s=>
+    '<div class="sec'+(s.role==='제외'?' dropped':'')+'"><h3 class="'+(s.header?'':'none')+'">'+
+      (s.header ? esc(s.header) : '(제목 없이 시작된 블록)')+
+      (s.role ? '<span class="role r-'+s.role+'">'+s.role+' · '+ROLE_NOTE[s.role]+'</span>' : '')+
+      '<span class="by">'+s.by+'로 판정</span></h3><ul>'+
+    s.items.map(i=>
+      '<li class="r-'+i.role+'"><span class="tag">'+
+      (i.role==='item' ? '•' : '❓')+'</span>'+esc(i.text)+
+      '<br><span class="meta">들여쓰기 '+i.indent+'px · 신뢰 '+i.conf+
+      (i.parts>1 ? ' · <span class="merged">'+i.parts+'줄 합침</span>' : '')+
+      (i.role==='maybe' ? ' · LLM이 「제목인가 안내문인가」를 판정할 줄' : '')+
+      '</span></li>').join('')+
+    '</ul></div>').join('') || '<p class="muted">섹션이 안 나옵니다.</p>';
+
+  $('#tab-raw').innerHTML = '<table><thead><tr><th>#</th><th>역할</th><th>텍스트</th>'+
+    '<th>x0</th><th>높이</th><th>신뢰</th></tr></thead><tbody>'+
+    DATA.lines.map((l,i)=>'<tr class="r-'+l._role+'">'+
+      '<td class="n">'+(i+1)+'</td><td class="n">'+l._role+'</td><td>'+esc(l.text)+'</td>'+
+      '<td class="n">'+l.x0+'</td><td class="n">'+l.height+'</td>'+
+      '<td class="n'+(l.conf<0.5?' low':'')+'">'+l.conf+'</td></tr>').join('')+
+    '</tbody></table>';
+
+  draw();
+}
+
+async function run(file){
+  const eng = $('#engine').value;
+  $('#tab-sec').innerHTML = '<p class="muted">OCR 실행 중… '+
+    (eng==='paddle' ? '첫 실행은 한국어 모델을 내려받느라 오래 걸립니다.' : '')+'</p>';
+  IMG = new Image(); IMG.onload = draw; IMG.src = URL.createObjectURL(file);
+
+  const fd = new FormData(); fd.append('file', file); fd.append('engine', eng);
+  const res = await fetch('/ocr', {method:'POST', body:fd});
+  if(!res.ok){
+    $('#tab-sec').innerHTML = '<p class="muted">OCR 실패 '+res.status+': '+
+      esc(await res.text())+'</p>';
+    return;
+  }
+  DATA = await res.json();
+  render();
+}
+
+$('#file').onchange = e => e.target.files[0] && run(e.target.files[0]);
+$('#badgeX').oninput = render;
+$('#contTol').oninput = render;
+$('#useDict').onchange = render;
+$('#copy').onclick = () => navigator.clipboard.writeText($('#plain').textContent);
+
+const drop = $('#drop');
+drop.onclick = () => $('#file').click();
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('hot'); };
+drop.ondragleave = () => drop.classList.remove('hot');
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove('hot');
+                     e.dataTransfer.files[0] && run(e.dataTransfer.files[0]); };
+
+document.querySelectorAll('.tabs button').forEach(b=>{
+  b.onclick = () => {
+    document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    for(const t of ['sec','text','raw']) $('#tab-'+t).hidden = (t !== b.dataset.tab);
+  };
+});
+</script>
+</body>
+</html>

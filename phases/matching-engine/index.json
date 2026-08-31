@@ -1,0 +1,22 @@
+{
+  "project": "지원자-공고 매칭 스코어링 엔진",
+  "phase": "matching-engine",
+  "_order_note": "execute.py는 배열 순서로 돈다 (step 번호가 아니라). step10을 step4 앞에 둔 것은 의도다 — ① 전체 흐름이 끝까지 이어지는 시점을 앞당긴다(과제문: 「먼저 전체 흐름이 처음부터 끝까지 이어지도록」) ② 이력서를 쓸 때 rubric.json이 아직 없으므로 게이트 G3 독립성이 절차가 아니라 구조가 된다. 파일명은 step{step}.md 로 번호를 따르므로 번호는 바꾸지 않는다.",
+  "steps": [
+    { "step": 0, "name": "project-setup", "status": "pending" },
+    { "step": 1, "name": "core-model", "status": "pending" },
+    { "step": 2, "name": "posting-source", "status": "pending",
+      "requirement_status": { "req1_api_crawl": "pending", "req2_image_parse": "pending" } },
+    { "step": 3, "name": "posting-parser", "status": "pending" },
+    { "step": 10, "name": "mock-resumes", "status": "pending" },
+    { "step": 4, "name": "rubric-builder", "status": "pending" },
+    { "step": 5, "name": "fact-scorer", "status": "pending" },
+    { "step": 6, "name": "judge-layer", "status": "pending" },
+    { "step": 7, "name": "aggregate-rank", "status": "pending" },
+    { "step": 8, "name": "entrypoint-api", "status": "pending" },
+    { "step": 9, "name": "result-ui", "status": "pending" },
+    { "step": 11, "name": "selected-tests", "status": "pending" },
+    { "step": 12, "name": "evidence-extensions", "status": "pending" },
+    { "step": 13, "name": "handoff", "status": "pending" }
+  ]
+}

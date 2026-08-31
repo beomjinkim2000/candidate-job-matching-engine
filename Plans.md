@@ -1,0 +1,83 @@
+# Plans — 지원자-공고 매칭 스코어링 엔진
+
+> 실행 계획 원본: `~/.claude/plans/sprightly-skipping-wombat.md` · 브리프: `.claude/state/views/plan-brief-20260831-183500.html`
+> 마커 규칙: Status 컬럼만 신뢰 (cc:TODO / cc:WIP / cc:完了)
+
+## Phase 0 — 준비
+
+| # | Task | Status | 비고 |
+|---|------|--------|------|
+| 0.1 | 리서치·심사 스킬 프로젝트 반입 | cc:完了 | .claude/skills 8종 + judge 에이전트 8인 (전역 최신판 소스) |
+| 0.2 | 과제 준수사항 CLAUDE.md 반영 | cc:完了 | CRITICAL 규칙 명문화 |
+| 0.3 | harness 스켈레톤 반입 (UI 제외) | cc:完了 | docs/{PRD,ARCHITECTURE,ADR}.md, .claude/commands, scripts/execute.py |
+| 0.4 | harness init (toml·doctor) | cc:完了 | harness sync + doctor 전 항목 통과 |
+
+## Phase 1 — 계획 확정 (사용자 승인 대기)
+
+| # | Task | Status | 비고 |
+|---|------|--------|------|
+| 1.0 | 1차 문헌 검토 (평가축·가중치) + 분석 | cc:完了 | `docs/SCORING_CRITERIA.md` · 쉬운설명 `..._EXPLAINED.md` — 허들-후-보상 구조, 제안 4건 반려 |
+| 1.0b | 2차 문헌 검토 (루브릭·심사위원) + 분석 | cc:完了 | `docs/RUBRIC_DESIGN.md` — 3층 구조 확정(게이트/코드/심사위원), 고정 5항목 루브릭 반려, 블라인드 채용 학력 금지 반영 |
+| 1.1 | 경량 리서치 (사람인 API·이미지 파싱·예산) | cc:WIP | 사람인 API 승인 대기 중 (즉시 발급 아님) |
+| 1.2 | Kairen OS 분석 → 근거 모델 확정 | cc:完了 | `docs/KAIREN_OS_ANALYSIS.md` — 근거를 Object+Link 그래프로, 검산 G1~G6, reviewStatus, 근거등급 E2/E1/E0 |
+| 1.3 | 근거 해법 리서치 3건 → 아이디어 3개 | cc:完了 | `docs/EVIDENCE_IDEAS.md` — 판단유탈 대장 · 소거 재채점 · 등수 뒤집기. **3개 모두 채택** |
+| 1.4 | 하네스 step 설계 | cc:完了 | `phases/matching-engine/` step0~12. 브리프 `.claude/state/views/harness-flow-brief.html` |
+| 1.5 | 법적 우회 구조 설계 | cc:完了 | `docs/LEGAL_ARCHITECTURE.md` — 화살표 방향 반전 · 4개 경계 · 원본 미적재 · 못 푸는 것 5가지. **과제 CRITICAL** |
+| 1.6 | 승인 게이트 도입 (파이프라인 분할) | cc:完了 | `prepare()` / `score()` 분리. `--skip-approval`은 「미승인」 표시 |
+| 1.7 | 근거 확장 3가지 채택 | cc:完了 | step12 unblock. TRADEOFFS D-6 |
+| 1.8 | Obsidian 볼트 정리 | cc:完了 | `~/Documents/기술면접/wiki/그룹바이 과제/` — canvas 1 + 노트 9 |
+| 1.9 | 이미지 확보 경로 명세 | cc:完了 | `docs/IMAGE_ACQUISITION.md` — **API는 이미지를 안 준다**(응답 필드 검증). 데모 4단계 중 3단계는 API 밖. 데모≠프로덕션 이미지 → `BBox.img_w/img_h` 추가 |
+| 1.10 | API의 역할 재정의 | cc:完了 | API는 **본문 파이프가 아니라 대조군.** 동일성 확인·상태감시(**검산 G7 승인무효화**)·파싱 교차검증으로 프로덕션에도 남는다. `PostingRegistry` 신설 |
+| 1.11 | 루브릭 역설계 + Plans 상세화 | cc:TODO | judge-first ②검증 |
+| 1.12 | /plan-review 모의심사 → 계획 개정 | cc:TODO | 심사 1회차 |
+
+## Phase 1.5 — 대상 공고 확정 (2026-09-01 02:5x 사용자 지정)
+
+| 항목 | 공고 A | 공고 B |
+|---|---|---|
+| 회사 | **KT** | **넥슨 (넥토리얼)** |
+| `rec_idx` | 54832105 | 54828914 |
+| 대상 직군 | **NW인프라운용** (Claude 선정 — 공고 내 3직무 중) | **게임 프로그래머** |
+| 저장 경로 | `data/postings/kt-nw/` | `data/postings/nexon-game/` |
+| 레이아웃 | **3열 표.** `직무 \| 수행업무 및 우대사항 \| 근무지`에 직무 3개가 한 표에 | 단일 직군. 섹션 나열형 |
+| 헤더 표현 | 「수행업무」 「우대사항」 「지원자격」 | 「자격요건」 「이런 일을 함께합니다」 **「이런 분을 찾고 있습니다」** **「이런 경험이 있다면 더욱 좋습니다」** |
+| OCR 난도 | 표 셀 소속 · 표 밖 공통 섹션 병존 | 어두운 배경 + 장식 효과 |
+
+**이 두 공고가 설계 결정 두 개를 실증한다.**
+
+1. **넥슨의 헤더는 사전으로 못 잡는다.** 「이런 분을 찾고 있습니다」는 어떤 사전에도 없다.
+   `step3.md` 3-C가 사전 대신 LLM에 **문자열만** 보내기로 한 근거가 가정이 아니라 실물이 됐다
+2. **KT는 표 셀 소속 문제의 실물이다.** 「B2B 솔루션·서비스를 제안하고 프로세스를 수행합니다」가
+   어느 직무 행 것인지 모르면 **점수가 틀린다.** 대응은 `step3.md` 3-B′ (직무 행 y 구간 분할)
+
+## Phase 2 — 구현
+
+| # | Task | Status | 비고 |
+|---|------|--------|------|
+| 2.0 | 하네스 심사 루프 (veto 0까지) | cc:WIP | R1 = 51/100 · veto 4건. `docs/HARNESS_SCOREBOARD.md`. **이게 끝나야 2.1 시작** |
+| 2.1 | crawler — 사람인 API + 이미지 확보 | cc:TODO | 공고 2개 확정(위 표). 키 미발급 시 분기는 `docs/SCHEDULE.md` §2 |
+| 2.2 | parser — 이미지 → 구조화 공고 JSON | cc:TODO | **OCR이 주, LLM은 헤더 역할 분류만.** ~~Claude 자체 비전~~ **폐기**(2026-09-01) — 이미지를 LLM에 보내지 않는다, 좌표 출처는 OCR 하나. `src/CLAUDE.md:159-179` |
+| 2.3 | scoring engine — 결정적 0~100 + 근거 | cc:TODO | 직군 하드코딩 금지 |
+| 2.4 | CLI/API 단일 진입점 + 결과 UI | cc:TODO | **UI 화면은 사용자가 직접 처리한다** (2026-09-01 지시). Claude는 `/score`·`/result`·`/image` 와 데이터만 |
+| 2.5 | 목업 이력서 12명 (2공고×6명, 완벽2·부분3·미스1) | cc:TODO | 서로 다른 직군. **실제 포지션에 맞는 지원서 레퍼런스를 가져와 변형**한다 (2026-09-01 지시) — 지어낸 서식이 아니라 실제 국내 이력서 형식. 실존 인물·실제 재직 이력 금지는 그대로 |
+| 2.6 | 선정 테스트 + ruff | cc:TODO | 케이스 선정이 평가 포인트. step11 |
+| 2.8 | 근거 해법 3가지 (step12) | cc:TODO | **채택됨.** 순서 ③→①→②. `docs/EVIDENCE_IDEAS.md` |
+| 2.7 | GitHub public 레포 생성·push | cc:TODO | 키·.claude 미포함 검사 |
+
+## Phase 3 — 마무리
+
+| # | Task | Status | 비고 |
+|---|------|--------|------|
+| 3.1 | README 소재 정리 (본인 직접 작성 지원) | cc:TODO | 소재는 `docs/`에만. **README.md 파일 생성 금지** |
+| 3.2 | /rubric-review 최종 심사 → 개선 | cc:TODO | 심사 2회차 — **산출물 대상**. 2.0(계획 심사)과 다른 스킬이다 |
+| 3.3 | 제출 | cc:TODO | **마감 2026-09-01 18:00 KST** (`docs/SCHEDULE.md`) |
+
+## 실행 순서 (2026-09-01 사용자 확정)
+
+```
+2.0 하네스 심사 루프 ──▶ veto 0 ──▶ 2.1~2.8 전체 파이프라인 1회 완주 ──▶ 3.2 산출물 심사 ──▶ 최종
+    (지금 여기)              정지 조건        UI 제외                        루프 2회차
+```
+
+**하네스 심사가 끝나기 전에 파이프라인을 돌리지 않는다.** 이유: 하네스가 지시하는 내용이
+아직 바뀌는 중이라, 지금 돌리면 폐기될 설계로 만든 산출물을 심사하게 된다.
