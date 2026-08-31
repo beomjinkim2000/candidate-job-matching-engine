@@ -1,0 +1,23 @@
+# 비밀키 — 절대 커밋 금지
+.env
+.env.*
+
+# Claude/harness 작업 메타데이터 — 제출 레포에 포함하지 않음
+.claude/
+.harness-mem/
+.claude-plugin/
+hooks/
+harness.toml
+
+# harness 생성물
+out/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
