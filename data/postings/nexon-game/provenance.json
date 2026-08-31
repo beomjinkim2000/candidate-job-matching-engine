@@ -1,0 +1,19 @@
+{
+  "posting_id": "nexon-game",
+  "source_kind": "local",
+  "acquired_at": "2026-09-01T04:11:41.512302+09:00",
+  "target_position": null,
+  "image_sha256": [
+    "ee3320ddb7ed709b455926a5c025baeff03f59bbfd5c55bbbc2f9bf7ecbf2fb8"
+  ],
+  "image_size": [
+    [
+      860,
+      2533
+    ]
+  ],
+  "ocr_engine": null,
+  "ocr_sha256": null,
+  "api_verified": false,
+  "api_verified_at": null
+}
