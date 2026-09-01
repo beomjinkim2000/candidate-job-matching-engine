@@ -307,10 +307,31 @@ def test_인용이_빈_응답은_점수에_쓰이지_않는다():
 def test_모든_응답이_근거를_못_내면_점수를_만들지_않는다():
     """0점이나 1점으로 대신하지 않는다. 그러면 「근거를 못 낸 것」과
     「관련 경험이 없는 것」이 같은 점수가 되어 둘을 구별할 방법이 사라진다.
+
+    **응답을 3건 준비한다** — 둘 다 실패하면 딱 한 번 되묻기 때문이다(2026-09-01 추가).
+    되물어도 못 내면 여기 판정은 그대로다.
     """
-    client, _ = fake_client(_reply(2, []), _reply(4, []))
+    client, _ = fake_client(_reply(2, []), _reply(4, []), _reply(3, []))
     with pytest.raises(NoGroundedResponse):
         _judge(client)
+
+
+def test_둘_다_실패해도_되물어서_하나가_나오면_점수가_선다():
+    """**운 나쁜 한 쌍이 실행 전체를 죽이지 않게 한다.**
+
+    온도가 0인데도 응답이 매번 같지 않다(`seed`를 안 준다). 실측에서 같은 (지원자, 항목)이
+    한 번은 쓸 만한 인용을 내고 한 번은 못 냈고, 그 한 번 때문에 **12명짜리 실행이 통째로
+    죽었다.** 되묻는 것은 1회뿐이고, 그래도 못 내면 위 테스트대로 예외다.
+    """
+    client, completions = fake_client(
+        _reply(2, []),  # 심사위원 1 — 근거 없음
+        _reply(4, []),  # 심사위원 2 — 근거 없음
+        _reply(4, [_quote(F_ACROSS_LINES, F_ACROSS_LINES)]),  # 되물음 — 나왔다
+    )
+    score, _ = _judge(client)
+
+    assert score.value == pytest.approx(4.0)
+    assert len(completions.calls) == 3  # 되물음은 1회뿐이다
 
 
 def test_인용은_모델_문자열이_아니라_원문_슬라이스로_저장된다():
@@ -488,6 +509,11 @@ def test_상한을_넘으면_조용히_줄이지_않고_예외를_던진다():
 def test_예산이_호출수와_토큰과_USD를_누적한다(tmp_path):
     """「이 결과를 만드는 데 n회 / $x」가 화면에 뜨려면 실측이 있어야 한다.
     단가가 설정에 없으면 환산이 0이고, **그 사실이 결과에 드러나야 한다.**
+
+    > 이 테스트는 원래 **「두 번 저장하면 두 번 더해진다」**고 주장했다. 그게 맞는 줄
+    > 알았는데, 중간 저장을 넣자마자 그 주장이 곧 회계 오류라는 게 드러났다 —
+    > **한 번 쓴 호출은 몇 번 저장하든 한 번이다.** 자세히는
+    > `test_save를_여러_번_불러도_같은_호출을_두_번_세지_않는다`.
     """
     budget = CallBudget(
         _settings(price_in_per_1m=2.5, price_out_per_1m=10.0), path=tmp_path / "usage.json"
@@ -502,10 +528,10 @@ def test_예산이_호출수와_토큰과_USD를_누적한다(tmp_path):
     assert free.report().priced is False  # 「공짜였다」가 아니라 「단가를 모른다」
 
     budget.save()
-    budget.save()  # 두 번 저장하면 두 번 더해진다 — 누적 기록이다
+    budget.save()  # 두 번 저장해도 **한 번 쓴 것은 한 번이다** (아래 주석)
     saved = json.loads((tmp_path / "usage.json").read_text(encoding="utf-8"))
-    assert saved["calls"] == 2
-    assert saved["in_tokens"] == 2_000_000
+    assert saved["calls"] == 1
+    assert saved["in_tokens"] == 1_000_000
 
 
 def test_누적이_상한을_넘으면_새_프로세스에서도_즉시_막힌다(tmp_path):
@@ -608,6 +634,49 @@ def test_path가_None이면_읽지도_쓰지도_않는다(tmp_path):
     # 남의 파일도, 기본 경로도 건드리지 않았다 (기본 경로는 위 fixture가 tmp_path다).
     assert json.loads(other.read_text(encoding="utf-8"))["calls"] == 999
     assert not (tmp_path / panel.USAGE_FILENAME).exists()
+
+
+def test_save를_여러_번_불러도_같은_호출을_두_번_세지_않는다(tmp_path):
+    """중간 저장을 넣으면서 생긴 위험을 못으로 박는다.
+
+    `save()`는 파일을 **다시 읽어** 누적한다(다중 프로세스 대비). 그래서 델타를 안 빼면
+    실행 중간에 한 번, 끝나고 또 한 번 부를 때 **같은 호출이 두 번 세어진다.**
+    상한이 리셋되던 원래 사고와 방향만 반대인 같은 종류의 회계 오류다.
+    """
+    usage = tmp_path / "usage.json"
+    budget = CallBudget(_settings(price_in_per_1m=1.0, price_out_per_1m=1.0), path=usage)
+
+    budget.spend(1_000_000, 0)
+    budget.save()
+    budget.save()  # 아무것도 더 안 쓰고 다시 저장
+    assert json.loads(usage.read_text(encoding="utf-8"))["calls"] == 1
+
+    budget.spend(1_000_000, 0)
+    budget.save()
+    body = json.loads(usage.read_text(encoding="utf-8"))
+    assert body["calls"] == 2
+    assert body["in_tokens"] == 2_000_000
+    assert body["usd"] == pytest.approx(2.0)
+
+
+def test_상한을_넘겨_죽어도_그때까지_쓴_양이_파일에_남는다(tmp_path):
+    """2026-09-01 두 번째 사고 — **죽으면 쓴 만큼이 회계에서 사라졌다.**
+
+    넥슨 채점이 상한에 걸려 죽으면서 그 실행의 55회가 파일에 안 남았고, 파일은 745회를
+    아는데 실제로는 800회를 쓴 상태가 됐다. **못 센 지출은 없는 지출이 아니다** —
+    다음 실행이 그 55회를 아직 쓸 수 있는 몫으로 오해한다.
+    """
+    usage = tmp_path / "usage.json"
+    usage.write_text(json.dumps({"calls": 8}), encoding="utf-8")
+    budget = CallBudget(_settings(max_total_calls=10), path=usage)
+
+    budget.spend(100, 10)  # 누적 9
+    with pytest.raises(BudgetExceeded):
+        budget.spend(100, 10)  # 누적 10
+        budget.spend(100, 10)  # 누적 11 — 여기서 터진다
+
+    # 터뜨린 그 호출까지 남는다. 「몰래 지우지 않는다」.
+    assert json.loads(usage.read_text(encoding="utf-8"))["calls"] == 11
 
 
 # --- 순서 편향 -------------------------------------------------------------

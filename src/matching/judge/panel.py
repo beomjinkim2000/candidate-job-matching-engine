@@ -66,6 +66,11 @@ JUDGE_TEMPERATURE = 0.0
 
 USAGE_FILENAME = ".judge_usage.json"
 
+# 사용량을 파일에 흘려 넣는 주기. **죽어도 잃는 양의 상한**이 이 값이다.
+# 1로 두면 호출마다 파일을 다시 읽고 쓰게 되고, 크게 두면 사고 때 잃는 양이 는다.
+# 완주 1회가 100~200회이므로 20이면 최악 손실이 전체의 10~20%다.
+FLUSH_EVERY = 20
+
 
 class JudgeError(RuntimeError):
     """심사위원 층에서 점수를 만들 수 없다."""
@@ -206,6 +211,13 @@ class CallBudget:
         self.out_tokens = 0
         self.records: list[JudgeCall] = []
 
+        # **이미 파일에 적어 넣은 이번 실행분.** `save()`가 델타만 더하게 하는 표식이고,
+        # 그래서 `save()`를 몇 번 부르든 같은 호출이 두 번 세어지지 않는다.
+        self._saved_calls = 0
+        self._saved_in = 0
+        self._saved_out = 0
+        self._saved_usd = 0.0
+
     def total_calls(self) -> int:
         """이전 실행들 + 이번 실행. **상한이 걸리는 기준이다.**"""
         return self.prior_calls + self.calls
@@ -237,6 +249,17 @@ class CallBudget:
 
         기록을 먼저 하고 예외를 던진다 — 「몰래 줄이지 않는다」의 반대편은
         **「몰래 지우지 않는다」**다. 넘긴 그 호출도 사용량에 남는다.
+
+        ## 2026-09-01 두 번째 사고 — 죽으면 쓴 만큼이 회계에서 사라졌다
+
+        상한을 누적으로 고친 뒤에도 **`save()`는 실행이 정상 종료할 때만 불렸다.**
+        넥슨 채점이 상한에 걸려 죽으면서 그 실행이 쓴 **55회가 파일에 안 남았고**,
+        파일은 745회를 아는데 실제로는 800회를 쓴 상태가 됐다. 다음 실행이 그 55회를
+        **다시 쓸 수 있는 몫으로 오해한다.**
+
+        그래서 여기서 저장한다 — **`FLUSH_EVERY`회마다, 그리고 예외를 던지기 직전에.**
+        「난간이 서 있다」는 상한을 지키는 것만이 아니라 **얼마를 썼는지 잃지 않는 것**
+        까지다. 못 센 지출은 없는 지출이 아니다.
         """
         self.calls += 1
         self.in_tokens += max(0, in_tokens)
@@ -244,7 +267,10 @@ class CallBudget:
         if call is not None:
             self.records.append(call)
         if self.total_calls() > self.limit:
+            self.save()  # 넘긴 그 호출까지 남기고 나서 던진다
             raise BudgetExceeded(self.over_limit_message())
+        if self.calls - self._saved_calls >= FLUSH_EVERY:
+            self.save()
 
     def usd(self) -> float:
         """**이번 실행**을 설정의 단가로 환산한 값. 단가를 코드에 박지 않는다 (§2)."""
@@ -271,21 +297,29 @@ class CallBudget:
         `__init__`이 읽어 둔 `prior_*`를 쓰지 않고 **저장 시점에 파일을 다시 읽는다.**
         그 사이에 다른 프로세스가 쓴 양을 덮어쓰지 않기 위해서다 — 이번 사고가 정확히
         「여러 프로세스가 동시에 돈다」는 상황이었다.
+
+        **여러 번 불러도 안전하다.** 파일에 이미 적은 몫(`_saved_*`)을 빼고 **델타만**
+        더한다. 이게 없으면 실행 중간에 한 번, 끝나고 또 한 번 부를 때 같은 호출이
+        두 번 세어져 **회계가 반대 방향으로 틀린다.**
         """
         if self.path is None:
             return  # 기록하지 않기로 하고 만든 예산이다
 
         previous = _read_usage(self.path)
         body = {
-            "calls": int(previous["calls"]) + self.calls,
-            "in_tokens": int(previous["in_tokens"]) + self.in_tokens,
-            "out_tokens": int(previous["out_tokens"]) + self.out_tokens,
-            "usd": previous["usd"] + self.usd(),
+            "calls": int(previous["calls"]) + (self.calls - self._saved_calls),
+            "in_tokens": int(previous["in_tokens"]) + (self.in_tokens - self._saved_in),
+            "out_tokens": int(previous["out_tokens"]) + (self.out_tokens - self._saved_out),
+            "usd": previous["usd"] + (self.usd() - self._saved_usd),
         }
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(
             json.dumps(body, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
         )
+        self._saved_calls = self.calls
+        self._saved_in = self.in_tokens
+        self._saved_out = self.out_tokens
+        self._saved_usd = self.usd()
 
 
 class _Verdict:
@@ -303,30 +337,71 @@ def _strip_ws(text: str) -> str:
     return "".join(text.split())
 
 
+def _ws_index(text: str) -> tuple[str, list[int]]:
+    """공백을 뺀 글과, 그 글의 각 글자가 원문 몇 번째였는지의 표."""
+    stripped: list[str] = []
+    positions: list[int] = []
+    for index, char in enumerate(text):
+        if not char.isspace():
+            stripped.append(char)
+            positions.append(index)
+    return "".join(stripped), positions
+
+
+def _locate(quote_text: str, table: tuple[str, list[int]]) -> tuple[int, int] | None:
+    """인용문을 **원문에서 다시 찾는다.** 정확히 한 번 나올 때만 위치를 준다.
+
+    **여러 곳에 나오면 버린다** — 어느 쪽을 가리켰는지 모르는 채 하나를 고르면
+    그건 근거가 아니라 추측이다. 없어도 버린다(지어낸 인용).
+    """
+    haystack, positions = table
+    needle = _strip_ws(quote_text)
+    if not needle:
+        return None
+    first = haystack.find(needle)
+    if first < 0 or haystack.find(needle, first + 1) != -1:
+        return None
+    return positions[first], positions[first + len(needle) - 1] + 1
+
+
 def keep_quotes(output: JudgeOutput, masked_resume: str) -> list[Span]:
     """받아들일 인용만 남긴다. **어긋난 것은 그 인용만 버린다.**
 
     대조는 심사위원이 실제로 본 글(마스킹된 글)로 한다. 마스킹은 길이를 보존하므로
     오프셋은 원문과 같고, 받아들인 구간에는 마스킹 문자가 없으므로 그 구간을 원문에서
     다시 잘라도 같은 문자열이 나온다.
+
+    **모델이 준 `start`·`end`를 최종 권위로 두지 않는다.** 그 자리가 인용문과 안 맞으면
+    인용문을 원문에서 **우리가 다시 찾는다**(`_locate`). 모델은 글자 수를 정확히 세지
+    못한다 — 실측에서 인용 내용은 정확한데 `end`만 7글자 짧아 그 지원자의 채점이
+    통째로 죽었고, 심사위원 2명이 다 그러면 **12명짜리 실행 전체가 죽는다.**
+
+    이 완화가 검산 G2를 느슨하게 만들지 않는다. 오히려 반대다 —
+    **위치를 모델의 주장에서 받는 대신 원문 대조로 정한다.** 원문에 없으면 여전히 버리고,
+    **여러 곳에 나와도 버린다.** 「인용이 원문에 실재한다」는 불변식은 그대로다.
     """
     kept: list[Span] = []
     seen: set[tuple[int, int]] = set()
+    table = _ws_index(masked_resume)
     for quote in output.quotes:
         if len(kept) >= MAX_QUOTES:
             break
         start, end = quote.start, quote.end
-        if start < 0 or end <= start or end > len(masked_resume):
+        span: tuple[int, int] | None = None
+        if 0 <= start < end <= len(masked_resume) and _strip_ws(
+            masked_resume[start:end]
+        ) == _strip_ws(quote.text):
+            span = (start, end)  # 모델이 맞게 짚었다
+        else:
+            span = _locate(quote.text, table)  # 어긋났다 — 원문에서 다시 찾는다
+        if span is None:
             continue
-        actual = masked_resume[start:end]
-        if MASK_CHAR in actual:
+        if MASK_CHAR in masked_resume[span[0] : span[1]]:
             continue  # 가린 자리를 인용했다. 원문에서 다시 자르면 가린 값이 되살아난다
-        if _strip_ws(actual) != _strip_ws(quote.text):
-            continue  # 위치가 어긋났다
-        if (start, end) in seen:
+        if span in seen:
             continue
-        seen.add((start, end))
-        kept.append(Span(start=start, end=end))
+        seen.add(span)
+        kept.append(Span(start=span[0], end=span[1]))
     return kept
 
 
@@ -472,9 +547,27 @@ def judge_criterion(
                 discarded += 1
 
     if not verdicts:
+        # **아무도 못 냈으면 딱 한 번 더 묻는다.** 무한 재시도가 아니라 1회다.
+        #
+        # 온도가 0인데도 응답이 매번 같지 않다 — `seed`를 안 주기 때문이고, 실제로
+        # 같은 (지원자, 항목)이 한 번은 쓸 만한 인용을 내고 한 번은 못 냈다. 이 실패는
+        # **「근거가 없다」가 아니라 「모델이 이번에 좌표를 흘렸다」**이고, 그 차이를
+        # 구분하지 않으면 12명짜리 실행이 운 나쁜 한 쌍 때문에 통째로 죽는다. 실제로 죽었다.
+        #
+        # 되묻는 비용은 **실패한 항목당 1회**뿐이라 예산에 거의 안 걸린다. 그래도
+        # 여전히 못 내면 예외를 던진다 — 「근거 없는 점수는 만들지 않는다」는 그대로다.
+        retried = _ask(client, settings, messages, digest, active_budget)
+        if retried is not None:
+            spans = keep_quotes(retried, masked)
+            if spans:
+                verdicts.append(_Verdict(JUDGE_IDS[0], retried, spans))
+        if not verdicts:
+            discarded += 1
+
+    if not verdicts:
         raise NoGroundedResponse(
             f"{candidate.candidate_id} / {criterion.id} — 응답 {discarded}건이 모두 "
-            "쓸 만한 인용을 내지 못했다. 근거 없는 점수를 만들지 않는다"
+            "쓸 만한 인용을 내지 못했다(되물음 1회 포함). 근거 없는 점수를 만들지 않는다"
         )
 
     value = fmean(verdict.output.score for verdict in verdicts)
