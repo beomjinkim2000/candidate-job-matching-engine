@@ -4,6 +4,8 @@
 POST /score          채점한다. 결과를 data/runs/{run_id}/result.json에 쓴다
 POST /prepare        공고 → 루브릭 초안 (전부 draft). 채점하지 않는다
 POST /approve        승인 · 필수↔우대 뒤집기 · 삭제. 채점하지 않는다
+POST /resumes        이력서를 넣는다 (여러 명 한 번에). **원문 그대로 저장한다**
+POST /postings       공고 그림을 올려 새 공고 자리를 만든다. **덮어쓰지 않는다**
 GET  /postings       확보한 공고 목록 — 첫 화면이 무엇을 고를지 (step 9)
 GET  /runs/{id}      저장된 결과를 **읽기만** 한다
 GET  /image/{id}     공고 이미지 원본 — bbox 네모를 그릴 바탕
@@ -53,14 +55,15 @@ GET  /               정적 UI (step 9)
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -98,6 +101,7 @@ from .service import (
     prepare_posting,
     score_proposal,
 )
+from .upload import UploadConflict, store_posting_images
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 INDEX_FILENAME = "index.html"
@@ -105,6 +109,29 @@ INDEX_FILENAME = "index.html"
 # `GET /trace`가 두 번째 호출부터 읽는 파일. **커밋 금지** — `ocr.json`과 같은 이유로
 # 공고 본문 그 자체다(줄 텍스트를 전부 담는다). `.gitignore`에 넣어 두었다.
 TRACE_FILENAME = "trace.json"
+
+# `POST /resumes`가 한 번에 받는 인원과 한 통의 길이 상한. **둘 다 임의값이다** —
+# 근거는 값이 아니라 「상한이 있어야 한다」는 쪽에 있다. 이력서 전문은 판단 항목마다
+# 심사위원 프롬프트에 통째로 실리므로(`judge/prompt.py`) 인원과 길이가 그대로 호출
+# 비용이 된다. 상한이 없으면 요청 하나가 남은 예산($5)을 통째로 먹을 수 있다.
+# 제출 데이터셋은 공고당 6명 · 한 통 1,312~1,449자다 (`data/resumes/*/index.json`).
+MAX_RESUMES_PER_REQUEST = 30
+MAX_RESUME_CHARS = 20_000
+
+# 본문 길이 하한. **양식을 검사하는 것이 아니다** — 파이프라인은 이력서를 통짜 텍스트로
+# 읽고 섹션을 파싱하지 않으므로(심사위원이 본문을 읽고 문자 오프셋으로 인용할 뿐이다)
+# 섹션 유무를 여기서 보면 다른 양식의 이력서가 거부되어 일반화가 깨진다. 목업 12명조차
+# 섹션명이 서로 다르다. 그래서 검사는 **길이 하한 하나**로 끝낸다.
+#
+# 하한을 두는 이유는 품질이 아니라 **붙여넣기 실패**다. 몇 글자만 들어오면 채점이 그대로
+# 돌아 심사위원 호출을 쓰고 「0점」이 멀쩡한 결과처럼 랭킹에 오른다 — 실패가 결과의
+# 모습을 하고 나오는 것을 막는다. 50자는 **임의값**이다 (제출 데이터셋 한 통의 1/26).
+MIN_RESUME_CHARS = 50
+
+# 업로드로 들어온 이력서의 `design_note` 머리에 붙는 한 줄. 스키마에 「이 파일이 어디서
+# 왔나」를 적을 자리가 따로 없어서(`source_kind`에 해당하는 것이 이력서에는 없다)
+# 사람이 읽는 유일한 자리에 남긴다. 올린 사람이 적은 메모는 **고치지 않고 뒤에 붙인다.**
+UPLOAD_NOTE = "업로드로 받은 이력서다 — 목업 데이터셋 설계 절차를 거치지 않았다."
 
 # 마스킹 종류 코드 → 화면에 쓸 한국어. `scorer/mask.py`의 `_FIELD_LABELS` 키와 짝이다.
 # **코드값을 그대로 화면에 내보내지 않는다** — 「무엇을 가렸는가」는 사람이 읽어야 한다.
@@ -167,6 +194,57 @@ class ScoreRequest(BaseModel):
     posting_id: str
     resume_ids: list[str] | None = None
     options: ScoreOptions = Field(default_factory=ScoreOptions)
+
+
+class ResumeEntry(BaseModel):
+    """올라온 이력서 한 통. **채점이 읽는 것은 `text` 하나다.**
+
+    나머지 셋은 목업 데이터셋의 설계 기록이라 파일에만 남고 `load_resumes()`는 보지
+    않는다 — `Resume` 객체에 `intended_type`을 담지 않은 것과 같은 이유다
+    (`model/objects.py`). 채점 경로가 라벨을 볼 수 있으면 유형 분리 테스트가 자기
+    자신을 검사하게 된다.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    candidate_id: str
+    text: str
+    intended_type: str | None = None
+    design_note: str | None = None
+    format_ref: str | None = None
+
+
+class ResumesRequest(BaseModel):
+    """**여러 명을 한 번에 받는다.** 6명을 6번 올리게 하지 않는다."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    posting_id: str
+    resumes: list[ResumeEntry]
+
+
+class RejectedResume(BaseModel):
+    """저장하지 못한 한 통과 그 사유. **사유 없는 실패를 만들지 않는다.**"""
+
+    model_config = ConfigDict(extra="forbid")
+
+    candidate_id: str
+    reason: str
+
+
+class ResumesResponse(BaseModel):
+    """`POST /resumes`의 성공 응답.
+
+    성공 응답에서 `failed`는 **항상 빈 목록**이다 — 하나라도 실패하면 아무것도 저장하지
+    않고 실패 목록을 오류 응답(400·409)에 담아 보낸다. 그쪽 본문도 `saved`·`failed`를
+    같은 이름으로 담으므로 화면은 한 가지 모양만 읽으면 된다.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    posting_id: str
+    saved: list[str]
+    failed: list[RejectedResume]
 
 
 class ApproveRequest(BaseModel):
@@ -381,6 +459,36 @@ def _mask_label(category: str) -> str:
     return "·".join(_MASK_LABELS.get(part, part) for part in category.split("+"))
 
 
+def _resume_document(entry: ResumeEntry, candidate_id: str) -> str:
+    """저장할 JSON 한 통. **필드는 기존 데이터셋과 같은 여섯 개다** (`data/resumes/*/A-*.json`).
+
+    ## `read_fields`를 빈 목록으로 적는다
+
+    그 필드는 「이 이력서를 설계할 때 공고 조건의 어떤 필드를 읽었나」라는 **자기신고**이고,
+    배점을 보고 라벨을 정하지 않았다는 기록이다 (`phases/matching-engine/step10.md`).
+    업로드로 들어온 이력서에는 그 절차 자체가 없다. `["text", "kind"]`를 대신 채워 주면
+    **우리가 남의 독립성을 증언**하는 것이 되고, 그 값을 검사하는 테스트가 우리가 지어낸
+    신고를 통과시킨다. 빈 목록은 「선언이 없다」는 사실 그대로다.
+
+    ## 라벨을 지어내지 않는다
+
+    `intended_type`(완벽/부분/미스)은 목업 데이터셋의 라벨이다. 안 주면 `unlabeled`로
+    적는다 — 「완벽」이라고 우리가 정하면 유형 분리 측정이 우리 짐작을 재게 된다.
+    """
+    note = UPLOAD_NOTE
+    if entry.design_note:
+        note = f"{UPLOAD_NOTE} 아래는 올린 사람이 적은 메모다.\n{entry.design_note}"
+    document = {
+        "candidate_id": candidate_id,
+        "intended_type": entry.intended_type or "unlabeled",
+        "design_note": note,
+        "format_ref": entry.format_ref or "",
+        "read_fields": [],
+        "text": entry.text,
+    }
+    return json.dumps(document, ensure_ascii=False, indent=2) + "\n"
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -459,6 +567,7 @@ def create_app(
     app.add_exception_handler(BudgetExceeded, _budget)
     app.add_exception_handler(ApprovalRequired, _conflict)
     app.add_exception_handler(ApprovalStale, _conflict)
+    app.add_exception_handler(UploadConflict, _conflict)
     app.add_exception_handler(EntryError, _bad_request)
     app.add_exception_handler(ProvenanceError, _unprocessable)
     app.add_exception_handler(Exception, _internal)
@@ -549,6 +658,166 @@ def create_app(
         )
         return result
 
+    # --- 입력 넣기 -----------------------------------------------------------
+
+    # 201은 `POST /postings`와 같은 값이다. 업로드 둘이 성공 코드를 다르게 주면 화면이
+    # 엔드포인트마다 다른 판정을 짜야 한다 — 같은 일을 하는 문이니 같은 코드를 준다.
+    @app.post("/resumes", response_model=ResumesResponse, status_code=201)
+    def post_resumes(body: ResumesRequest) -> ResumesResponse | JSONResponse:
+        """이력서를 넣는다 — **여러 명을 한 번에.** 채점하지 않는다.
+
+        ## 마스킹을 여기서 하지 않는다
+
+        저장은 **원문 그대로**다. 가리는 일은 읽을 때 `scorer.mask.mask_sensitive()`가
+        하고, 게이트·사실 채점·심사위원·`GET /resume/{id}`가 **각자** 그 함수를 부른다.
+
+        미리 가려서 저장하면 두 가지가 깨진다. 첫째, `Evidence.span`은 **원문 오프셋**인데
+        원문이 사라지면 그 오프셋이 실재하는지 대조할 자리가 없어져 검산 G2가 우리가 만든
+        문자열을 우리가 검사하는 꼴이 된다. 둘째, 가린 자리를 짚은 인용은 버려지는데
+        (`judge/panel.py`의 `keep_quotes`) 미리 가리면 그 자리가 넓어진다. 마스킹은 `■`를
+        다시 잡지 않으므로(`scorer/mask.py`) **이중 마스킹은 더 가리는 것이 아니라 근거를
+        잃는 것**이다. 구조 설명은 `GET /resume/{resume_id}`의 docstring에 있다.
+
+        ## 이력서 양식을 검사하지 않는다
+
+        검사는 **식별자가 경로로 안전한가**와 **본문 길이**에서 끝난다. 섹션(학력·경력·
+        자기소개서…)이 있는지 보지 않는다 — 파이프라인은 이력서를 `text` 하나에 담긴 통짜
+        텍스트로 읽고 섹션을 파싱하지 않으며, 양식을 강제하면 다른 서식의 이력서가 거부되어
+        직군 무관 일반화가 깨진다. 목업 12명조차 섹션명이 서로 다르다.
+
+        ## 하나라도 실패하면 아무것도 저장하지 않는다
+
+        「되는 것만 저장」과 「전부 물리기」 중 **후자를 골랐다.** 이유가 둘이다.
+
+        1. **랭킹은 비교다.** 6명을 올렸는데 4명만 저장되면 채점은 성공하고 화면에는
+           「4명 중 1위」가 뜬다 — 빠진 둘은 어디에도 안 남는다. `load_resumes()`가 없는
+           id를 조용히 빼지 않는 것과 같은 규칙이다 (`api/service.py`)
+        2. **다시 올릴 수 있어야 한다.** 되는 것만 저장하면 재시도가 이미 저장된 통들
+           때문에 409가 되고, 사용자는 무엇이 들어갔는지 손으로 골라내야 한다. 전부
+           물리면 고쳐서 **그대로 다시 보내면** 된다
+
+        대신 5명이 멀쩡한데 1명 때문에 전부 다시 보내게 된다. 그 값은 **실패한 통 전부를
+        사유와 함께** 돌려주는 것으로 갚는다 — 한 번에 다 고칠 수 있으면 왕복이 늘지 않는다.
+        첫 실패에서 멈추지 않는 것이 이 선택의 조건이다.
+        """
+        posting_id = _safe_id(body.posting_id, "공고 식별자")
+        if not posting_dir(state.data_dir, posting_id).is_dir():
+            # **이력서만 떠 있으면 채점할 대상이 없다.** 공고를 먼저 올린다.
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    f"{posting_id}: 공고가 없다 — {POSTINGS_SUBDIR}/{posting_id}/ 디렉터리가 "
+                    "없다. 공고를 먼저 넣는다"
+                ),
+            )
+        if not body.resumes:
+            raise EntryError("이력서가 한 통도 없다 — resumes가 비어 있다")
+        if len(body.resumes) > MAX_RESUMES_PER_REQUEST:
+            raise EntryError(
+                f"한 번에 {MAX_RESUMES_PER_REQUEST}통까지 받는다 — {len(body.resumes)}통이 왔다"
+            )
+
+        directory = state.data_dir / RESUMES_SUBDIR / posting_id
+        planned: list[tuple[Path, str]] = []
+        failed: list[RejectedResume] = []
+        conflict = False
+        seen: set[str] = set()
+
+        for entry in body.resumes:
+            try:
+                candidate_id = _safe_id(entry.candidate_id, "지원자 식별자")
+            except HTTPException as exc:
+                # 400을 그대로 던지지 않는다 — 그러면 뒤에 오는 통들의 사유가 사라진다.
+                failed.append(
+                    RejectedResume(candidate_id=entry.candidate_id, reason=str(exc.detail))
+                )
+                continue
+
+            path = directory / f"{candidate_id}.json"
+            reason: str | None = None
+            if candidate_id in seen:
+                reason = (
+                    "같은 요청 안에 같은 지원자 식별자가 둘 이상 있다 — "
+                    "어느 쪽을 남길지 우리가 정하지 않는다"
+                )
+            elif not entry.text.strip():
+                reason = "이력서 본문이 비어 있다"
+            elif len(entry.text.strip()) < MIN_RESUME_CHARS:
+                # **양식이 아니라 길이만 본다.** 붙여넣기가 반쯤 들어온 것을 채점 결과로
+                # 만들지 않으려는 것이고, 섹션 구조는 검사하지 않는다.
+                reason = (
+                    f"본문이 {len(entry.text.strip()):,}자다 — 채점하려면 {MIN_RESUME_CHARS}자는 "
+                    "있어야 한다. 붙여넣기가 다 들어왔는지 본다"
+                )
+            elif len(entry.text) > MAX_RESUME_CHARS:
+                reason = (
+                    f"본문이 {len(entry.text):,}자다 — 한 통은 {MAX_RESUME_CHARS:,}자까지 받는다"
+                )
+            elif _safe(entry.text, state.settings) != entry.text:
+                # 저장은 되는데 **읽을 수 없는** 이력서가 된다 (`GET /resume`이 거부한다).
+                # 그걸 저장 시점에 알려 주는 쪽이 낫다.
+                reason = (
+                    "본문에 키처럼 보이는 문자열이 있다 — 저장해도 GET /resume이 내보내지 "
+                    "못한다(지우면 오프셋이 어긋난다). 그 문자열을 빼고 다시 올린다"
+                )
+            elif path.exists():
+                conflict = True
+                reason = (
+                    f"이미 있다 — {RESUMES_SUBDIR}/{posting_id}/{path.name}. "
+                    "덮어쓰지 않는다. 지우고 다시 올린다"
+                )
+            seen.add(candidate_id)
+
+            if reason is not None:
+                failed.append(RejectedResume(candidate_id=candidate_id, reason=reason))
+                continue
+            planned.append((path, _resume_document(entry, candidate_id)))
+
+        if failed:
+            return _fail(
+                # 중복이 섞여 있으면 409다 — 「이미 있다」가 사용자가 고칠 방법이 다른
+                # 유일한 사유다(지우거나 다른 id를 쓴다). 나머지는 요청이 잘못된 것이다.
+                409 if conflict else 400,
+                f"{len(failed)}통을 저장할 수 없다 — 한 통도 저장하지 않았다. "
+                "사유는 failed에 전부 담았다",
+                _safe_payload(
+                    {
+                        "posting_id": posting_id,
+                        "saved": [],
+                        "failed": [item.model_dump() for item in failed],
+                    },
+                    state.settings,
+                ),
+            )
+
+        directory.mkdir(parents=True, exist_ok=True)
+        written: list[Path] = []
+        try:
+            for path, document in planned:
+                # `"x"` — 존재 검사와 쓰기 **사이**에 다른 요청이 끼어들 수 있다.
+                # 검사만 믿으면 그 틈에 남의 이력서를 덮어쓴다.
+                with path.open("x", encoding="utf-8") as handle:
+                    handle.write(document)
+                written.append(path)
+        except OSError as exc:
+            # 쓰기 도중 실패도 「전부 아니면 아무것도」에 맞춘다 — 되감지 않으면 앞의
+            # 몇 통만 남아 위에서 고른 규칙이 여기서만 깨진다.
+            for done in written:
+                with contextlib.suppress(OSError):
+                    done.unlink()
+            return _fail(
+                409 if isinstance(exc, FileExistsError) else 500,
+                f"저장 도중 막혔다 — 이번 요청이 만든 {len(written)}통을 되감았다 "
+                f"({type(exc).__name__}: {exc})",
+                _safe_payload(
+                    {"posting_id": posting_id, "saved": [], "failed": []}, state.settings
+                ),
+            )
+
+        return ResumesResponse(
+            posting_id=posting_id, saved=[path.stem for path, _ in planned], failed=[]
+        )
+
     # --- 읽기 ---------------------------------------------------------------
 
     @app.get("/postings", response_model=list[PostingSummary])
@@ -589,6 +858,53 @@ def create_app(
                 )
             )
         return summaries
+
+    @app.post("/postings", response_model=PostingSummary, status_code=201)
+    def post_posting(
+        posting_id: Annotated[str, Form()],
+        files: Annotated[list[UploadFile], File()],
+        position: Annotated[str | None, Form()] = None,
+    ) -> PostingSummary:
+        """공고 그림을 올려 **새 공고 자리를 만든다.** 파싱도 채점도 하지 않는다.
+
+        이게 없으면 평가자가 자기 공고로 돌려보려면 `data/postings/` 밑에 파일을 손으로
+        복사해야 한다. 그건 「돌려봤다」가 아니다. 만드는 것은 디렉터리 하나뿐이고,
+        그 뒤는 기존 경로 그대로다 — `POST /prepare`가 이 디렉터리를 받아 간다.
+
+        ## 있는 공고는 409다. 덮어쓰기를 열지 않는다
+
+        커밋된 `requirements.json`의 `source_bbox`는 **그때 그 그림 위에서만** 맞는다.
+        그림만 갈아 끼우면 근거를 눌렀을 때 엉뚱한 자리에 네모가 그려지고, 그건
+        **틀린 것을 그럴듯하게** 보여주는 것이라 빈 화면보다 나쁘다. 사유는
+        `upload.py` 모듈 설명에 있다.
+
+        ## 확장자를 믿지 않는다
+
+        형식은 머리 바이트로 정하고 실제로 디코드까지 해 본다. 검사는 전부
+        `upload.store_posting_images()`에 있다 — **이 함수는 HTTP를 모르고**, 그래서
+        서버를 띄우지 않고도 같은 규칙을 시험할 수 있다.
+
+        `source_kind`가 `local`이 되는 이유도 거기 적었다. 한 줄로 줄이면: 업로드는
+        그림을 **놓는 손**이 바뀐 것이고, 그 뒤 읽는 것은 `LocalSource` 그대로다.
+        """
+        safe = _safe_id(posting_id, "공고 식별자")
+        # 스트림을 그대로 넘긴다. `UploadFile.file`은 starlette가 이미 임시 파일에
+        # 받아 둔 것이라, 여기서 `.read()`로 통째로 들지 않고 상한을 보며 조금씩 읽는다.
+        # 라우트를 `async def`로 두지 않은 것도 같은 이유다 — 디코드와 해시 계산이
+        # 이벤트 루프를 잡으면 그동안 다른 요청이 통째로 멈춘다.
+        provenance = store_posting_images(
+            state.data_dir,
+            safe,
+            [((item.filename or ""), item.file) for item in files],
+            position=position,
+        )
+        return PostingSummary(
+            posting_id=provenance.posting_id,
+            source_kind=provenance.source_kind,
+            target_position=provenance.target_position,
+            image_count=len(provenance.image_sha256),
+            api_verified=provenance.api_verified,
+        )
 
     @app.get("/runs/{run_id}", response_model=RunResult)
     def get_run(run_id: str) -> RunResult:

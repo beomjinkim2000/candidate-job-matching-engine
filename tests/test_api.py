@@ -752,8 +752,19 @@ def test_CLI와_HTTP가_같은_채점_함수를_부른다():
     assert "score_proposal" in cli_source
     assert "score_proposal" in server_source
     # 채점을 일으키는 HTTP 엔드포인트는 하나다.
-    assert server_source.count("@app.post") == 3
     assert server_source.count("score_proposal(") == 1
+
+    # POST 경로를 **개수가 아니라 이름으로** 본다. 개수를 세면 엔드포인트가 늘 때마다
+    # 숫자를 올려야 하는데, 그건 검사가 아니라 통과시키는 일이다. 이름 목록이면 새 POST가
+    # 목록에 없어서 걸리고, 그때 「이게 채점을 일으키나」를 사람이 한 번 판단하게 된다.
+    # 입력을 넣는 둘(`/postings`·`/resumes`)은 그 판단을 거쳐 여기 적혔다 — 채점하지 않는다.
+    posts = {
+        route.path
+        for route in server.create_app(_settings()).routes
+        if "POST" in getattr(route, "methods", set())
+    }
+    assert posts <= {"/prepare", "/approve", "/score", "/postings", "/resumes"}, posts
+    assert "/score" in posts
 
 
 def test_이력서인지를_파일_이름이_아니라_내용으로_가른다(tmp_path):
