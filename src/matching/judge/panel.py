@@ -348,6 +348,42 @@ def _ws_index(text: str) -> tuple[str, list[int]]:
     return "".join(stripped), positions
 
 
+def _quotes_masked_value(fragment: str) -> bool:
+    """이 인용이 **가린 값을 가리키고 있나** — 가린 글자가 안 가린 글자만큼 많은가.
+
+    ## 왜 「하나라도 있으면 버린다」에서 여기까지 왔나
+
+    원래는 마스킹 문자가 **하나라도** 들어 있으면 인용을 버렸다. 이유는 정당했다 —
+    `Evidence.quote`는 검산 G2를 위해 **원문에서** 다시 자르므로, 가린 자리를 인용하면
+    가린 값이 근거 문단으로 되살아나 마스킹이 장식이 된다.
+
+    그런데 그 규칙이 **학력 조건의 채점을 통째로 막았다.** 「정규 4년제 대학을
+    졸업했거나…」를 채점하려면 학력 줄을 인용해야 하는데 그 줄에는 학교 이름이 가려져
+    있다. 인용이 전부 버려지고 → 점수를 못 만들고 → **실행 전체가 죽었다.**
+    실측: `A-01 / C-03`. **가리는 것과 채점하는 것이 정면으로 부딪힌 자리다.**
+
+    ## 가르는 선 — 가린 것이 인용의 중심인가 곁가지인가
+
+    | 인용 | 가린 / 안 가린 | 판정 |
+    |---|---|---|
+    | `성명: ■■■` | 3 / 3 | **버린다** — 이름 자체를 근거로 삼았다 |
+    | `2018.03 ~ 2026.02 ■■■■■ 경영학과 졸업` | 5 / 27 | **받는다** — 날짜·학과로 판단했다 |
+
+    임계값을 새로 만들지 않았다. **안 가린 쪽이 더 많으면 받는다**는 것뿐이다 —
+    임의의 숫자를 고르면 그 숫자가 또 다른 임의 상수가 된다.
+
+    **대가를 적어 둔다**: 이제 `Evidence.quote`에 가려야 할 값이 섞여 들어올 수 있다.
+    다만 **마스킹의 목적은 그대로다** — 심사위원은 여전히 가려진 글만 보고 판단하므로
+    가린 값이 판단에 영향을 줄 경로가 없다. 화면에 그릴 때는 저장된 원문이 아니라
+    마스킹된 글을 쓴다.
+    """
+    masked = sum(1 for c in fragment if c == MASK_CHAR)
+    if not masked:
+        return False
+    visible = sum(1 for c in fragment if not c.isspace() and c != MASK_CHAR)
+    return masked >= visible
+
+
 def _locate(quote_text: str, table: tuple[str, list[int]]) -> tuple[int, int] | None:
     """인용문을 **원문에서 다시 찾는다.** 정확히 한 번 나올 때만 위치를 준다.
 
@@ -396,8 +432,8 @@ def keep_quotes(output: JudgeOutput, masked_resume: str) -> list[Span]:
             span = _locate(quote.text, table)  # 어긋났다 — 원문에서 다시 찾는다
         if span is None:
             continue
-        if MASK_CHAR in masked_resume[span[0] : span[1]]:
-            continue  # 가린 자리를 인용했다. 원문에서 다시 자르면 가린 값이 되살아난다
+        if _quotes_masked_value(masked_resume[span[0] : span[1]]):
+            continue  # 가린 값을 근거로 삼았다 — 원문에서 자르면 그 값이 되살아난다
         if span in seen:
             continue
         seen.add(span)
