@@ -183,7 +183,8 @@
     {
       "step": 7,
       "name": "aggregate-rank",
-      "status": "pending"
+      "status": "pending",
+      "started_at": "2026-09-01T11:48:56+0900"
     },
     {
       "step": 8,
