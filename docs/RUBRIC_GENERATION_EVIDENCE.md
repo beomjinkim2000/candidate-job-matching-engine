@@ -237,7 +237,7 @@ LLaMA의 에세이 **비격식체 벌점 d=1.90** — 10점 만점에 약 2점 �
 | 2층 척도 | 5점 척도 | **재검토** — binary 체크리스트 복수 개가 κ가 높다 | Deng / Autorubric |
 | 심사위원 출력 | 1~5 중 하나 강제 | **`CANNOT_ASSESS` 기권 추가** | Autorubric |
 | 목업 이력서 통제 | 글자 수 ±15% | **문체 통제 추가** | Jadhav d=1.90 |
-| 검산 | G1~G7 | 루브릭을 **승인 시점에 고정(lock)** — 이미 `posting_revision`이 절반 함 | RULERS |
+| 검산 | G1~G5 + G7 (G6 미구현) | 루브릭을 **승인 시점에 고정(lock)** — 이미 `posting_revision`이 절반 함 | RULERS |
 
 **RULERS**(Hong 외 2026 · https://arxiv.org/abs/2601.08654)는 이름부터 우리 설계와 같다 —
 **Locked Rubrics and Evidence-Anchored Scoring**. 루브릭을 실행 전에 **불변 체크리스트로 컴파일**해서

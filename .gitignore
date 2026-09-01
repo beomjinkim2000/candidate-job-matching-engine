@@ -66,16 +66,18 @@ data/.judge_usage.json
 # README에 옮겨 쓸 재료. **제출물이 아니라 작성 도구다** — 본인이 쓴 README와
 # 나란히 있으면 「어느 쪽이 제출물인가」가 흐려진다.
 docs/README_MATERIAL.md
-# 하네스 step 정의 (작업 지시서)
-phases/
+# 하네스 step 정의 (작업 지시서) — **싣는다** (2026-09-02 결정)
+#   phases/   ← 뺐다. 「무엇을 왜 그 순서로 만들기로 했나」가 결과에는 안 남는다.
+#             특히 각 step의 「금지사항」이 판단의 기록이다. 안내는 phases/README.md
+# 다만 실행 로그는 뺀다 — 세션 id·토큰·비용·원시 stdout이라 읽을 값이 없다
+phases/**/*-output.json
 # 진행 상황 추적 — **이 제출 레포에서만 예외로 싣는다** (2026-09-02 결정)
 # 원칙은 「제작 과정 메타데이터는 빼기」였다. 그런데 계획이 **어디서 틀렸는지**가
 # 결과보다 읽을 값이 있다고 봤다 — API 반려·비전 폐기·직군 교체가 전부 여기 있다.
 #   Plans.md   ← 뺐다. 상태를 제출 시점에 맞춰 갱신하고 싣는다
-# 계획 심사 이력
-docs/HARNESS_SCOREBOARD.md
-# 실행기 검증 기록
-docs/HARNESS_VALIDITY.md
+# 계획 심사 이력 · 실행기 검증 기록 — **둘 다 싣는다** (2026-09-02 결정)
+#   docs/HARNESS_SCOREBOARD.md   ← 구현 전에 내 작업 지시서를 스스로 반증해 본 기록
+#   docs/HARNESS_VALIDITY.md     ← 그 심사가 실행까지 전달되는지 실측한 기록
 # 하네스 실행기 — 외부 스켈레톤이지 우리 코드가 아니다
 scripts/
 # OCR 엔진 비교 실험 — 결론만 docs/OCR_EVIDENCE.md에 옮겼다

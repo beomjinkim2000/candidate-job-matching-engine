@@ -1,0 +1,325 @@
+{
+  "project": "지원자-공고 매칭 스코어링 엔진",
+  "phase": "matching-engine",
+  "_order_note": "execute.py는 배열 순서로 돈다 (step 번호가 아니라). step10을 step4 앞에 둔 것은 의도다 — ① 전체 흐름이 끝까지 이어지는 시점을 앞당긴다(과제문: 「먼저 전체 흐름이 처음부터 끝까지 이어지도록」) ② 이력서를 쓸 때 rubric.json이 아직 없으므로 게이트 G3 독립성이 절차가 아니라 구조가 된다. 파일명은 step{step}.md 로 번호를 따르므로 번호는 바꾸지 않는다.",
+  "steps": [
+    {
+      "step": 0,
+      "name": "project-setup",
+      "status": "completed",
+      "started_at": "2026-09-01T03:35:45+0900",
+      "completed_at": "2026-09-01T03:42:54+0900",
+      "summary": "src/matching 8개 서브패키지 뼈대 + config.py(가중치·게이트·임계값·모델·단가 외부화, 키 마스킹) + pyproject(ocr 선택그룹·live 마커·패키지루트 src) + .env.example + CI. AC 5종 전부 통과 (py3.13 venv).",
+      "notes": [
+        "gitignore에 줄 끝 주석이 없어 step0 문서의 data/ 블록 4줄이 무효였다 — 주석을 별도 줄로 올려 수정. 수정 전엔 img_*.png·ocr.json이 전혀 안 막혔다.",
+        "AC의 `'sk-' not in repr(s)`와 step0 본문의 마스킹 예시(`sk-***`)가 충돌해 AC를 따랐다. 마스킹 문자열은 `***set***`.",
+        "`.env.*`가 `.env.example`까지 막고 있어 `!.env.example` 예외를 추가했다.",
+        "제작 메타데이터(phases/·Plans.md·scripts/·docs/HARNESS_*.md·spike/ocr_check/.vision_ocr)는 .gitignore에 넣었으나 **이미 tracked라 그대로 추적된다.** 무시 규칙은 신규 파일에만 먹는다. 공개 레포에서 빼려면 push 전 `git rm --cached`가 따로 필요하다 — step0 범위 밖이라 하지 않았다.",
+        "CI의 `pytest -q`는 step 11 전까지 수집 0건(exit 5)이므로 그 코드만 허용하는 분기를 뒀다. `ruff check .`는 scripts/·spike/를 extend-exclude로 뺀다(우리 코드 아님)."
+      ]
+    },
+    {
+      "step": 1,
+      "name": "core-model",
+      "status": "completed",
+      "started_at": "2026-09-01T03:42:54+0900",
+      "completed_at": "2026-09-01T03:49:28+0900",
+      "summary": "src/matching/model/ 4파일 — objects.py(BBox·Span·Requirement·Criterion·Evidence·Score·Link, rel 5종 고정, review_status 기본 draft) · graph.py(EvidenceGraph.add/link/out/index/get/trace, TRACE_CHAIN 4단계) · governance.py(Violation·check·enforce·GovernanceError, G1~G5) · render.py(render_rationale — 그래프에서 매번 생성). tests/test_model.py 23케이스 통과, ruff 통과.",
+      "notes": [
+        "G4·G5는 필드가 required라 `None`이 정상 경로로는 안 생긴다. 테스트는 `model_construct`로 재현하고, 더 현실적인 실패인 **넓이 0 bbox·기준 이미지 크기 0**도 G4가 잡게 했다 — 「필드만 채운 가짜 좌표」가 통과하면 G4가 증명하는 것이 없다.",
+        "G2에 빈 인용·span 범위 밖을 추가했다. 빈 quote는 어떤 span과도 일치해 검산을 무력화한다.",
+        "G3에 `requirement_id` 필드와 `derived_from` Link의 불일치 검사를 넣었다. 둘이 어긋나면 근거 문단이 실제와 다른 조건을 보여준다.",
+        "`trace()`는 각 마디에서 남은 단계 중 처음 이어지는 rel 하나만 잡고 건너뛴다. 이 건너뛰기가 게이트 Score(grounded_in 없이 derived_from으로 붙음)를 살린다.",
+        "`render_rationale`은 항목(Criterion)을 trace가 아니라 `score.criterion_id`로 찾는다. Evidence가 여러 항목을 지지할 때 trace로는 엉뚱한 항목이 잡힌다.",
+        "`Score.rationale`(채점자 문장)은 지우지 않고 문단 끝에 「채점자 서술」로 분리 표시했다. 근거(Link)와 서술을 섞으면 무엇이 검증된 것인지 사라진다."
+      ]
+    },
+    {
+      "step": 2,
+      "name": "posting-source",
+      "status": "completed",
+      "requirement_status": {
+        "req1_api_crawl": "unverified",
+        "req2_image_parse": "pending"
+      },
+      "started_at": "2026-09-01T03:49:29+0900",
+      "completed_at": "2026-09-01T04:03:12+0900",
+      "summary": "어댑터 코드 완성. SaraminSource는 키 미발급으로 실호출 미검증 — 요구 ① 실증은 step 3의 전제조건",
+      "notes": [
+        "src/matching/source/ 7파일 — base.py(PostingRef·PostingSource Protocol·SourceUnavailable/QuotaExceeded·경로 헬퍼) · saramin.py(QuotaLog·job_search·SaraminSource, list_postings만 API) · local.py · registry.py(PostingMeta·SaraminRegistry) · client_feed.py(인터페이스만) · provenance.py(write/verify) · __init__.py(get_source). CLI에 `acquire` 서브커맨드 추가. tests 26케이스 통과.",
+        "검증 절차 §2의 grep이 registry.py 2줄에 걸린다 — 둘 다 요청 파라미터 `keywords`(docs/SARAMIN_API.md §2 「우리가 쓰는 것」)이고, §3이 금지한 응답 필드(공고 본문에서 뽑은 낱말 목록)와 이름이 겹칠 뿐이다. grep 패턴 `keyword`가 `keywords`의 부분 문자열이라 생기는 충돌이고, 그 grep이 지키려는 PostingMeta 필드 목록에는 조건성 필드가 하나도 없다(tests/test_source.py가 필드 집합을 고정하고 extra=forbid로 주입도 막는다). 동일성 확인(역할 ①)은 자유어 검색 없이는 성립하지 않으므로 파라미터를 뺄 수 없었다.",
+        "SaraminSource는 사람인 공고 ID를 그대로 posting_id로 쓰지 않는다 — posting_id가 디렉터리 이름이 되고 provenance.json에 실려 **커밋**되므로, 그대로 두면 금지사항(공고 ID·URL을 남기지 마라)을 어긴다. local_posting_id()가 sha256 앞 10자로 바꾼다. 되짚기 방지 장치는 아니다(짧은 숫자 ID는 전수 대조로 되짚힌다) — 산출물이 사람인 DB의 부분 복제가 되지 않게 하는 것이 목적이다.",
+        "공고 페이지 url은 프로세스 메모리에만 둔다(_page_urls). 그래서 fetch_images()는 같은 프로세스에서 list_postings()를 부른 뒤에만 돈다 — 디스크에 url을 쓰지 않으려고 치른 비용이다.",
+        "자체 쿼터 상한을 200회/일로 잡았다(공식 한도 500). 남는 300회는 실수 예산이다. SaraminSource와 SaraminRegistry가 같은 로그 파일을 공유한다 — 한도는 앱 단위이지 클래스 단위가 아니다.",
+        "PostingMeta의 posting_date·expiration_date는 posting-timestamp·expiration-timestamp에서 만든다. ISO 표기 필드는 fields= 로 따로 요청해야 나오는데 timestamp로 충분하다(docs/SARAMIN_API.md §3) — 한 번 덜 묻는 만큼 한도를 덜 쓴다.",
+        "fetch_images()의 <img> 정규식은 본문이 iframe·스크립트 안에 있으면 아무것도 못 찾는다. 키가 없어 실지면에서 검증하지 못했고, 그때는 경로 B(사람이 이미지를 놓고 acquire)로 간다 — docstring에 한계로 적었다.",
+        "verify_provenance는 「파일이 없다」를 전부 위반으로 세지 않는다. img_*.png·ocr.json은 커밋되지 않아 clone 직후에는 원래 없다. 장수 불일치(0장 ≠ 기록 n장)로 잡히고, 그게 「대조할 수 없다」는 사실 그대로다.",
+        "LocalSource의 PostingRef.title·company는 빈 문자열이다. 회사명·공고 제목을 저장하지 않기 때문이다(남기는 것은 해시와 대상 직무 라벨뿐). 동일성 확인은 SaraminRegistry.lookup()의 일이지 본문 어댑터의 일이 아니다."
+      ]
+    },
+    {
+      "step": 3,
+      "name": "posting-parser",
+      "status": "completed",
+      "started_at": "2026-09-01T04:03:12+0900",
+      "summary": "parser 7파일 완성 + CLI `parse --inspect`. 실제 공고 2건 파싱 완주 — kt-b2c 조건 6건(필수 4·우대 2) + 담당업무 5건, nexon-game 조건 14건(필수 4·우대 10) + 담당업무 5건. 공고당 LLM 1회, 이미지는 안 보낸다. OCR 신뢰도 kt 0.958 / nexon 0.938. tests/test_parser.py 27케이스 통과.",
+      "notes": [
+        "step3.md의 판정 순서를 실측으로 뒤집었다. 명세는 ① x0<임계 → header 가 맨 앞이었는데, 확보한 공고 2건에서 섹션 헤더와 불릿 항목의 x0가 사실상 같다(kt-nw 44~57 대 46~50, nexon-game 42~43 대 42~43). 그 순서로는 조건이 0건이 된다. 또 이어지는 줄(x0 60~71)까지 header로 먹어 한 조건의 뒷부분이 새 섹션이 되고 그 아래 항목이 역할 없는 블록에 갇힌다. 개정 순서는 불릿 → continuation → x0 → ambiguous. PaddleOCR과 macOS Vision이 두 공고에서 독립적으로 같은 결론을 냈다(docs/OCR_EVIDENCE.md §4의 교차검증 논리). 원래 실측 공고에서는 결과가 안 바뀐다 — 그 공고 헤더는 불릿이 없고 항목보다 덜 들여써져 있다.",
+        "docs/OCR_EVIDENCE.md의 임계값 header_x_threshold=100은 폭 1131px 이미지에서 나온 값이고 확보한 공고는 860px이다. 값 자체는 바꾸지 않았다(첫 열/오른쪽 열을 가르는 데는 여전히 맞다) — 바꾼 것은 그 값을 언제 보는가다.",
+        "3-B-prime 밴드 경계를 「라벨 y ~ 다음 라벨 y」에서 「라벨 중심 사이의 중점」으로 고쳤다. kt-nw의 직무 라벨이 셀 세로 가운데에 있어서 명세대로 자르면 두 번째 직무의 셀 내용(y 2127~2258, 6줄)이 첫 직무 구간에 들어온다. 그중 불릿 항목은 앞의 「우대사항」 블록에 붙어 다른 직무의 업무가 이 지원자의 우대조건이 된다 — 점수 문제다. 중점 방식은 줄을 가장 가까운 라벨에 배정하는 것과 같고 새 임계값이 필요 없다. 수정 후 실측: NW인프라운용 밴드 1655~2046, 다른 직무 줄 유입 0건.",
+        "중점 방식의 알려진 한계 — 표의 열 제목 행(「직무」)도 첫 열에 있어 라벨로 세어지고, 그 때문에 첫 직무 셀의 윗부분 4줄(y 1553~1629)이 잘린다. 잘린 것이 담당업무(duty) 줄이라 조건에는 영향이 없지만 다른 표에서는 다를 수 있다.",
+        "Requirement.text를 ocr.document()의 연속 슬라이스로 정의했다. 병합 항목의 line_ids에 원본의 사이 줄을 전부 넣어, 「span으로 자른 것이 텍스트와 글자까지 같다」가 구조적으로 보장된다. 불릿도 지우지 않는다 — 지우면 그 동일성이 깨진다. verify.py의 P1·P2·P3이 이걸 검사한다.",
+        "line_ids는 model/objects.py의 Requirement가 아니라 parser의 RequirementRecord(상속)에 뒀다. Requirement는 파이프라인 전체의 계약이고 줄 id는 파서만 아는 것이다. 상속이라 그래프·검산에는 그대로 들어가고 requirements.json에는 역참조가 남는다.",
+        "header_roles.json을 무시 목록에 추가했다. 섹션 제목을 원문 그대로 담으므로 ocr.json과 같은 이유로 공고 본문이다. 캐시가 사라지면 공고당 LLM 1회를 다시 부르면 된다.",
+        "src/matching/parser/vision_ocr.swift는 spike/ocr_check에서 복사한 것이다. spike는 제출물이 아니라 (docs/OCR_EVIDENCE.md §6) 패키지 안에 자체 사본을 둔다. 컴파일 산출물은 임시 디렉터리에 캐시한다.",
+        "AC의 grep이 header_role.py 주석의 직군 예시 낱말에 걸려 표현을 바꿨다. 로직이 아니라 설명이었지만, 검사가 주석과 코드를 구분하지 못하는 편이 구분하려다 진짜 하드코딩을 놓치는 것보다 낫다.",
+        "OCR 소요 실측 — kt-nw(860x4920) 376초, nexon-game(860x2533) 232초. docs/OCR_EVIDENCE.md의 ~40초보다 훨씬 길다. 세로로 긴 공고라 그렇다(paddle이 4000px 초과분을 리사이즈한다). ocr.json 캐시가 없으면 규칙 한 줄 고칠 때마다 10분이 든다 — 파일 3분할의 실익이 여기서 확인됐다.",
+        "키를 넣고 실행하니 **다단 표에서만 터지는 결함 4건**이 실측으로 드러났다. (1) 모델이 none(제목 아님)이라 답한 것을 「답을 안 했다」로 세어, 표 열 제목 「직무」 하나에 파싱 전체가 멈췄다. (2) 이어지는 줄에 상한이 없어 480px 떨어진 근무지 열이 수행업무 항목에 붙어 조건 문구에 지명이 섞였다 — `continuation_max_indent`(60) 신설. (3) 셀 라벨이 세로 가운데 정렬이라 자기 내용보다 뒤에 나와 「우대사항」 블록이 항목 0개가 됐다. `split_positions`가 이미 고쳤던 것과 **같은 원인이 한 단계 아래에서 또 나온 것**이다. (4) 「이 줄이 제목인가」를 LLM에 물어 조건 문장 하나가 제목으로 오인됐고, 그 위 수행업무 4건이 우대 조건으로 넘어갔다.",
+        "**제목 판별을 LLM에서 열 구조로 옮겼다** (`order_band_lines`). LLM은 「이 제목이 무슨 성격인가」에는 답하지만 「이 줄이 제목인가」에는 못 답한다 — 그건 뜻이 아니라 배치의 문제이고 배치는 OCR이 준다. 밴드 안의 줄은 LLM이 뒤집지 못하게 막았다.",
+        "`order_band_lines`를 3-C **앞으로** 옮겼다. 뒤에 두면 「수행업무」가 모호한 줄로 분류돼 「제목이 아니면 none」 바구니로 나가고, none이 오면 그 블록이 역할 없이 남아 **사다리 3단계(담당업무 대응)가 입력을 통째로 잃는다.** 실제로 그랬다. 앞으로 옮기니 duty가 온다.",
+        "**담당업무를 좌표째 별도 목록(`duties`)으로 남긴다.** 조건이 아니므로 `requirements`에는 안 넣지만 버리지도 않는다 — KT는 조건 6건 중 4건이 졸업·병역·해외여행·입사일이라 지원자 전원이 통과하고, 담당업무를 빼면 그 공고가 마케터와 개발자를 구별하지 못한다. `RequirementKind`에 `duty`를 더했고 배정 규칙은 step4.md에 적었다 — gate·fact 층 금지, judgment 층 고정.",
+        "캐시 키에 **프롬프트 해시**를 넣었다. 안 넣으면 지시문을 고쳐도 캐시가 맞아떨어져 옛 판정이 조용히 재사용된다. 실제로 한 번 그래서 엉뚱한 데를 팠다.",
+        "모델이 25줄 중 1줄을 흘리는 것이 실측됐다(nexon). **빠진 줄만 한 번 더 묻는다** — 공고당 최대 2회. 여기서 포기하면 공고 하나가 통째로 파싱 불가가 되는데 원인은 판단 실패가 아니라 누락이다.",
+        "조건의 `source_span` 기준 문서를 `ocr`에서 **`scoped`(직무로 좁힌 사영본)**로 바꿨다. 원본 줄 순서를 기준으로 삼으면 병합 조건의 span이 사이에 낀 다른 열의 값까지 삼킨다. 사영본은 `ocr.json` + `position_band`로 재현되므로 검증 가능성은 그대로다.",
+        "점검용 화면(`--inspect`)을 만들었다. 원본 이미지 위에 OCR 박스를 얹고 줄·조건과 양방향으로 연결한다. **표만 봐서는 「글자는 맞는데 배치가 틀린」 것을 못 본다** — 이번에 잡은 4건 중 3건이 그 종류였다. 원본 이미지를 data URI로 품으므로 `out/`에만 쓰고 커밋하지 않는다."
+      ],
+      "completed_at": "2026-09-01T10:20:00+0900",
+      "requirement_status": {
+        "req1_api_crawl": "unverified",
+        "req2_image_parse": "verified"
+      }
+    },
+    {
+      "step": 10,
+      "name": "mock-resumes",
+      "status": "completed",
+      "started_at": "2026-09-01T10:28:32+0900",
+      "completed_at": "2026-09-01T10:47:15+0900",
+      "summary": "목업 이력서 12명 완성 (kt-b2c A-01~A-06 / nexon-game B-01~B-06, 각 완벽 2·부분 3·미스 1). 홀드아웃 조건 — kt-b2c: R-01·R-02, nexon-game: R-07·R-13. tests/test_dataset.py 16케이스 통과, AC 전항 통과.",
+      "holdout_requirement_ids": {
+        "kt-b2c": [
+          "R-01",
+          "R-02"
+        ],
+        "nexon-game": [
+          "R-07",
+          "R-13"
+        ]
+      },
+      "notes": [
+        "requirements.json에서 `text`·`kind`만 읽었고 `id`는 holdout.json에 뺀 조건을 적기 위해서만 읽었다(그 사실을 holdout.json의 read_fields에 그대로 적었다). rubric.json은 이 시점에 존재하지 않는다 — 게이트 G3의 구조적 방어가 실제로 성립했고, `test_rubric을_한_번도_열_수_없었다`가 그 순서가 뒤집히면 잡는다.",
+        "**홀드아웃을 필수가 아니라 우대·선택 조건에서 골랐다.** kt-b2c의 필수 4건은 졸업·병역·해외여행·입사일이라 여기서 2건을 빼면 부분 매칭 3명의 미충족 조합을 서로 다르게 만들 자리가 2개밖에 안 남는다. 더 큰 이유는 측정 쪽이다 — 「해외여행 결격사유」처럼 아무도 안 다루는 조건을 홀드아웃하면 여섯 명의 점수가 전부 같아져 분산이 0이 되고, step 11의 홀드아웃 지표가 아무 말도 하지 않는다. 지원서 서식에서 자연히 밀도가 갈리는 조건을 골라야 라벨 밖 측정이 성립한다.",
+        "kt-b2c의 필수 조건 4건 중 3건(졸업·병역·해외여행)이 지원자 대부분을 통과시키는 자격 요건이라, 유형을 실제로 가르는 축은 담당업무(duty) 정합과 입사 시점이다. step 3이 duty를 좌표째 남겨 두지 않았다면 이 공고는 마케터와 개발자를 구별하지 못했을 것이다 — 그 판단이 여기서 데이터로 확인된다.",
+        "부분 매칭 3명의 미충족 조합을 겹치지 않게 짰다. kt-b2c: {학력+입사 시점} / {병역} / {입사 시점}, nexon-game: {졸업 시점} / {상근 불가} / {병역+정규 전환}. 업무 축도 서로 반대로 비웠다(A-03 온라인만 ↔ A-04 현장만, B-03 엔진만 ↔ B-04 언어·동시성만) — 같은 방향으로 비우면 부분 매칭 3명이 사실상 한 명이 된다.",
+        "완벽 2명은 「깊이 대 넓이」로 갈랐다. 한 명은 한 채널/한 언어를 오래, 다른 한 명은 여러 채널/여러 엔진을 짧게. 둘 다 필수를 전부 충족하므로 **등수가 갈리는 이유가 자격이 아니라 충족 방식**이어야 하고, 그게 갈리지 않으면 랭킹이 무의미하다는 것을 이 두 명이 드러낸다.",
+        "분량은 공고별 max/min 비가 kt 1.104 · nexon 1.096이다(임계 1.35). 미스매칭형도 같은 분량으로 쓰되 다른 직군의 경험을 상세히 서술했다 — 짧게 쓰면 점수가 낮은 이유가 적합도인지 길이인지 갈라낼 수 없다.",
+        "**공고 원문 복붙을 기계로 확인했다.** 공백을 지운 뒤 조건·담당업무 문구와 이력서 본문의 연속 일치 최댓값이 kt 8자(「2026년12월」 — 날짜), nexon 7자(「Git·SVN」 — 도구 이름)다. 문장 수준의 겹침이 없다는 뜻이고, 테스트 임계는 10자로 뒀다. 처음 측정에서 9자짜리 명사 나열 2건(「도매·소매·온라인」·「자료구조,알고리즘」)이 나와 어순과 표기를 바꿨다.",
+        "미스매칭 2명은 서로의 공고 직군을 쓰지 않았다(임상병리 / 시각디자인). 넥슨 지원자를 KT 미스매칭으로 쓰면 직군 교차 측정(1차 지표)과 미스매칭 라벨이 같은 사람을 두고 겹쳐, 두 측정이 독립이 아니게 된다.",
+        "이름·생년월일·나이·학교를 일부러 넣었고 테스트가 그 존재를 검사한다 — 마스킹할 것이 없으면 마스킹 테스트는 통과해도 아무 말을 하지 않는다. 인물·기업·학교는 전부 가상이다.",
+        "`design_note` grep은 자기신고를 볼 뿐이라 우회 가능하다. 그 한계는 step10.md가 이미 적었고, 이 step은 그 위에 조건 ID 패턴(`R-\\d`)을 하나 더 막는 정도만 보탰다."
+      ]
+    },
+    {
+      "step": 4,
+      "name": "rubric-builder",
+      "status": "completed",
+      "started_at": "2026-09-01T10:47:15+0900",
+      "completed_at": "2026-09-01T10:56:53+0900",
+      "summary": "src/matching/rubric/ 3파일 — anchors.py(ANCHOR_TEMPLATE 1/3/5, 조건 문구를 앞에 붙여 조사 회피) · build.py(층 배정 gate/fact/judgment · 가중치 배분 · derived_from Link) · review.py(승인은 review_status만). 실제 공고 2건에서 루브릭 생성 완주 — kt-b2c 11항목(fact 3·judgment 8) / nexon-game 19항목(fact 6·judgment 13), 둘 다 총합 정확히 100.000000, 항목 겹침 0건, G3 위반 0건. tests/test_rubric.py 16케이스 통과.",
+      "notes": [
+        "**docs/RUBRIC_GENERATION_EVIDENCE.md §7과 어긋나는 채로 뒀다.** 그 문서는 「공통 템플릿 하나는 유지하지 않는다. 조건 유형별로 나눈다(지금 생각: 3개)」를 확정으로 적었는데, step4.md 명세는 ANCHOR_TEMPLATE 하나를 코드로 못박고 있다. step4.md를 따랐다 — ① step4.md가 그 문서보다 나중이다(문서 2026-08-31 22:31, step4.md는 2026-09-01 커밋에서 최종 수정) ② 문서 §7 자신이 「유형별 템플릿을 몇 개로 할 것인가」를 **미정**으로 남겼고, 미정인 설계를 24시간 안에 확정하는 것이 이 step의 일이 아니다. **어긋난 사실을 지우지 않는다** — 다음 사람이 유형별 템플릿을 넣을 자리는 anchors.py 하나뿐이다.",
+        "**settings.kind_shares를 새로 뺐다** (required 3 / preferred 2 / duty 1, 전부 임의값). 층 안에서 kind가 갖는 몫도 가중치인데 코드 상수로 두면 「가중치는 설정값으로 외부화한다」(src/CLAUDE.md 절대 규칙)를 어긴다. 근거가 있는 것은 순서(required > preferred >= duty)뿐이고 3:2:1이라는 숫자가 아니다. _kind_shares()가 설정이 뒤집힌 값을 줘도 그 순서로 눌러 담는다.",
+        "**is_countable의 오분류를 알고도 뒀다.** 라틴 문자·숫자만 보므로 「남성의 경우, 병역필 또는 면제된 분」·「해외여행 및 체류에 결격사유가 없는 분」처럼 사실상 이분법인 조건이 판단 층으로 간다 — kt-b2c에서 이 둘이 15점씩 30점을 차지한다. 고치려면 상태 어휘 사전이 필요한데 사전은 목록 밖 표현에 **조용히** 실패한다(파서에서 섹션 제목 사전을 뺀 이유와 같다). 대신 layer를 결과에 실어 어디가 틀어졌는지 보이게 뒀다. step 6에서 이 항목들의 심사위원 점수가 전원 동일하게 나오면 그게 이 오분류의 신호다.",
+        "**게이트가 실제로 발동한 적이 없다.** 확보한 두 공고에 면허·법정 자격 조건이 없어 gate 층 항목이 0건이다. gate 경로는 합성 조건으로만 시험했다(test_gate_kind_goes_to_the_gate_layer). GATE_MARKERS에 없는 종류 이름을 .env의 MATCHING_GATE_KINDS에 넣으면 그 문자열 자체가 표지가 되므로, 코드를 고치지 않고 게이트를 늘릴 수 있다.",
+        "층에 항목이 하나도 없으면 그 층의 배점을 남은 층이 가져간다(_layer_totals). 안 그러면 조건이 전부 서술형인 공고에서 사실 층 35점이 갈 곳을 잃어 **그 공고의 지원자만 만점이 65점**이 된다. test_missing_layer_does_not_lose_its_points가 이걸 잡는다."
+      ],
+      "requirement_status": {
+        "req5_job_agnostic": "verified — 직군이 다른 두 공고에서 항목 겹침 0건, 기준점 패턴만 동일"
+      }
+    },
+    {
+      "step": 5,
+      "name": "fact-scorer",
+      "status": "completed",
+      "started_at": "2026-09-01T10:56:53+0900",
+      "completed_at": "2026-09-01T11:15:11+0900",
+      "summary": "src/matching/scorer/ 4파일 — normalize.py(글자 단위 정규화 + index_map으로 원문 오프셋 되짚기 · key_terms 라틴>한글·숫자 우선순위 · data/aliases.json 양방향 묶음) · mask.py(길이 보존 ■ 마스킹, 필드/학교접미사/세토막날짜/만N세/사진경로 패턴, 병역·경력기간·전공은 남김) · gate.py(0층, layer==gate만·의심스러우면 통과·탈락 사유 동반) · fact.py(1층, 수치=포화함수 / 열거=커버리지 / 보유=1.0·0.0). LLM 호출 0건(grep openai 비어 있음), 결정적. 실제 공고 2건 × 이력서 12명 완주 — 검산 위반 0건, kt-b2c 사실층 8.8~20.4점 / nexon-game 2.0~16.2점으로 갈림(미스매칭 B-06이 최저). tests/test_scorer.py 29케이스 통과.",
+      "notes": [
+        "**Resume 타입이 어디에도 없었다** — step5.md·step7.md가 쓰는데 step1이 안 만들었다. model/objects.py에 넣되 GraphObject 합집합에는 안 넣었다(이력서는 입력이지 판단의 마디가 아니고, score() 종료 시 원본 파기와 충돌한다). intended_type(완벽/부분/미스)도 안 담았다 — 채점 경로가 라벨을 볼 수 있으면 유형 분리 테스트가 자기 자신을 검사한다.",
+        "**검산 G1의 예외를 넓혔다** (step5.md 지시). 기존 예외는 layer==gate 하나였고, 여기에 「layer==fact 이고 value==0」을 더했다. **value==0 조건이 핵심이다** — 빼면 사실 층 점수 전체가 근거 없이 통과해 G1이 아무것도 막지 않는다. 예외가 열린 자리는 tests/test_scorer.py의 test_g1_still_catches_a_nonzero_score_without_evidence가 잠근다.",
+        "0점 Score를 **항목과 조건 둘 다에** derived_from으로 잇는다. step5.md는 Criterion만 말했는데, 그것만 걸면 trace()가 Criterion(TRACE_CHAIN 3단계)에서 멈춰 공고 이미지 좌표에 닿지 못하고 render_rationale이 「G3 위반 상태」라고 잘못 쓴다. 조건까지 이어야 근거 사슬이 끝까지 간다.",
+        "**포화 계수 k의 기본값을 1.0 → 2.0으로 올렸다.** config.py 주석이 「함수 형태는 step 5에서 확정」이라 열어 둔 자리였고, step5.md의 손계산 예시가 전부 k=2.0이다. 1.0이면 요구를 정확히 채운 사람이 0.632라 미달자와 잘 안 갈린다. **여전히 임의값**이라는 표시는 지우지 않았다.",
+        "요구 연차는 **「N년 이상」처럼 비교어가 붙은 것만** 인정한다. 안 그러면 kt-b2c R-03의 「정규4년제」와 「2027년2월」이 요구 연차로 둔갑한다. 이력서 쪽 기간은 1900 미만의 N년·N개월만 세고, 「총 5년 경력」류 요약 문장이 겹쳐 세어지는 실패는 docstring에 적어 뒀다.",
+        "**확보한 공고 2건에 게이트 항목이 0개다** — 면허·법정 자격증 조건이 없다. 그래서 0층은 실데이터가 아니라 테스트로만 검증된다(면허 미보유 분리 · 「필수」 비법정 조건이 탈락시키지 않음). 요구 ③의 「탈락자를 사유와 함께 남긴다」는 코드까지만 실증된 상태다.",
+        "**kt-b2c C-01(AX·AI·Cloud·Data)이 6명 전원 0.00이다.** 마케팅 직군 이력서에 그 라틴 토큰이 없어서인데, 이 조건은 홀드아웃 2건 중 하나(R-01)라 step 11의 홀드아웃 측정이 사실 층에서는 분산 0을 본다. 판단 층(R-02)에서 재는 것이 남아 있다.",
+        "data/aliases.json을 **빈 객체로 커밋했다.** 우리 두 공고에 맞는 항목(Cloud↔클라우드 등)을 채우면 그건 데이터가 아니라 그 공고에 맞춘 손질이 된다. 사전 경로 자체는 test_alias_lets_korean_spelling_match_latin_condition이 실제로 태워 본다.",
+        "마스킹에서 **병역·경력 기간(YYYY.MM)·전공·학점은 일부러 남겼다.** 앞의 둘은 공고가 명시한 지원 조건이자 연차 계산의 유일한 입력이고, 전공은 블라인드 금지 항목이 아니다(금지된 것은 학교명). 생년월일은 **세 토막 날짜만** 가린다 — 두 토막을 가리면 경력 기간이 사라진다."
+      ]
+    },
+    {
+      "step": 6,
+      "name": "judge-layer",
+      "status": "completed",
+      "started_at": "2026-09-01T11:15:11+0900",
+      "completed_at": "2026-09-01T11:58:00+0900",
+      "summary": "src/matching/judge/ 4파일(schema·prompt·bias·panel) + CallBudget. tests/test_judge.py 22케이스(오프라인 20 + live 2) 전부 통과. **live 실측 완료** — 재현성 합동 σ=0.3015 (4셀 × 11회 = 44호출), 순서 불변성 stable(rank_changes 0, 8호출). 임계 σ≤0.5 통과.",
+      "summary_data": {
+        "repeat_sigma": 0.3015,
+        "repeat_n": 11,
+        "cells": 4,
+        "scale": "raw 1~5",
+        "order_stable": true,
+        "live_calls": 52,
+        "live_in_tokens": 99410,
+        "live_out_tokens": 9612
+      },
+      "notes": [
+        "하네스가 이 step을 error로 남겼다 — 코드와 테스트는 커밋됐는데(1,512줄) 세션이 index.json 상태를 못 올렸다. 「3회 시도 후 실패: Step did not update status」. 산출물을 직접 검사해 완료 처리했다: 오프라인 20케이스 통과 · ruff 통과 · **미실행이던 live 2건을 실제로 돌렸다.**",
+        "**σ 측정 표본이 처음엔 전부 포화 지점이었다.** 상위 2명 × 판단항목 2개로 재니 네 셀이 [1,1,…] 아니면 [5,5,…]로 나와 σ=0.0000이었다. 상위권은 판단 항목에서 척도의 양 끝에 붙어 흔들릴 자리가 없다. 그 0을 잡음 바닥으로 쓰면 step 11의 홀드아웃이 **무엇이든 통과시킨다** — 심사가 지적한 「분산 > 0은 채점 노이즈만으로 통과」가 바로 이 형태다.",
+        "**위·중위를 한 명씩 섞도록 고쳤다**(`top[0]`과 `top[len//2]`). 라벨은 여전히 안 본다 — 순위는 사실 층 점수(결정적)로만 매긴다. 다시 재니 σ=0.3015이고, A-01/C-04가 11회 중 1회 1→3으로 흔들린 것이 그 값의 출처다. 이제 step 11의 홀드아웃 문턱이 raw 척도로 **sd > 0.603**이라는 실제 바가 된다.",
+        "step 6 세션 자신은 이 함정을 알고 **항목**을 kind가 다른 것으로 골랐다(형식 요건 두 건이 뽑히는 것을 피하려고). 맞는 방향이었지만 **지원자 쪽 포화**를 놓쳤다. 한쪽만 막으면 다른 쪽으로 새어 나온다."
+      ]
+    },
+    {
+      "step": 7,
+      "name": "aggregate-rank",
+      "status": "completed",
+      "started_at": "2026-09-01T11:48:56+0900",
+      "completed_at": "2026-09-01T12:08:41+0900",
+      "summary": "src/matching/pipeline/ 4파일 — aggregate.py(판단 층 (raw-1)/4 정규화 · 「만점 100」 계약 · 게이트 판정은 run_gates 것을 옮기기만) · rank.py(탈락자 rank=None으로 끝에 분리 · 동점은 판단 층 → candidate_id) · run.py(prepare/score 두 동강 · 승인 게이트 · 검산 G7 · enforce()가 aggregate() 앞 · 원본 파기 · data/runs/{run_id}/result.json) · explain.py(사람이 읽는 랭킹, [등급 · 승인상태] 배지 포함). tests/test_aggregate.py 18케이스 통과, ruff 통과. prepare()로 실제 공고 2건 오프라인 재현 — kt-b2c 11항목(fact 3·judgment 8) / nexon-game 19항목(fact 6·judgment 13), 둘 다 총합 100.000000.",
+      "notes": [
+        "**COST_BUDGET §1의 심사위원 호출 추정이 실제 루브릭과 어긋난다.** §1은 「12명 × 판단항목 2개 × 2명 = 48회」로 잡았는데, step 4가 만든 판단 항목이 kt-b2c 8개·nexon-game 13개다. 완주 1회는 kt-b2c 6명×8×2 = 96회, nexon-game 6명×13×2 = 156회 (이견 0 가정)로 합 ≈252회이고, 3번째 심사위원이 붙으면 최악 378회다. score()는 실행(공고)마다 CallBudget을 새로 만들므로 상한 600(2026-09-01 12:00 실측으로 상향)에는 걸리지 않는다. §1의 표는 step 13-A에서 이 숫자로 고쳐야 한다.",
+        "aggregate()는 채점 안 된 항목이 하나라도 있으면 AggregateError를 던진다 — 부분 합계를 내면 그 지원자의 만점만 줄어 등수 비교가 성립하지 않는다. 그래서 score()는 **게이트 탈락자도 끝까지 채점한다** (탈락 사유만 남기면 「그 외에는 어땠나」를 볼 수 없고, 게이트는 면허·법정자격만 보도록 좁게 설계돼 탈락자가 드물다).",
+        "aggregate()는 settings를 **읽지 않는다.** 배점(35/65)은 build_rubric이 이미 Criterion.weight에 녹여 놓았고 여기서 다시 읽으면 배점이 사는 자리가 둘이 된다. step7.md의 호출 모양을 지키려고 인자만 남기고 그 사실을 docstring에 적었다.",
+        "prepare()가 RequirementRecord의 line_ids를 뗀다. Requirement가 extra=\"forbid\"라 그대로 결과 JSON에 실으면 step 8의 GET /runs/{run_id}가 되읽을 때 ValidationError가 난다. 역참조는 requirements.json에 그대로 남으므로 잃는 것이 없다.",
+        "G7은 레지스트리(사람인 API)가 없으면 **검사할 수 없다.** 통과시키되 RunResult.revision_checked=False로 남기고 explain() 머리에 경고를 찍는다 — 「검사해서 통과」와 「검사 못 함」이 화면에서 같아 보이면 안 된다. 키 미발급 상태(docs/SCHEDULE.md §2 경로 B)가 정확히 이 경우다.",
+        "게이트 탈락 사유는 Score.rationale(run_gates가 쓴 문장)을 쓴다. render_rationale()의 문단은 좌표까지 담은 추적 기록이라 「왜 떨어졌나」 한 줄로는 안 읽힌다 — 추적 기록은 AxisScore.rationale에 그대로 남아 있다.",
+        "판단 층 항목이 있는데 client가 없으면 ValueError를 던진다. 조용히 건너뛰면 그 항목들이 0점이 되어 「근거를 못 냈다」와 「경험이 없다」가 같은 점수가 된다. --no-judge는 step 8에서 명시적 경로로 붙인다.",
+        "score()에 now= 인자를 뒀다. run_id가 시각에서 나오므로 테스트가 재현 가능한 실행 id를 만들 수 있어야 한다."
+      ]
+    },
+    {
+      "step": 8,
+      "name": "entrypoint-api",
+      "status": "completed",
+      "started_at": "2026-09-01T12:08:41+0900",
+      "completed_at": "2026-09-01T12:29:35+0900",
+      "summary": "python run.py — 키를 getpass로 받아 .env(0600)에 쓰고 127.0.0.1:8000에 서버를 띄운 뒤 브라우저를 연다. 진입점 3파일 — run.py · api/cli.py(score 서브커맨드) · api/server.py(POST /score·/prepare·/approve, GET /runs/{id}·/image/{id}·/) + 둘이 공유하는 api/service.py. 채점을 일으키는 엔드포인트는 POST /score 하나. tests/test_api.py 15케이스 통과.",
+      "notes": [
+        "CLI와 HTTP가 **같은 함수**를 지난다 — api/service.py의 prepare_posting()·score_proposal(). 로직을 양쪽에 복제하면 두 경로의 결과가 갈렸을 때 어느 쪽이 맞는지 알 수 없다. test_api.py가 두 소스에 score_proposal이 있고 server 쪽 호출이 정확히 1회인 것을 검사한다.",
+        "**step 8이 파일을 하나 더 만들었다 — api/service.py.** step 명세는 run.py·cli.py·server.py 셋을 지정했지만, 이력서 로딩·클라이언트 생성·prepare→score 순서를 두 진입점에 각각 쓰면 같은 명세의 「로직을 복제하지 마라」를 어긴다. 기능을 늘린 파일이 아니라 **복제를 막는 이음매**다.",
+        "**--skip-approval을 CLI에 추가했다.** step 8의 인자 목록에는 없지만 src/CLAUDE.md가 이름까지 정해 둔 스위치이고, 승인 화면은 브라우저에만 있어서 이게 없으면 CLI로는 채점을 끝까지 못 한다. 주면 결과와 화면 상단에 「미승인」이 붙는다.",
+        "**--no-judge는 판단 항목을 빼고 루브릭을 다시 짓는다** (service.without_judgment). 빼기만 하면 만점이 100 밑으로 내려가 「0~100점」이 거짓말이 되고, 0점으로 채우면 「판단 안 함」과 「1점(경험 없음)」이 같아진다. 다시 지으면 남은 층이 100점을 나눠 갖는다. 실측: kt-b2c에서 판단 8개를 빼고 사실 3개가 100점을 나눠 가졌다.",
+        "**--no-judge를 HTTP로 열지 않았다.** 응답 계약이 RunResult 하나라 65점이 빠진 결과가 아무 표시 없이 화면에 간다. RunResult에 degraded_mode 필드가 없는 지금 상태에서 열면 화면이 거짓말을 한다.",
+        "POST /approve는 승인·뒤집기·삭제 뒤 **같은 식으로 배점을 다시 돌린다.** 뒤집기는 kind를, 삭제는 항목 수를 바꾸므로 안 돌리면 총합이 100이 아니게 된다. criterion_id는 그대로 둔다 — 다시 번호를 매기면 화면이 방금 누른 줄을 못 찾는다. 삭제된 항목은 그래프에 **가중치 0으로 남긴다**: 지우면 contradicts Link가 허공을 가리키고 「사람이 뺐다」는 기록도 사라진다.",
+        "승인 상태(RubricProposal)는 **메모리에만** 산다. 디스크에 남기면 다음 실행이 남의 승인을 물려받는다 — 승인은 「지금 이 사람이 이 화면에서 확인했다」는 행위다.",
+        "G7(revision 불일치)은 서버가 저장해 둔 제안의 posting_revision과 대조한다. 사람인 키가 없어 그 값이 None인 지금은 「null을 보내면 통과, 아무 문자열이나 보내면 409」다 — 검사가 도는 것은 맞지만 **대조 대상이 API가 아니라 우리 기록**이라는 사실을 지우지 않는다.",
+        "모듈 수준에 app 객체를 두지 않았다. create_app()이 .env을 읽고 OpenAI 클라이언트를 만들므로 import만으로 키를 읽게 된다 — 테스트가 그렇다. uvicorn으로 띄우려면 `uvicorn matching.api.server:create_app --factory`.",
+        "밖으로 나가는 모든 메시지가 _safe()를 지난다 (redact + 설정에 든 키 치환 + 토큰 모양 정규식). 예상 못 한 예외까지 500으로 걸러 내보내는 핸들러를 뒀다 — 사람인 인증이 쿼리 파라미터라 httpx 예외에 URL이 통째로 실린다. test_api.py가 키가 박힌 예외를 던지는 가짜 심사위원으로 검사한다.",
+        "config.py의 주석에서 키 접두사 문자열을 뺐다. step 8 검증 절차가 `grep \"<접두사>\" src/`로 키가 코드에 박혔는지 훑는데, 설명에 적혀 있으면 그 검사가 주석에 걸려 아무 말도 못 한다. step 3의 header_role.py에서 같은 일이 있었다.",
+        "--position은 provenance.json의 target_position만 갈아 끼운다 (파서가 대상 직무를 거기서만 읽는다). write_provenance()를 부르면 step 3이 채운 ocr_engine·ocr_sha256이 None으로 되돌아가 「어느 OCR 결과에서 나온 조건인가」의 증거가 사라진다.",
+        "GET /image/{id}는 이미지가 없으면 404 + 「이미지 없음 — 좌표 표시 불가」를 준다. 이미지는 커밋되지 않으므로 clone 직후에는 없는 것이 정상이고, 조용한 빈 칸을 주면 bbox를 저장한 의미가 사라진다.",
+        "GET /은 static/index.html이 있으면 그것을, 없으면 「화면은 step 9」 안내를 준다. step 9가 그 파일을 놓는다 — 여기서 만들지 않았다."
+      ]
+    },
+    {
+      "step": 9,
+      "name": "result-ui",
+      "status": "pending",
+      "started_at": "2026-09-01T12:29:35+0900"
+    },
+    {
+      "step": 11,
+      "name": "selected-tests",
+      "status": "completed",
+      "started_at": "2026-09-01T13:20:00+0900",
+      "completed_at": "2026-09-01T14:05:00+0900",
+      "summary": "tests/CLAUDE.md의 8개 케이스 전부 존재. 신규 4파일 — test_generalization.py(직군 교차) · test_types_separate.py(유형 분리) · test_holdout.py(홀드아웃) · test_verbosity.py(장황함, @live) + conftest.py(스텁 심사위원 2종·픽스처 로더·repeat_sigma) + tests/fixtures/cross-job/(가짜 공고 2·이력서 8). **실물 API 호출 0회** — data/.judge_usage.json이 645회·$5.952 그대로이고 git status가 data/에 변경 없음. 직군 교차 실측: 양방향 4건 모두 하락 21.88점(임계 15). 홀드아웃은 skip — 저장된 완주 결과(data/runs/)가 아직 없다. 장황함은 @live라 미실행.",
+      "summary_data": {
+        "openai_calls": 0,
+        "usage_file_unchanged": {
+          "calls": 645,
+          "usd": 5.952
+        },
+        "cross_job_drop": {
+          "threshold": 15.0,
+          "judge": "ConstantJudge (항목·이력서 무관 고정 점수) — 하락이 결정적 층에서만 나온다",
+          "measured": {
+            "FA-01: 임상→설비": 21.88,
+            "FA-02: 임상→설비": 21.88,
+            "FB-01: 설비→임상": 21.88,
+            "FB-02: 설비→임상": 21.88
+          },
+          "note": "두 공고 다 「3년 이상」 경력 조건을 일부러 겹쳐 두었다. 그 항목은 직군을 바꿔도 점수가 그대로라 하락에 0점을 기여한다 — 하락 21.88은 나머지 두 항목의 배점 합이다."
+        },
+        "cross_job_drop_overlap_judge": {
+          "judge": "OverlapJudge (글자 겹침 대역) — 보조 확인용, 임계 없음",
+          "measured": {
+            "FA-01": 70.62,
+            "FA-02": 70.62,
+            "FB-01": 78.75,
+            "FB-02": 70.62
+          }
+        },
+        "type_separation": {
+          "group_means": {
+            "완벽": 99.31,
+            "부분": 41.97,
+            "미스": 11.35
+          },
+          "group_ranges": {
+            "완벽": [
+              99.09,
+              99.53
+            ],
+            "부분": [
+              29.2,
+              56.11
+            ],
+            "미스": [
+              11.35,
+              11.35
+            ]
+          },
+          "judge": "OverlapJudge"
+        },
+        "holdout": {
+          "status": "skipped",
+          "repeat_sigma_read": 0.3015,
+          "threshold": 0.603,
+          "reason": "data/runs/에 저장된 완주 결과가 없다 — 채점을 다시 하지 않는 설계라 잴 입력이 없다",
+          "blocker": "완주 결과가 생겨도 절반만 잴 수 있다. 홀드아웃 4건 중 판단 층은 kt-b2c R-02 하나뿐이고 kt-b2c R-01·nexon-game R-07·R-13은 전부 사실 층이다(라틴 토큰이 있어 is_countable이 참). σ가 5점 척도 값이라 0~1 커버리지와 나란히 놓을 수 없어 nexon-game은 잴 항목이 0개다."
+        },
+        "verbosity": {
+          "status": "not_run",
+          "threshold": 10.0,
+          "reason": "@live. 예산 $5를 이미 넘겼다 (645회 · $5.952)"
+        },
+        "live_marks_excluded_by_default": true,
+        "test_counts": {
+          "new_files": 5,
+          "new_cases": 20,
+          "default_run_deselected_live": 3
+        }
+      },
+      "notes": [
+        "**직군 교차의 심사위원을 상수로 고정했다.** 내용에 반응하는 스텁을 쓰면 하락이 스텁의 재주인지 엔진의 성질인지 구별되지 않는다. ConstantJudge를 쓰면 판단 층 65점이 두 공고에서 완전히 같은 값이 되어 남는 차이가 전부 게이트·사실 층과 루브릭 가중치에서 나온다 — 그 층은 LLM이 없는 결정적 코드다. 전제가 실제로 성립하는지를 test_상수_심사위원에서_판단_층은_두_공고에_같은_값을_낸다가 따로 검사한다.",
+        "**픽스처 공고를 의료·제조로 잡았다.** 확보한 실제 공고 2건이 둘 다 IT·게임이라 그 둘로 재면 「우리 파서가 IT 공고 두 개를 구별한다」까지만 말하게 된다.",
+        "**홀드아웃 조건 선정(step 10)과 홀드아웃 테스트 명세(step 11)가 어긋난다.** 명세는 raw 1~5 판단 층 점수를 재라고 하는데, 골라 둔 조건 4건 중 3건이 사실 층으로 간다. nexon-game은 판단 층 홀드아웃 항목이 0개라 완주 결과가 생겨도 skip된다. 임계를 낮추거나 척도를 섞어 통과시키지 않았다 — 척도가 다른 두 수를 비교하면 엔진이 아무것도 변별하지 못해도 통과한다(R4 심사).",
+        "**커버리지를 올리지 않았다.** 새 케이스는 tests/CLAUDE.md 표에 이미 있는 것 4개뿐이고, 케이스마다 「왜 이걸 골랐는가」를 파일 docstring에 적었다. tests/CLAUDE.md에 케이스→파일 지도만 추가했다.",
+        "**임계를 실측으로 되맞추지 않았다.** 직군 교차 15점 · 장황함 10점 · 홀드아웃 계수 2.0은 임의값 그대로 두고 실측만 여기 적었다. 판정선을 판정 대상의 실행 결과에서 뽑으면 그 테스트는 아무것도 반증하지 못한다."
+      ]
+    },
+    {
+      "step": 12,
+      "name": "evidence-extensions",
+      "status": "pending"
+    },
+    {
+      "step": 13,
+      "name": "handoff",
+      "status": "pending"
+    }
+  ],
+  "created_at": "2026-09-01T03:35:45+0900"
+}
