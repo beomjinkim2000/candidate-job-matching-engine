@@ -1,0 +1,3606 @@
+{
+  "run_id": "kt-b2c-UI계약검증-픽스처",
+  "posting_id": "kt-b2c",
+  "source_kind": "local",
+  "created_at": "2026-09-01T13:00:00+09:00",
+  "ranked": [
+    {
+      "candidate_id": "A-03",
+      "total": 72.5,
+      "rank": 1,
+      "gate": {
+        "passed": true,
+        "failed_criteria": [],
+        "reasons": []
+      },
+      "breakdown": [
+        {
+          "criterion_id": "C-01",
+          "label": "·AX기술(AI, Cloud, Data 등)에기본적인관심과 이…",
+          "layer": "fact",
+          "raw": 1.0,
+          "weighted": 8.75,
+          "max_weighted": 8.75,
+          "rationale": "[계약 검증 픽스처] ·AX기술(AI, Cloud, Data 등)에기본적인관심과 이… — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (243,2688)-(595,2732).",
+          "evidence_ids": [
+            "E-A-03-C-01-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-02",
+          "label": "서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분",
+          "layer": "judgment",
+          "raw": 5.0,
+          "weighted": 10.0,
+          "max_weighted": 10.0,
+          "rationale": "[계약 검증 픽스처] 서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2737)-(676,2754).",
+          "evidence_ids": [
+            "E-A-03-C-02-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-03",
+          "label": "·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분",
+          "layer": "fact",
+          "raw": 1.0,
+          "weighted": 13.125,
+          "max_weighted": 13.125,
+          "rationale": "[계약 검증 픽스처] ·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (46,2903)-(467,2929).",
+          "evidence_ids": [
+            "E-A-03-C-03-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-04",
+          "label": "•남성의경우,병역필또는면제된분",
+          "layer": "judgment",
+          "raw": 2.5,
+          "weighted": 5.625,
+          "max_weighted": 15.0,
+          "rationale": "[계약 검증 픽스처] •남성의경우,병역필또는면제된분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (46,2935)-(291,2961).",
+          "evidence_ids": [
+            "E-A-03-C-04-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-05",
+          "label": "·해외여행및체류에 결격사유가없는분",
+          "layer": "judgment",
+          "raw": 3.5,
+          "weighted": 9.375,
+          "max_weighted": 15.0,
+          "rationale": "[계약 검증 픽스처] ·해외여행및체류에 결격사유가없는분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (48,2968)-(314,2990).",
+          "evidence_ids": [
+            "E-A-03-C-05-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-06",
+          "label": "·2026년12월 중 입사 가능한 분",
+          "layer": "fact",
+          "raw": 1.0,
+          "weighted": 13.125,
+          "max_weighted": 13.125,
+          "rationale": "[계약 검증 픽스처] ·2026년12월 중 입사 가능한 분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (49,3001)-(266,3022).",
+          "evidence_ids": [
+            "E-A-03-C-06-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-07",
+          "label": "B2C 채널을 관리하고 세일즈 전략을 세웁니다",
+          "layer": "judgment",
+          "raw": 1.0,
+          "weighted": 0.0,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] B2C 채널을 관리하고 세일즈 전략을 세웁니다 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (243,2504)-(529,2522).",
+          "evidence_ids": [
+            "E-A-03-C-07-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-08",
+          "label": "·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립",
+          "layer": "judgment",
+          "raw": 2.0,
+          "weighted": 1.25,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2533)-(581,2550).",
+          "evidence_ids": [
+            "E-A-03-C-08-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-09",
+          "label": "·B2C고객을위한 상품마케팅및세일즈기획",
+          "layer": "judgment",
+          "raw": 3.0,
+          "weighted": 2.5,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·B2C고객을위한 상품마케팅및세일즈기획 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2555)-(505,2572).",
+          "evidence_ids": [
+            "E-A-03-C-09-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-10",
+          "label": "·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립",
+          "layer": "judgment",
+          "raw": 4.0,
+          "weighted": 3.75,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (242,2577)-(636,2599).",
+          "evidence_ids": [
+            "E-A-03-C-10-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-11",
+          "label": "·KT상품판매를위한새로운채널발굴및유통망운영·관리",
+          "layer": "judgment",
+          "raw": 5.0,
+          "weighted": 5.0,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·KT상품판매를위한새로운채널발굴및유통망운영·관리 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (242,2600)-(580,2622).",
+          "evidence_ids": [
+            "E-A-03-C-11-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        }
+      ],
+      "graph_ref": "kt-b2c-UI계약검증-픽스처"
+    },
+    {
+      "candidate_id": "A-06",
+      "total": 72.5,
+      "rank": 2,
+      "gate": {
+        "passed": true,
+        "failed_criteria": [],
+        "reasons": []
+      },
+      "breakdown": [
+        {
+          "criterion_id": "C-01",
+          "label": "·AX기술(AI, Cloud, Data 등)에기본적인관심과 이…",
+          "layer": "fact",
+          "raw": 1.0,
+          "weighted": 8.75,
+          "max_weighted": 8.75,
+          "rationale": "[계약 검증 픽스처] ·AX기술(AI, Cloud, Data 등)에기본적인관심과 이… — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (243,2688)-(595,2732).",
+          "evidence_ids": [
+            "E-A-06-C-01-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-02",
+          "label": "서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분",
+          "layer": "judgment",
+          "raw": 5.0,
+          "weighted": 10.0,
+          "max_weighted": 10.0,
+          "rationale": "[계약 검증 픽스처] 서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2737)-(676,2754).",
+          "evidence_ids": [
+            "E-A-06-C-02-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-03",
+          "label": "·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분",
+          "layer": "fact",
+          "raw": 1.0,
+          "weighted": 13.125,
+          "max_weighted": 13.125,
+          "rationale": "[계약 검증 픽스처] ·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (46,2903)-(467,2929).",
+          "evidence_ids": [
+            "E-A-06-C-03-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-04",
+          "label": "•남성의경우,병역필또는면제된분",
+          "layer": "judgment",
+          "raw": 2.5,
+          "weighted": 5.625,
+          "max_weighted": 15.0,
+          "rationale": "[계약 검증 픽스처] •남성의경우,병역필또는면제된분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (46,2935)-(291,2961).",
+          "evidence_ids": [
+            "E-A-06-C-04-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-05",
+          "label": "·해외여행및체류에 결격사유가없는분",
+          "layer": "judgment",
+          "raw": 3.5,
+          "weighted": 9.375,
+          "max_weighted": 15.0,
+          "rationale": "[계약 검증 픽스처] ·해외여행및체류에 결격사유가없는분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (48,2968)-(314,2990).",
+          "evidence_ids": [
+            "E-A-06-C-05-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-06",
+          "label": "·2026년12월 중 입사 가능한 분",
+          "layer": "fact",
+          "raw": 1.0,
+          "weighted": 13.125,
+          "max_weighted": 13.125,
+          "rationale": "[계약 검증 픽스처] ·2026년12월 중 입사 가능한 분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (49,3001)-(266,3022).",
+          "evidence_ids": [
+            "E-A-06-C-06-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-07",
+          "label": "B2C 채널을 관리하고 세일즈 전략을 세웁니다",
+          "layer": "judgment",
+          "raw": 1.0,
+          "weighted": 0.0,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] B2C 채널을 관리하고 세일즈 전략을 세웁니다 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (243,2504)-(529,2522).",
+          "evidence_ids": [
+            "E-A-06-C-07-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-08",
+          "label": "·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립",
+          "layer": "judgment",
+          "raw": 2.0,
+          "weighted": 1.25,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2533)-(581,2550).",
+          "evidence_ids": [
+            "E-A-06-C-08-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-09",
+          "label": "·B2C고객을위한 상품마케팅및세일즈기획",
+          "layer": "judgment",
+          "raw": 3.0,
+          "weighted": 2.5,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·B2C고객을위한 상품마케팅및세일즈기획 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2555)-(505,2572).",
+          "evidence_ids": [
+            "E-A-06-C-09-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-10",
+          "label": "·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립",
+          "layer": "judgment",
+          "raw": 4.0,
+          "weighted": 3.75,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (242,2577)-(636,2599).",
+          "evidence_ids": [
+            "E-A-06-C-10-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-11",
+          "label": "·KT상품판매를위한새로운채널발굴및유통망운영·관리",
+          "layer": "judgment",
+          "raw": 5.0,
+          "weighted": 5.0,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·KT상품판매를위한새로운채널발굴및유통망운영·관리 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (242,2600)-(580,2622).",
+          "evidence_ids": [
+            "E-A-06-C-11-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        }
+      ],
+      "graph_ref": "kt-b2c-UI계약검증-픽스처"
+    },
+    {
+      "candidate_id": "A-01",
+      "total": 65.625,
+      "rank": 3,
+      "gate": {
+        "passed": true,
+        "failed_criteria": [],
+        "reasons": []
+      },
+      "breakdown": [
+        {
+          "criterion_id": "C-01",
+          "label": "·AX기술(AI, Cloud, Data 등)에기본적인관심과 이…",
+          "layer": "fact",
+          "raw": 0.0,
+          "weighted": 0.0,
+          "max_weighted": 8.75,
+          "rationale": "[계약 검증 픽스처] ·AX기술(AI, Cloud, Data 등)에기본적인관심과 이… — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (243,2688)-(595,2732).",
+          "evidence_ids": [],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-02",
+          "label": "서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분",
+          "layer": "judgment",
+          "raw": 2.0,
+          "weighted": 2.5,
+          "max_weighted": 10.0,
+          "rationale": "[계약 검증 픽스처] 서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2737)-(676,2754).",
+          "evidence_ids": [
+            "E-A-01-C-02-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-03",
+          "label": "·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분",
+          "layer": "fact",
+          "raw": 1.0,
+          "weighted": 13.125,
+          "max_weighted": 13.125,
+          "rationale": "[계약 검증 픽스처] ·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (46,2903)-(467,2929).",
+          "evidence_ids": [
+            "E-A-01-C-03-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-04",
+          "label": "•남성의경우,병역필또는면제된분",
+          "layer": "judgment",
+          "raw": 4.0,
+          "weighted": 11.25,
+          "max_weighted": 15.0,
+          "rationale": "[계약 검증 픽스처] •남성의경우,병역필또는면제된분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (46,2935)-(291,2961).",
+          "evidence_ids": [
+            "E-A-01-C-04-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-05",
+          "label": "·해외여행및체류에 결격사유가없는분",
+          "layer": "judgment",
+          "raw": 5.0,
+          "weighted": 15.0,
+          "max_weighted": 15.0,
+          "rationale": "[계약 검증 픽스처] ·해외여행및체류에 결격사유가없는분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (48,2968)-(314,2990).",
+          "evidence_ids": [
+            "E-A-01-C-05-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-06",
+          "label": "·2026년12월 중 입사 가능한 분",
+          "layer": "fact",
+          "raw": 1.0,
+          "weighted": 13.125,
+          "max_weighted": 13.125,
+          "rationale": "[계약 검증 픽스처] ·2026년12월 중 입사 가능한 분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (49,3001)-(266,3022).",
+          "evidence_ids": [
+            "E-A-01-C-06-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-07",
+          "label": "B2C 채널을 관리하고 세일즈 전략을 세웁니다",
+          "layer": "judgment",
+          "raw": 2.5,
+          "weighted": 1.875,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] B2C 채널을 관리하고 세일즈 전략을 세웁니다 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (243,2504)-(529,2522).",
+          "evidence_ids": [
+            "E-A-01-C-07-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-08",
+          "label": "·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립",
+          "layer": "judgment",
+          "raw": 3.5,
+          "weighted": 3.125,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2533)-(581,2550).",
+          "evidence_ids": [
+            "E-A-01-C-08-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-09",
+          "label": "·B2C고객을위한 상품마케팅및세일즈기획",
+          "layer": "judgment",
+          "raw": 4.5,
+          "weighted": 4.375,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·B2C고객을위한 상품마케팅및세일즈기획 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2555)-(505,2572).",
+          "evidence_ids": [
+            "E-A-01-C-09-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-10",
+          "label": "·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립",
+          "layer": "judgment",
+          "raw": 1.0,
+          "weighted": 0.0,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (242,2577)-(636,2599).",
+          "evidence_ids": [
+            "E-A-01-C-10-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-11",
+          "label": "·KT상품판매를위한새로운채널발굴및유통망운영·관리",
+          "layer": "judgment",
+          "raw": 2.0,
+          "weighted": 1.25,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·KT상품판매를위한새로운채널발굴및유통망운영·관리 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (242,2600)-(580,2622).",
+          "evidence_ids": [
+            "E-A-01-C-11-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        }
+      ],
+      "graph_ref": "kt-b2c-UI계약검증-픽스처"
+    },
+    {
+      "candidate_id": "A-04",
+      "total": 65.625,
+      "rank": 4,
+      "gate": {
+        "passed": true,
+        "failed_criteria": [],
+        "reasons": []
+      },
+      "breakdown": [
+        {
+          "criterion_id": "C-01",
+          "label": "·AX기술(AI, Cloud, Data 등)에기본적인관심과 이…",
+          "layer": "fact",
+          "raw": 0.0,
+          "weighted": 0.0,
+          "max_weighted": 8.75,
+          "rationale": "[계약 검증 픽스처] ·AX기술(AI, Cloud, Data 등)에기본적인관심과 이… — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (243,2688)-(595,2732).",
+          "evidence_ids": [],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-02",
+          "label": "서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분",
+          "layer": "judgment",
+          "raw": 2.0,
+          "weighted": 2.5,
+          "max_weighted": 10.0,
+          "rationale": "[계약 검증 픽스처] 서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2737)-(676,2754).",
+          "evidence_ids": [
+            "E-A-04-C-02-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-03",
+          "label": "·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분",
+          "layer": "fact",
+          "raw": 1.0,
+          "weighted": 13.125,
+          "max_weighted": 13.125,
+          "rationale": "[계약 검증 픽스처] ·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (46,2903)-(467,2929).",
+          "evidence_ids": [
+            "E-A-04-C-03-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-04",
+          "label": "•남성의경우,병역필또는면제된분",
+          "layer": "judgment",
+          "raw": 4.0,
+          "weighted": 11.25,
+          "max_weighted": 15.0,
+          "rationale": "[계약 검증 픽스처] •남성의경우,병역필또는면제된분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (46,2935)-(291,2961).",
+          "evidence_ids": [
+            "E-A-04-C-04-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-05",
+          "label": "·해외여행및체류에 결격사유가없는분",
+          "layer": "judgment",
+          "raw": 5.0,
+          "weighted": 15.0,
+          "max_weighted": 15.0,
+          "rationale": "[계약 검증 픽스처] ·해외여행및체류에 결격사유가없는분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (48,2968)-(314,2990).",
+          "evidence_ids": [
+            "E-A-04-C-05-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-06",
+          "label": "·2026년12월 중 입사 가능한 분",
+          "layer": "fact",
+          "raw": 1.0,
+          "weighted": 13.125,
+          "max_weighted": 13.125,
+          "rationale": "[계약 검증 픽스처] ·2026년12월 중 입사 가능한 분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (49,3001)-(266,3022).",
+          "evidence_ids": [
+            "E-A-04-C-06-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-07",
+          "label": "B2C 채널을 관리하고 세일즈 전략을 세웁니다",
+          "layer": "judgment",
+          "raw": 2.5,
+          "weighted": 1.875,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] B2C 채널을 관리하고 세일즈 전략을 세웁니다 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (243,2504)-(529,2522).",
+          "evidence_ids": [
+            "E-A-04-C-07-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-08",
+          "label": "·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립",
+          "layer": "judgment",
+          "raw": 3.5,
+          "weighted": 3.125,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2533)-(581,2550).",
+          "evidence_ids": [
+            "E-A-04-C-08-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-09",
+          "label": "·B2C고객을위한 상품마케팅및세일즈기획",
+          "layer": "judgment",
+          "raw": 4.5,
+          "weighted": 4.375,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·B2C고객을위한 상품마케팅및세일즈기획 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2555)-(505,2572).",
+          "evidence_ids": [
+            "E-A-04-C-09-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-10",
+          "label": "·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립",
+          "layer": "judgment",
+          "raw": 1.0,
+          "weighted": 0.0,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (242,2577)-(636,2599).",
+          "evidence_ids": [
+            "E-A-04-C-10-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-11",
+          "label": "·KT상품판매를위한새로운채널발굴및유통망운영·관리",
+          "layer": "judgment",
+          "raw": 2.0,
+          "weighted": 1.25,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·KT상품판매를위한새로운채널발굴및유통망운영·관리 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (242,2600)-(580,2622).",
+          "evidence_ids": [
+            "E-A-04-C-11-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        }
+      ],
+      "graph_ref": "kt-b2c-UI계약검증-픽스처"
+    },
+    {
+      "candidate_id": "A-02",
+      "total": 33.125,
+      "rank": 5,
+      "gate": {
+        "passed": true,
+        "failed_criteria": [],
+        "reasons": []
+      },
+      "breakdown": [
+        {
+          "criterion_id": "C-01",
+          "label": "·AX기술(AI, Cloud, Data 등)에기본적인관심과 이…",
+          "layer": "fact",
+          "raw": 1.0,
+          "weighted": 8.75,
+          "max_weighted": 8.75,
+          "rationale": "[계약 검증 픽스처] ·AX기술(AI, Cloud, Data 등)에기본적인관심과 이… — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (243,2688)-(595,2732).",
+          "evidence_ids": [
+            "E-A-02-C-01-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-02",
+          "label": "서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분",
+          "layer": "judgment",
+          "raw": 3.5,
+          "weighted": 6.25,
+          "max_weighted": 10.0,
+          "rationale": "[계약 검증 픽스처] 서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2737)-(676,2754).",
+          "evidence_ids": [
+            "E-A-02-C-02-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-03",
+          "label": "·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분",
+          "layer": "fact",
+          "raw": 0.0,
+          "weighted": 0.0,
+          "max_weighted": 13.125,
+          "rationale": "[계약 검증 픽스처] ·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (46,2903)-(467,2929).",
+          "evidence_ids": [],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-04",
+          "label": "•남성의경우,병역필또는면제된분",
+          "layer": "judgment",
+          "raw": 1.0,
+          "weighted": 0.0,
+          "max_weighted": 15.0,
+          "rationale": "[계약 검증 픽스처] •남성의경우,병역필또는면제된분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (46,2935)-(291,2961).",
+          "evidence_ids": [
+            "E-A-02-C-04-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-05",
+          "label": "·해외여행및체류에 결격사유가없는분",
+          "layer": "judgment",
+          "raw": 2.0,
+          "weighted": 3.75,
+          "max_weighted": 15.0,
+          "rationale": "[계약 검증 픽스처] ·해외여행및체류에 결격사유가없는분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (48,2968)-(314,2990).",
+          "evidence_ids": [
+            "E-A-02-C-05-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-06",
+          "label": "·2026년12월 중 입사 가능한 분",
+          "layer": "fact",
+          "raw": 0.0,
+          "weighted": 0.0,
+          "max_weighted": 13.125,
+          "rationale": "[계약 검증 픽스처] ·2026년12월 중 입사 가능한 분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (49,3001)-(266,3022).",
+          "evidence_ids": [],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-07",
+          "label": "B2C 채널을 관리하고 세일즈 전략을 세웁니다",
+          "layer": "judgment",
+          "raw": 4.0,
+          "weighted": 3.75,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] B2C 채널을 관리하고 세일즈 전략을 세웁니다 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (243,2504)-(529,2522).",
+          "evidence_ids": [
+            "E-A-02-C-07-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-08",
+          "label": "·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립",
+          "layer": "judgment",
+          "raw": 5.0,
+          "weighted": 5.0,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2533)-(581,2550).",
+          "evidence_ids": [
+            "E-A-02-C-08-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-09",
+          "label": "·B2C고객을위한 상품마케팅및세일즈기획",
+          "layer": "judgment",
+          "raw": 1.5,
+          "weighted": 0.625,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·B2C고객을위한 상품마케팅및세일즈기획 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2555)-(505,2572).",
+          "evidence_ids": [
+            "E-A-02-C-09-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-10",
+          "label": "·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립",
+          "layer": "judgment",
+          "raw": 2.5,
+          "weighted": 1.875,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (242,2577)-(636,2599).",
+          "evidence_ids": [
+            "E-A-02-C-10-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-11",
+          "label": "·KT상품판매를위한새로운채널발굴및유통망운영·관리",
+          "layer": "judgment",
+          "raw": 3.5,
+          "weighted": 3.125,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·KT상품판매를위한새로운채널발굴및유통망운영·관리 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (242,2600)-(580,2622).",
+          "evidence_ids": [
+            "E-A-02-C-11-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        }
+      ],
+      "graph_ref": "kt-b2c-UI계약검증-픽스처"
+    },
+    {
+      "candidate_id": "A-05",
+      "total": 33.125,
+      "rank": null,
+      "gate": {
+        "passed": false,
+        "failed_criteria": [
+          "C-99"
+        ],
+        "reasons": [
+          "[픽스처] 게이트 탈락 렌더 확인용 — 실제 판정이 아니다"
+        ]
+      },
+      "breakdown": [
+        {
+          "criterion_id": "C-01",
+          "label": "·AX기술(AI, Cloud, Data 등)에기본적인관심과 이…",
+          "layer": "fact",
+          "raw": 1.0,
+          "weighted": 8.75,
+          "max_weighted": 8.75,
+          "rationale": "[계약 검증 픽스처] ·AX기술(AI, Cloud, Data 등)에기본적인관심과 이… — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (243,2688)-(595,2732).",
+          "evidence_ids": [
+            "E-A-05-C-01-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-02",
+          "label": "서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분",
+          "layer": "judgment",
+          "raw": 3.5,
+          "weighted": 6.25,
+          "max_weighted": 10.0,
+          "rationale": "[계약 검증 픽스처] 서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2737)-(676,2754).",
+          "evidence_ids": [
+            "E-A-05-C-02-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-03",
+          "label": "·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분",
+          "layer": "fact",
+          "raw": 0.0,
+          "weighted": 0.0,
+          "max_weighted": 13.125,
+          "rationale": "[계약 검증 픽스처] ·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (46,2903)-(467,2929).",
+          "evidence_ids": [],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-04",
+          "label": "•남성의경우,병역필또는면제된분",
+          "layer": "judgment",
+          "raw": 1.0,
+          "weighted": 0.0,
+          "max_weighted": 15.0,
+          "rationale": "[계약 검증 픽스처] •남성의경우,병역필또는면제된분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (46,2935)-(291,2961).",
+          "evidence_ids": [
+            "E-A-05-C-04-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-05",
+          "label": "·해외여행및체류에 결격사유가없는분",
+          "layer": "judgment",
+          "raw": 2.0,
+          "weighted": 3.75,
+          "max_weighted": 15.0,
+          "rationale": "[계약 검증 픽스처] ·해외여행및체류에 결격사유가없는분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (48,2968)-(314,2990).",
+          "evidence_ids": [
+            "E-A-05-C-05-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "human_validated"
+        },
+        {
+          "criterion_id": "C-06",
+          "label": "·2026년12월 중 입사 가능한 분",
+          "layer": "fact",
+          "raw": 0.0,
+          "weighted": 0.0,
+          "max_weighted": 13.125,
+          "rationale": "[계약 검증 픽스처] ·2026년12월 중 입사 가능한 분 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (49,3001)-(266,3022).",
+          "evidence_ids": [],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-07",
+          "label": "B2C 채널을 관리하고 세일즈 전략을 세웁니다",
+          "layer": "judgment",
+          "raw": 4.0,
+          "weighted": 3.75,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] B2C 채널을 관리하고 세일즈 전략을 세웁니다 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (243,2504)-(529,2522).",
+          "evidence_ids": [
+            "E-A-05-C-07-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-08",
+          "label": "·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립",
+          "layer": "judgment",
+          "raw": 5.0,
+          "weighted": 5.0,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2533)-(581,2550).",
+          "evidence_ids": [
+            "E-A-05-C-08-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-09",
+          "label": "·B2C고객을위한 상품마케팅및세일즈기획",
+          "layer": "judgment",
+          "raw": 1.5,
+          "weighted": 0.625,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·B2C고객을위한 상품마케팅및세일즈기획 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (244,2555)-(505,2572).",
+          "evidence_ids": [
+            "E-A-05-C-09-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-10",
+          "label": "·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립",
+          "layer": "judgment",
+          "raw": 2.5,
+          "weighted": 1.875,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (242,2577)-(636,2599).",
+          "evidence_ids": [
+            "E-A-05-C-10-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        },
+        {
+          "criterion_id": "C-11",
+          "label": "·KT상품판매를위한새로운채널발굴및유통망운영·관리",
+          "layer": "judgment",
+          "raw": 3.5,
+          "weighted": 3.125,
+          "max_weighted": 5.0,
+          "rationale": "[계약 검증 픽스처] ·KT상품판매를위한새로운채널발굴및유통망운영·관리 — 이 문단은 실제 채점에서 나온 것이 아니다. 그 조건을 읽은 자리: 공고 이미지 1쪽 (242,2600)-(580,2622).",
+          "evidence_ids": [
+            "E-A-05-C-11-01"
+          ],
+          "evidence_grade": "E2",
+          "review_status": "draft"
+        }
+      ],
+      "graph_ref": "kt-b2c-UI계약검증-픽스처"
+    }
+  ],
+  "graph": {
+    "requirements": [
+      {
+        "id": "R-01",
+        "text": "·AX기술(AI, Cloud, Data 등)에기본적인관심과 이해가 있고\n새로운 기술 트렌드를 유연하게 받아들이시는 분",
+        "kind": "preferred",
+        "evidence_grade": "E2",
+        "ladder_step": 1,
+        "source_bbox": {
+          "page": 1,
+          "x1": 243,
+          "y1": 2688,
+          "x2": 595,
+          "y2": 2732,
+          "img_w": 860,
+          "img_h": 4920
+        },
+        "source_span": {
+          "start": 420,
+          "end": 485
+        },
+        "review_status": "draft"
+      },
+      {
+        "id": "R-02",
+        "text": "서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분",
+        "kind": "preferred",
+        "evidence_grade": "E2",
+        "ladder_step": 1,
+        "source_bbox": {
+          "page": 1,
+          "x1": 244,
+          "y1": 2737,
+          "x2": 676,
+          "y2": 2754,
+          "img_w": 860,
+          "img_h": 4920
+        },
+        "source_span": {
+          "start": 486,
+          "end": 520
+        },
+        "review_status": "draft"
+      },
+      {
+        "id": "R-03",
+        "text": "·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분",
+        "kind": "required",
+        "evidence_grade": "E2",
+        "ladder_step": 1,
+        "source_bbox": {
+          "page": 1,
+          "x1": 46,
+          "y1": 2903,
+          "x2": 467,
+          "y2": 2929,
+          "img_w": 860,
+          "img_h": 4920
+        },
+        "source_span": {
+          "start": 580,
+          "end": 613
+        },
+        "review_status": "draft"
+      },
+      {
+        "id": "R-04",
+        "text": "•남성의경우,병역필또는면제된분",
+        "kind": "required",
+        "evidence_grade": "E2",
+        "ladder_step": 1,
+        "source_bbox": {
+          "page": 1,
+          "x1": 46,
+          "y1": 2935,
+          "x2": 291,
+          "y2": 2961,
+          "img_w": 860,
+          "img_h": 4920
+        },
+        "source_span": {
+          "start": 614,
+          "end": 630
+        },
+        "review_status": "draft"
+      },
+      {
+        "id": "R-05",
+        "text": "·해외여행및체류에 결격사유가없는분",
+        "kind": "required",
+        "evidence_grade": "E2",
+        "ladder_step": 1,
+        "source_bbox": {
+          "page": 1,
+          "x1": 48,
+          "y1": 2968,
+          "x2": 314,
+          "y2": 2990,
+          "img_w": 860,
+          "img_h": 4920
+        },
+        "source_span": {
+          "start": 631,
+          "end": 649
+        },
+        "review_status": "draft"
+      },
+      {
+        "id": "R-06",
+        "text": "·2026년12월 중 입사 가능한 분",
+        "kind": "required",
+        "evidence_grade": "E2",
+        "ladder_step": 1,
+        "source_bbox": {
+          "page": 1,
+          "x1": 49,
+          "y1": 3001,
+          "x2": 266,
+          "y2": 3022,
+          "img_w": 860,
+          "img_h": 4920
+        },
+        "source_span": {
+          "start": 650,
+          "end": 670
+        },
+        "review_status": "draft"
+      },
+      {
+        "id": "D-01",
+        "text": "B2C 채널을 관리하고 세일즈 전략을 세웁니다",
+        "kind": "duty",
+        "evidence_grade": "E2",
+        "ladder_step": 1,
+        "source_bbox": {
+          "page": 1,
+          "x1": 243,
+          "y1": 2504,
+          "x2": 529,
+          "y2": 2522,
+          "img_w": 860,
+          "img_h": 4920
+        },
+        "source_span": {
+          "start": 276,
+          "end": 301
+        },
+        "review_status": "draft"
+      },
+      {
+        "id": "D-02",
+        "text": "·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립",
+        "kind": "duty",
+        "evidence_grade": "E2",
+        "ladder_step": 1,
+        "source_bbox": {
+          "page": 1,
+          "x1": 244,
+          "y1": 2533,
+          "x2": 581,
+          "y2": 2550,
+          "img_w": 860,
+          "img_h": 4920
+        },
+        "source_span": {
+          "start": 302,
+          "end": 333
+        },
+        "review_status": "draft"
+      },
+      {
+        "id": "D-03",
+        "text": "·B2C고객을위한 상품마케팅및세일즈기획",
+        "kind": "duty",
+        "evidence_grade": "E2",
+        "ladder_step": 1,
+        "source_bbox": {
+          "page": 1,
+          "x1": 244,
+          "y1": 2555,
+          "x2": 505,
+          "y2": 2572,
+          "img_w": 860,
+          "img_h": 4920
+        },
+        "source_span": {
+          "start": 334,
+          "end": 355
+        },
+        "review_status": "draft"
+      },
+      {
+        "id": "D-04",
+        "text": "·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립",
+        "kind": "duty",
+        "evidence_grade": "E2",
+        "ladder_step": 1,
+        "source_bbox": {
+          "page": 1,
+          "x1": 242,
+          "y1": 2577,
+          "x2": 636,
+          "y2": 2599,
+          "img_w": 860,
+          "img_h": 4920
+        },
+        "source_span": {
+          "start": 356,
+          "end": 387
+        },
+        "review_status": "draft"
+      },
+      {
+        "id": "D-05",
+        "text": "·KT상품판매를위한새로운채널발굴및유통망운영·관리",
+        "kind": "duty",
+        "evidence_grade": "E2",
+        "ladder_step": 1,
+        "source_bbox": {
+          "page": 1,
+          "x1": 242,
+          "y1": 2600,
+          "x2": 580,
+          "y2": 2622,
+          "img_w": 860,
+          "img_h": 4920
+        },
+        "source_span": {
+          "start": 388,
+          "end": 414
+        },
+        "review_status": "draft"
+      }
+    ],
+    "criteria": [
+      {
+        "id": "C-01",
+        "requirement_id": "R-01",
+        "label": "·AX기술(AI, Cloud, Data 등)에기본적인관심과 이…",
+        "anchors": {
+          "1": "「·AX기술(AI, Cloud, Data 등)에기본적인관심과 이…」 — 관련 경험이 없거나, 있어도 구체적 행동 서술이 없음",
+          "3": "「·AX기술(AI, Cloud, Data 등)에기본적인관심과 이…」 — 제시하나 서술이 추상적이고 본인 역할·성과가 불명확함",
+          "5": "「·AX기술(AI, Cloud, Data 등)에기본적인관심과 이…」 — 본인의 역할 · 취한 행동 · 달성한 성과가 명확히 서술됨"
+        },
+        "weight": 8.75,
+        "layer": "fact",
+        "review_status": "human_validated"
+      },
+      {
+        "id": "C-02",
+        "requirement_id": "R-02",
+        "label": "서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분",
+        "anchors": {
+          "1": "「서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분」 — 관련 경험이 없거나, 있어도 구체적 행동 서술이 없음",
+          "3": "「서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분」 — 제시하나 서술이 추상적이고 본인 역할·성과가 불명확함",
+          "5": "「서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분」 — 본인의 역할 · 취한 행동 · 달성한 성과가 명확히 서술됨"
+        },
+        "weight": 10.0,
+        "layer": "judgment",
+        "review_status": "human_validated"
+      },
+      {
+        "id": "C-03",
+        "requirement_id": "R-03",
+        "label": "·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분",
+        "anchors": {
+          "1": "「·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분」 — 관련 경험이 없거나, 있어도 구체적 행동 서술이 없음",
+          "3": "「·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분」 — 제시하나 서술이 추상적이고 본인 역할·성과가 불명확함",
+          "5": "「·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분」 — 본인의 역할 · 취한 행동 · 달성한 성과가 명확히 서술됨"
+        },
+        "weight": 13.125,
+        "layer": "fact",
+        "review_status": "human_validated"
+      },
+      {
+        "id": "C-04",
+        "requirement_id": "R-04",
+        "label": "•남성의경우,병역필또는면제된분",
+        "anchors": {
+          "1": "「•남성의경우,병역필또는면제된분」 — 관련 경험이 없거나, 있어도 구체적 행동 서술이 없음",
+          "3": "「•남성의경우,병역필또는면제된분」 — 제시하나 서술이 추상적이고 본인 역할·성과가 불명확함",
+          "5": "「•남성의경우,병역필또는면제된분」 — 본인의 역할 · 취한 행동 · 달성한 성과가 명확히 서술됨"
+        },
+        "weight": 15.0,
+        "layer": "judgment",
+        "review_status": "human_validated"
+      },
+      {
+        "id": "C-05",
+        "requirement_id": "R-05",
+        "label": "·해외여행및체류에 결격사유가없는분",
+        "anchors": {
+          "1": "「·해외여행및체류에 결격사유가없는분」 — 관련 경험이 없거나, 있어도 구체적 행동 서술이 없음",
+          "3": "「·해외여행및체류에 결격사유가없는분」 — 제시하나 서술이 추상적이고 본인 역할·성과가 불명확함",
+          "5": "「·해외여행및체류에 결격사유가없는분」 — 본인의 역할 · 취한 행동 · 달성한 성과가 명확히 서술됨"
+        },
+        "weight": 15.0,
+        "layer": "judgment",
+        "review_status": "human_validated"
+      },
+      {
+        "id": "C-06",
+        "requirement_id": "R-06",
+        "label": "·2026년12월 중 입사 가능한 분",
+        "anchors": {
+          "1": "「·2026년12월 중 입사 가능한 분」 — 관련 경험이 없거나, 있어도 구체적 행동 서술이 없음",
+          "3": "「·2026년12월 중 입사 가능한 분」 — 제시하나 서술이 추상적이고 본인 역할·성과가 불명확함",
+          "5": "「·2026년12월 중 입사 가능한 분」 — 본인의 역할 · 취한 행동 · 달성한 성과가 명확히 서술됨"
+        },
+        "weight": 13.125,
+        "layer": "fact",
+        "review_status": "draft"
+      },
+      {
+        "id": "C-07",
+        "requirement_id": "D-01",
+        "label": "B2C 채널을 관리하고 세일즈 전략을 세웁니다",
+        "anchors": {
+          "1": "「B2C 채널을 관리하고 세일즈 전략을 세웁니다」 — 관련 경험이 없거나, 있어도 구체적 행동 서술이 없음",
+          "3": "「B2C 채널을 관리하고 세일즈 전략을 세웁니다」 — 제시하나 서술이 추상적이고 본인 역할·성과가 불명확함",
+          "5": "「B2C 채널을 관리하고 세일즈 전략을 세웁니다」 — 본인의 역할 · 취한 행동 · 달성한 성과가 명확히 서술됨"
+        },
+        "weight": 5.0,
+        "layer": "judgment",
+        "review_status": "draft"
+      },
+      {
+        "id": "C-08",
+        "requirement_id": "D-02",
+        "label": "·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립",
+        "anchors": {
+          "1": "「·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립」 — 관련 경험이 없거나, 있어도 구체적 행동 서술이 없음",
+          "3": "「·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립」 — 제시하나 서술이 추상적이고 본인 역할·성과가 불명확함",
+          "5": "「·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립」 — 본인의 역할 · 취한 행동 · 달성한 성과가 명확히 서술됨"
+        },
+        "weight": 5.0,
+        "layer": "judgment",
+        "review_status": "draft"
+      },
+      {
+        "id": "C-09",
+        "requirement_id": "D-03",
+        "label": "·B2C고객을위한 상품마케팅및세일즈기획",
+        "anchors": {
+          "1": "「·B2C고객을위한 상품마케팅및세일즈기획」 — 관련 경험이 없거나, 있어도 구체적 행동 서술이 없음",
+          "3": "「·B2C고객을위한 상품마케팅및세일즈기획」 — 제시하나 서술이 추상적이고 본인 역할·성과가 불명확함",
+          "5": "「·B2C고객을위한 상품마케팅및세일즈기획」 — 본인의 역할 · 취한 행동 · 달성한 성과가 명확히 서술됨"
+        },
+        "weight": 5.0,
+        "layer": "judgment",
+        "review_status": "draft"
+      },
+      {
+        "id": "C-10",
+        "requirement_id": "D-04",
+        "label": "·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립",
+        "anchors": {
+          "1": "「·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립」 — 관련 경험이 없거나, 있어도 구체적 행동 서술이 없음",
+          "3": "「·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립」 — 제시하나 서술이 추상적이고 본인 역할·성과가 불명확함",
+          "5": "「·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립」 — 본인의 역할 · 취한 행동 · 달성한 성과가 명확히 서술됨"
+        },
+        "weight": 5.0,
+        "layer": "judgment",
+        "review_status": "draft"
+      },
+      {
+        "id": "C-11",
+        "requirement_id": "D-05",
+        "label": "·KT상품판매를위한새로운채널발굴및유통망운영·관리",
+        "anchors": {
+          "1": "「·KT상품판매를위한새로운채널발굴및유통망운영·관리」 — 관련 경험이 없거나, 있어도 구체적 행동 서술이 없음",
+          "3": "「·KT상품판매를위한새로운채널발굴및유통망운영·관리」 — 제시하나 서술이 추상적이고 본인 역할·성과가 불명확함",
+          "5": "「·KT상품판매를위한새로운채널발굴및유통망운영·관리」 — 본인의 역할 · 취한 행동 · 달성한 성과가 명확히 서술됨"
+        },
+        "weight": 5.0,
+        "layer": "judgment",
+        "review_status": "draft"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "E-A-01-C-02-01",
+        "resume_id": "A-01",
+        "span": {
+          "start": 181,
+          "end": 229
+        },
+        "quote": "26.02  ■■■■■ 경영학과 학사 졸업 (전공학점 3.82/4.5)\n- 졸업논문: "
+      },
+      {
+        "id": "E-A-01-C-03-01",
+        "resume_id": "A-01",
+        "span": {
+          "start": 242,
+          "end": 290
+        },
+        "quote": "치가 단품 회전율에 미치는 영향」\n\n■ 경력 및 대외활동\n2024.07 ~ 2025.0"
+      },
+      {
+        "id": "E-A-01-C-04-01",
+        "resume_id": "A-01",
+        "span": {
+          "start": 303,
+          "end": 351
+        },
+        "quote": "신 가맹 대리점 상담·판매 파트타임\n- 방문 고객 응대와 요금제 상담을 맡아 월평균 3"
+      },
+      {
+        "id": "E-A-01-C-05-01",
+        "resume_id": "A-01",
+        "span": {
+          "start": 364,
+          "end": 412
+        },
+        "quote": "약을 처리했습니다.\n- 매장 판매 이력을 직접 표로 정리해 요일·시간대별 방문 패턴을 "
+      },
+      {
+        "id": "E-A-01-C-06-01",
+        "resume_id": "A-01",
+        "span": {
+          "start": 425,
+          "end": 473
+        },
+        "quote": "를\n  조정했습니다. 대기 중 이탈하는 고객이 월 20건에서 7건으로 줄었습니다.\n- "
+      },
+      {
+        "id": "E-A-01-C-07-01",
+        "resume_id": "A-01",
+        "span": {
+          "start": 486,
+          "end": 534
+        },
+        "quote": "가격 게시물을 주 1회 기록해 비교표를 만들고, 점주와 함께 결합상품\n  안내 문구를 "
+      },
+      {
+        "id": "E-A-01-C-08-01",
+        "resume_id": "A-01",
+        "span": {
+          "start": 547,
+          "end": 595
+        },
+        "quote": "5.09 ~ 2026.02 (6개월)  △△가전유통 영업기획팀 인턴\n- 수도권 대리점 "
+      },
+      {
+        "id": "E-A-01-C-09-01",
+        "resume_id": "A-01",
+        "span": {
+          "start": 608,
+          "end": 656
+        },
+        "quote": " 취합해 상권별 지표를 만들고, 점유율이 세 달 연속\n  내려간 상권 2곳을 골라냈습니"
+      },
+      {
+        "id": "E-A-01-C-10-01",
+        "resume_id": "A-01",
+        "span": {
+          "start": 669,
+          "end": 717
+        },
+        "quote": "인구·경쟁점 밀도·주거 형태를 현장에서 조사해 원인을 정리하고, 소형 가전\n  중심으로"
+      },
+      {
+        "id": "E-A-01-C-11-01",
+        "resume_id": "A-01",
+        "span": {
+          "start": 730,
+          "end": 778
+        },
+        "quote": " 냈습니다. 시범 적용한 점포 2곳에서 다음 달 소형 가전\n  매출이 전월 대비 19%"
+      },
+      {
+        "id": "E-A-02-C-01-01",
+        "resume_id": "A-02",
+        "span": {
+          "start": 167,
+          "end": 215
+        },
+        "quote": "6년 12월 (잔여 6학점을 계절학기로 이수해 조기 입사 가능)\n\n■ 학력사항\n2019"
+      },
+      {
+        "id": "E-A-02-C-02-01",
+        "resume_id": "A-02",
+        "span": {
+          "start": 228,
+          "end": 276
+        },
+        "quote": " 졸업예정  ■■■■■ 미디어커뮤니케이션학과 (부전공 경영학)\n- 학점 3.61/4.5"
+      },
+      {
+        "id": "E-A-02-C-04-01",
+        "resume_id": "A-02",
+        "span": {
+          "start": 350,
+          "end": 398
+        },
+        "quote": "판매·반품 실적을 정리해 상세페이지 개편 순서를 제안했습니다.\n- 기획전 2건의 상품 "
+      },
+      {
+        "id": "E-A-02-C-05-01",
+        "resume_id": "A-02",
+        "span": {
+          "start": 411,
+          "end": 459
+        },
+        "quote": "준으로 묶음 구성을 다시 짰습니다.\n\n2024.03 ~ 2024.12 (10개월)  □"
+      },
+      {
+        "id": "E-A-02-C-07-01",
+        "resume_id": "A-02",
+        "span": {
+          "start": 533,
+          "end": 581
+        },
+        "quote": "구역 12개 점포에 계절 음료 냉장 매대 위치 변경을 안내했고, 담당 구역의 신상품\n "
+      },
+      {
+        "id": "E-A-02-C-08-01",
+        "resume_id": "A-02",
+        "span": {
+          "start": 594,
+          "end": 642
+        },
+        "quote": "보다 올랐습니다.\n\n2023.06 ~ 2024.02 (9개월)  소상공인 온라인 판로 "
+      },
+      {
+        "id": "E-A-02-C-09-01",
+        "resume_id": "A-02",
+        "span": {
+          "start": 655,
+          "end": 703
+        },
+        "quote": " 상인 18팀의 온라인 마켓 입점을 도왔고, 상품 사진과 설명 문구를 쓰는 기준을\n  "
+      },
+      {
+        "id": "E-A-02-C-10-01",
+        "resume_id": "A-02",
+        "span": {
+          "start": 716,
+          "end": 764
+        },
+        "quote": " 실시간 방송 판매를 두 차례 기획해 참여 상인 6팀의 첫 온라인 주문을 만들었습니다."
+      },
+      {
+        "id": "E-A-02-C-11-01",
+        "resume_id": "A-02",
+        "span": {
+          "start": 777,
+          "end": 825
+        },
+        "quote": "아이디어 공모전 장려 (2024.11) / 지역 상생 마케팅 공모전 우수 (2025.0"
+      },
+      {
+        "id": "E-A-03-C-01-01",
+        "resume_id": "A-03",
+        "span": {
+          "start": 214,
+          "end": 262
+        },
+        "quote": "■■ 경영학과 (2023년 2학기 ~ 2024년 1학기 휴학)\n- 학점 3.55/4.5"
+      },
+      {
+        "id": "E-A-03-C-02-01",
+        "resume_id": "A-03",
+        "span": {
+          "start": 275,
+          "end": 323
+        },
+        "quote": "\n2024.09 ~ 2025.12 (16개월)  개인 온라인 스토어 운영 (반려동물 소"
+      },
+      {
+        "id": "E-A-03-C-03-01",
+        "resume_id": "A-03",
+        "span": {
+          "start": 336,
+          "end": 384
+        },
+        "quote": "에 스토어를 열어 상품 등록부터 고객 문의 응대까지 혼자 맡았습니다.\n- 누적 주문 1"
+      },
+      {
+        "id": "E-A-03-C-04-01",
+        "resume_id": "A-03",
+        "span": {
+          "start": 397,
+          "end": 445
+        },
+        "quote": "고객 비중 18%를 기록했습니다.\n- 상품별 조회수와 구매 전환을 매주 기록해 사진과 "
+      },
+      {
+        "id": "E-A-03-C-05-01",
+        "resume_id": "A-03",
+        "span": {
+          "start": 458,
+          "end": 506
+        },
+        "quote": "출이 잘 되는\n  제목 길이와 키워드 배치를 정리해 두었습니다.\n\n2025.03 ~ 2"
+      },
+      {
+        "id": "E-A-03-C-06-01",
+        "resume_id": "A-03",
+        "span": {
+          "start": 519,
+          "end": 567
+        },
+        "quote": " ◇◇뷰티 브랜드 콘텐츠 마케팅 인턴 (주 3일)\n- 자사 SNS 계정 두 개의 게시물"
+      },
+      {
+        "id": "E-A-03-C-07-01",
+        "resume_id": "A-03",
+        "span": {
+          "start": 580,
+          "end": 628
+        },
+        "quote": " 12건을 운영했습니다.\n- 광고 소재 A/B 시안을 만들어 클릭률이 높은 문구 유형을"
+      },
+      {
+        "id": "E-A-03-C-08-01",
+        "resume_id": "A-03",
+        "span": {
+          "start": 641,
+          "end": 689
+        },
+        "quote": "루언서 12명에게 협업을 제안하고 일정과 산출물을 관리했습니다.\n\n2023.03 ~ 2"
+      },
+      {
+        "id": "E-A-03-C-09-01",
+        "resume_id": "A-03",
+        "span": {
+          "start": 702,
+          "end": 750
+        },
+        "quote": "팅 학회 4기\n- 지역 카페 두 곳의 온라인 홍보를 맡아 방문 고객 설문을 설계하고 결"
+      },
+      {
+        "id": "E-A-03-C-10-01",
+        "resume_id": "A-03",
+        "span": {
+          "start": 763,
+          "end": 811
+        },
+        "quote": " 자격 및 어학\nGTQ 1급 (2024.05) / 검색광고마케터 1급 (2025.04)"
+      },
+      {
+        "id": "E-A-03-C-11-01",
+        "resume_id": "A-03",
+        "span": {
+          "start": 824,
+          "end": 872
+        },
+        "quote": "(2025.07)\n\n■ 자기소개서\n1) 지원 동기\n스토어를 혼자 운영하면서 온라인에서 "
+      },
+      {
+        "id": "E-A-04-C-02-01",
+        "resume_id": "A-04",
+        "span": {
+          "start": 322,
+          "end": 370
+        },
+        "quote": "회전 현황을 점장에게 보고했습니다.\n- 주말 시식·체험 행사 운영을 맡아 진행 인력 배"
+      },
+      {
+        "id": "E-A-04-C-03-01",
+        "resume_id": "A-04",
+        "span": {
+          "start": 383,
+          "end": 431
+        },
+        "quote": "습니다.\n- 매장 반경 1km 안의 경쟁 점포 3곳의 가격표를 격주로 기록해 비교 자료"
+      },
+      {
+        "id": "E-A-04-C-04-01",
+        "resume_id": "A-04",
+        "span": {
+          "start": 444,
+          "end": 492
+        },
+        "quote": "25.01 ~ 2025.02 (2개월)  지자체 골목상권 실태조사 보조원\n- 상점 21"
+      },
+      {
+        "id": "E-A-04-C-05-01",
+        "resume_id": "A-04",
+        "span": {
+          "start": 505,
+          "end": 553
+        },
+        "quote": "시간·주 고객층을 조사하고 조사표를 작성했습니다.\n- 구역별 공실률과 업종 분포를 정리"
+      },
+      {
+        "id": "E-A-04-C-06-01",
+        "resume_id": "A-04",
+        "span": {
+          "start": 566,
+          "end": 614
+        },
+        "quote": "들었습니다.\n- 상권 안에서 사람이 실제로 걷는 동선이 도로 폭보다 건물 출입구 위치에"
+      },
+      {
+        "id": "E-A-04-C-07-01",
+        "resume_id": "A-04",
+        "span": {
+          "start": 627,
+          "end": 675
+        },
+        "quote": "장에서 확인하고 조사표에 별도 항목으로 추가했습니다.\n\n2023.09 ~ 2024.05"
+      },
+      {
+        "id": "E-A-04-C-08-01",
+        "resume_id": "A-04",
+        "span": {
+          "start": 688,
+          "end": 736
+        },
+        "quote": "분석 소모임 운영진\n- 학교 앞 상권 15개 점포의 매출 추정치를 공개 자료로 계산하는"
+      },
+      {
+        "id": "E-A-04-C-09-01",
+        "resume_id": "A-04",
+        "span": {
+          "start": 749,
+          "end": 797
+        },
+        "quote": " 소모임 정기 발표를 6회 진행했습니다.\n\n■ 자격 및 어학\n유통관리사 2급 (2025"
+      },
+      {
+        "id": "E-A-04-C-10-01",
+        "resume_id": "A-04",
+        "span": {
+          "start": 810,
+          "end": 858
+        },
+        "quote": "력 2급 (2023.12) / TOEIC 720 (2025.05)\n\n■ 자기소개서\n1)"
+      },
+      {
+        "id": "E-A-04-C-11-01",
+        "resume_id": "A-04",
+        "span": {
+          "start": 871,
+          "end": 919
+        },
+        "quote": " 하며 같은 거리에서도 100미터 차이로 매출이 갈리는 것을 여러 번 봤습니다.\n판매 "
+      },
+      {
+        "id": "E-A-05-C-01-01",
+        "resume_id": "A-05",
+        "span": {
+          "start": 308,
+          "end": 356
+        },
+        "quote": "03 ~ 2025.12 (10개월)  ☆☆리테일 수입 소비재 브랜드 마케팅 인턴\n- 수"
+      },
+      {
+        "id": "E-A-05-C-02-01",
+        "resume_id": "A-05",
+        "span": {
+          "start": 369,
+          "end": 417
+        },
+        "quote": "의 국내 판촉 자료를 만들고 매장 배포 일정을 관리했습니다.\n- 신제품 2종의 국내 출"
+      },
+      {
+        "id": "E-A-05-C-04-01",
+        "resume_id": "A-05",
+        "span": {
+          "start": 491,
+          "end": 539
+        },
+        "quote": ".06 ~ 2024.08 (15개월)  ◎◎백화점 잡화 매장 판매 아르바이트\n- 주말 "
+      },
+      {
+        "id": "E-A-05-C-05-01",
+        "resume_id": "A-05",
+        "span": {
+          "start": 552,
+          "end": 600
+        },
+        "quote": "0여 명의 고객을 상대했습니다.\n- 재고 실사와 진열 교체를 담당했고, 시즌 교체 시기"
+      },
+      {
+        "id": "E-A-05-C-07-01",
+        "resume_id": "A-05",
+        "span": {
+          "start": 674,
+          "end": 722
+        },
+        "quote": "025.02 (6개월)  대학생 소비 트렌드 리서치단 5기\n- 20대 소비자 120명 "
+      },
+      {
+        "id": "E-A-05-C-08-01",
+        "resume_id": "A-05",
+        "span": {
+          "start": 735,
+          "end": 783
+        },
+        "quote": "고서 한 편을 공동 집필했습니다.\n\n■ 자격 및 어학\n국제무역사 1급 (2025.08)"
+      },
+      {
+        "id": "E-A-05-C-09-01",
+        "resume_id": "A-05",
+        "span": {
+          "start": 796,
+          "end": 844
+        },
+        "quote": "2024.12) / TOEIC 910 (2026.01) / HSK 5급 (2024.06"
+      },
+      {
+        "id": "E-A-05-C-10-01",
+        "resume_id": "A-05",
+        "span": {
+          "start": 857,
+          "end": 905
+        },
+        "quote": " 지원 동기\n매장에서 고객을 응대하다 본사에서 브랜드를 다루는 자리로 옮겨 보니, 같은"
+      },
+      {
+        "id": "E-A-05-C-11-01",
+        "resume_id": "A-05",
+        "span": {
+          "start": 918,
+          "end": 966
+        },
+        "quote": "로 설명하느냐에 따라 전혀 다른 물건이 되었습니다. 국내 소비자에게 직접 닿는\n상품을 "
+      },
+      {
+        "id": "E-A-06-C-01-01",
+        "resume_id": "A-06",
+        "span": {
+          "start": 355,
+          "end": 403
+        },
+        "quote": "류로 재채취가 발생하는 사례를 두 달간 기록해 접수 단계의 확인 절차를\n  한 단계 늘"
+      },
+      {
+        "id": "E-A-06-C-02-01",
+        "resume_id": "A-06",
+        "span": {
+          "start": 416,
+          "end": 464
+        },
+        "quote": "후 재채취 건수가 월 11건에서 4건으로 줄었습니다.\n- 장비 일일 정도관리 기록지를 "
+      },
+      {
+        "id": "E-A-06-C-03-01",
+        "resume_id": "A-06",
+        "span": {
+          "start": 477,
+          "end": 525
+        },
+        "quote": "어난 항목을 팀장에게 보고했습니다.\n\n2024.07 ~ 2024.12 (6개월)  △△"
+      },
+      {
+        "id": "E-A-06-C-04-01",
+        "resume_id": "A-06",
+        "span": {
+          "start": 538,
+          "end": 586
+        },
+        "quote": "임상실습\n- 혈액은행 업무를 순환 실습하며 혈액형 검사와 교차시험 과정을 익혔습니다.\n"
+      },
+      {
+        "id": "E-A-06-C-05-01",
+        "resume_id": "A-06",
+        "span": {
+          "start": 599,
+          "end": 647
+        },
+        "quote": "판독 보조를 맡았습니다.\n\n2023.03 ~ 2023.12 (10개월)  교내 감염관리"
+      },
+      {
+        "id": "E-A-06-C-06-01",
+        "resume_id": "A-06",
+        "span": {
+          "start": 660,
+          "end": 708
+        },
+        "quote": " 안전 지침을 주제로 발표 4회를 진행하고 회차별 요약본을 정리해 배포했습니다.\n- 실"
+      },
+      {
+        "id": "E-A-06-C-07-01",
+        "resume_id": "A-06",
+        "span": {
+          "start": 721,
+          "end": 769
+        },
+        "quote": "에게 개인보호구 착탈의 절차를 교육했습니다.\n\n■ 자격 및 어학\n임상병리사 면허 (20"
+      },
+      {
+        "id": "E-A-06-C-08-01",
+        "resume_id": "A-06",
+        "span": {
+          "start": 782,
+          "end": 830
+        },
+        "quote": "사 3급 (2024.10) / TOEIC 605 (2024.03)\n\n■ 자기소개서\n1)"
+      },
+      {
+        "id": "E-A-06-C-09-01",
+        "resume_id": "A-06",
+        "span": {
+          "start": 843,
+          "end": 891
+        },
+        "quote": "일하며 결과 하나가 환자의 다음 진료를 바꾸는 것을 봤습니다. 정확한 절차를\n지키는 일"
+      },
+      {
+        "id": "E-A-06-C-10-01",
+        "resume_id": "A-06",
+        "span": {
+          "start": 904,
+          "end": 952
+        },
+        "quote": "넓은 조직에서 일하며 새로운 분야를 배우고 싶어 지원했습니다.\n\n2) 직무 관련 경험과"
+      },
+      {
+        "id": "E-A-06-C-11-01",
+        "resume_id": "A-06",
+        "span": {
+          "start": 965,
+          "end": 1013
+        },
+        "quote": " 안에서 쌓였습니다. 검체 접수와 장비 운용, 정도관리 기록이 매일의\n업무였고, 오류가"
+      }
+    ],
+    "scores": [
+      {
+        "id": "S-A-01-C-01",
+        "criterion_id": "C-01",
+        "candidate_id": "A-01",
+        "value": 0.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-01-C-02",
+        "criterion_id": "C-02",
+        "candidate_id": "A-01",
+        "value": 2.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-01-C-03",
+        "criterion_id": "C-03",
+        "candidate_id": "A-01",
+        "value": 1.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-01-C-04",
+        "criterion_id": "C-04",
+        "candidate_id": "A-01",
+        "value": 4.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-01-C-05",
+        "criterion_id": "C-05",
+        "candidate_id": "A-01",
+        "value": 5.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-01-C-06",
+        "criterion_id": "C-06",
+        "candidate_id": "A-01",
+        "value": 1.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-01-C-07",
+        "criterion_id": "C-07",
+        "candidate_id": "A-01",
+        "value": 2.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-01-C-08",
+        "criterion_id": "C-08",
+        "candidate_id": "A-01",
+        "value": 3.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-01-C-09",
+        "criterion_id": "C-09",
+        "candidate_id": "A-01",
+        "value": 4.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-01-C-10",
+        "criterion_id": "C-10",
+        "candidate_id": "A-01",
+        "value": 1.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-01-C-11",
+        "criterion_id": "C-11",
+        "candidate_id": "A-01",
+        "value": 2.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-02-C-01",
+        "criterion_id": "C-01",
+        "candidate_id": "A-02",
+        "value": 1.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-02-C-02",
+        "criterion_id": "C-02",
+        "candidate_id": "A-02",
+        "value": 3.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-02-C-03",
+        "criterion_id": "C-03",
+        "candidate_id": "A-02",
+        "value": 0.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-02-C-04",
+        "criterion_id": "C-04",
+        "candidate_id": "A-02",
+        "value": 1.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-02-C-05",
+        "criterion_id": "C-05",
+        "candidate_id": "A-02",
+        "value": 2.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-02-C-06",
+        "criterion_id": "C-06",
+        "candidate_id": "A-02",
+        "value": 0.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-02-C-07",
+        "criterion_id": "C-07",
+        "candidate_id": "A-02",
+        "value": 4.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-02-C-08",
+        "criterion_id": "C-08",
+        "candidate_id": "A-02",
+        "value": 5.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-02-C-09",
+        "criterion_id": "C-09",
+        "candidate_id": "A-02",
+        "value": 1.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-02-C-10",
+        "criterion_id": "C-10",
+        "candidate_id": "A-02",
+        "value": 2.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-02-C-11",
+        "criterion_id": "C-11",
+        "candidate_id": "A-02",
+        "value": 3.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-03-C-01",
+        "criterion_id": "C-01",
+        "candidate_id": "A-03",
+        "value": 1.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-03-C-02",
+        "criterion_id": "C-02",
+        "candidate_id": "A-03",
+        "value": 5.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-03-C-03",
+        "criterion_id": "C-03",
+        "candidate_id": "A-03",
+        "value": 1.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-03-C-04",
+        "criterion_id": "C-04",
+        "candidate_id": "A-03",
+        "value": 2.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-03-C-05",
+        "criterion_id": "C-05",
+        "candidate_id": "A-03",
+        "value": 3.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-03-C-06",
+        "criterion_id": "C-06",
+        "candidate_id": "A-03",
+        "value": 1.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-03-C-07",
+        "criterion_id": "C-07",
+        "candidate_id": "A-03",
+        "value": 1.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-03-C-08",
+        "criterion_id": "C-08",
+        "candidate_id": "A-03",
+        "value": 2.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-03-C-09",
+        "criterion_id": "C-09",
+        "candidate_id": "A-03",
+        "value": 3.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-03-C-10",
+        "criterion_id": "C-10",
+        "candidate_id": "A-03",
+        "value": 4.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-03-C-11",
+        "criterion_id": "C-11",
+        "candidate_id": "A-03",
+        "value": 5.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-04-C-01",
+        "criterion_id": "C-01",
+        "candidate_id": "A-04",
+        "value": 0.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-04-C-02",
+        "criterion_id": "C-02",
+        "candidate_id": "A-04",
+        "value": 2.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-04-C-03",
+        "criterion_id": "C-03",
+        "candidate_id": "A-04",
+        "value": 1.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-04-C-04",
+        "criterion_id": "C-04",
+        "candidate_id": "A-04",
+        "value": 4.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-04-C-05",
+        "criterion_id": "C-05",
+        "candidate_id": "A-04",
+        "value": 5.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-04-C-06",
+        "criterion_id": "C-06",
+        "candidate_id": "A-04",
+        "value": 1.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-04-C-07",
+        "criterion_id": "C-07",
+        "candidate_id": "A-04",
+        "value": 2.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-04-C-08",
+        "criterion_id": "C-08",
+        "candidate_id": "A-04",
+        "value": 3.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-04-C-09",
+        "criterion_id": "C-09",
+        "candidate_id": "A-04",
+        "value": 4.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-04-C-10",
+        "criterion_id": "C-10",
+        "candidate_id": "A-04",
+        "value": 1.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-04-C-11",
+        "criterion_id": "C-11",
+        "candidate_id": "A-04",
+        "value": 2.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-05-C-01",
+        "criterion_id": "C-01",
+        "candidate_id": "A-05",
+        "value": 1.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-05-C-02",
+        "criterion_id": "C-02",
+        "candidate_id": "A-05",
+        "value": 3.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-05-C-03",
+        "criterion_id": "C-03",
+        "candidate_id": "A-05",
+        "value": 0.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-05-C-04",
+        "criterion_id": "C-04",
+        "candidate_id": "A-05",
+        "value": 1.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-05-C-05",
+        "criterion_id": "C-05",
+        "candidate_id": "A-05",
+        "value": 2.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-05-C-06",
+        "criterion_id": "C-06",
+        "candidate_id": "A-05",
+        "value": 0.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-05-C-07",
+        "criterion_id": "C-07",
+        "candidate_id": "A-05",
+        "value": 4.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-05-C-08",
+        "criterion_id": "C-08",
+        "candidate_id": "A-05",
+        "value": 5.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-05-C-09",
+        "criterion_id": "C-09",
+        "candidate_id": "A-05",
+        "value": 1.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-05-C-10",
+        "criterion_id": "C-10",
+        "candidate_id": "A-05",
+        "value": 2.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-05-C-11",
+        "criterion_id": "C-11",
+        "candidate_id": "A-05",
+        "value": 3.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-06-C-01",
+        "criterion_id": "C-01",
+        "candidate_id": "A-06",
+        "value": 1.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-06-C-02",
+        "criterion_id": "C-02",
+        "candidate_id": "A-06",
+        "value": 5.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-06-C-03",
+        "criterion_id": "C-03",
+        "candidate_id": "A-06",
+        "value": 1.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-06-C-04",
+        "criterion_id": "C-04",
+        "candidate_id": "A-06",
+        "value": 2.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-06-C-05",
+        "criterion_id": "C-05",
+        "candidate_id": "A-06",
+        "value": 3.5,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-06-C-06",
+        "criterion_id": "C-06",
+        "candidate_id": "A-06",
+        "value": 1.0,
+        "layer": "fact",
+        "judge_id": null,
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-06-C-07",
+        "criterion_id": "C-07",
+        "candidate_id": "A-06",
+        "value": 1.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-06-C-08",
+        "criterion_id": "C-08",
+        "candidate_id": "A-06",
+        "value": 2.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-06-C-09",
+        "criterion_id": "C-09",
+        "candidate_id": "A-06",
+        "value": 3.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-06-C-10",
+        "criterion_id": "C-10",
+        "candidate_id": "A-06",
+        "value": 4.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      },
+      {
+        "id": "S-A-06-C-11",
+        "criterion_id": "C-11",
+        "candidate_id": "A-06",
+        "value": 5.0,
+        "layer": "judgment",
+        "judge_id": "panel-2",
+        "rationale": "[계약 검증 픽스처] 실제 채점 결과가 아니다"
+      }
+    ],
+    "links": [
+      {
+        "src": "R-01",
+        "rel": "extracted_from",
+        "dst": "kt-b2c:L-084"
+      },
+      {
+        "src": "R-01",
+        "rel": "extracted_from",
+        "dst": "kt-b2c:L-087"
+      },
+      {
+        "src": "R-02",
+        "rel": "extracted_from",
+        "dst": "kt-b2c:L-088"
+      },
+      {
+        "src": "R-03",
+        "rel": "extracted_from",
+        "dst": "kt-b2c:L-090"
+      },
+      {
+        "src": "R-04",
+        "rel": "extracted_from",
+        "dst": "kt-b2c:L-091"
+      },
+      {
+        "src": "R-05",
+        "rel": "extracted_from",
+        "dst": "kt-b2c:L-092"
+      },
+      {
+        "src": "R-06",
+        "rel": "extracted_from",
+        "dst": "kt-b2c:L-093"
+      },
+      {
+        "src": "D-01",
+        "rel": "extracted_from",
+        "dst": "kt-b2c:L-069"
+      },
+      {
+        "src": "D-02",
+        "rel": "extracted_from",
+        "dst": "kt-b2c:L-070"
+      },
+      {
+        "src": "D-03",
+        "rel": "extracted_from",
+        "dst": "kt-b2c:L-073"
+      },
+      {
+        "src": "D-04",
+        "rel": "extracted_from",
+        "dst": "kt-b2c:L-075"
+      },
+      {
+        "src": "D-05",
+        "rel": "extracted_from",
+        "dst": "kt-b2c:L-077"
+      },
+      {
+        "src": "C-01",
+        "rel": "derived_from",
+        "dst": "R-01"
+      },
+      {
+        "src": "C-02",
+        "rel": "derived_from",
+        "dst": "R-02"
+      },
+      {
+        "src": "C-03",
+        "rel": "derived_from",
+        "dst": "R-03"
+      },
+      {
+        "src": "C-04",
+        "rel": "derived_from",
+        "dst": "R-04"
+      },
+      {
+        "src": "C-05",
+        "rel": "derived_from",
+        "dst": "R-05"
+      },
+      {
+        "src": "C-06",
+        "rel": "derived_from",
+        "dst": "R-06"
+      },
+      {
+        "src": "C-07",
+        "rel": "derived_from",
+        "dst": "D-01"
+      },
+      {
+        "src": "C-08",
+        "rel": "derived_from",
+        "dst": "D-02"
+      },
+      {
+        "src": "C-09",
+        "rel": "derived_from",
+        "dst": "D-03"
+      },
+      {
+        "src": "C-10",
+        "rel": "derived_from",
+        "dst": "D-04"
+      },
+      {
+        "src": "C-11",
+        "rel": "derived_from",
+        "dst": "D-05"
+      },
+      {
+        "src": "S-A-01-C-01",
+        "rel": "derived_from",
+        "dst": "C-01"
+      },
+      {
+        "src": "S-A-01-C-02",
+        "rel": "grounded_in",
+        "dst": "E-A-01-C-02-01"
+      },
+      {
+        "src": "E-A-01-C-02-01",
+        "rel": "supports",
+        "dst": "C-02"
+      },
+      {
+        "src": "S-A-01-C-02",
+        "rel": "derived_from",
+        "dst": "C-02"
+      },
+      {
+        "src": "S-A-01-C-03",
+        "rel": "grounded_in",
+        "dst": "E-A-01-C-03-01"
+      },
+      {
+        "src": "E-A-01-C-03-01",
+        "rel": "supports",
+        "dst": "C-03"
+      },
+      {
+        "src": "S-A-01-C-03",
+        "rel": "derived_from",
+        "dst": "C-03"
+      },
+      {
+        "src": "S-A-01-C-04",
+        "rel": "grounded_in",
+        "dst": "E-A-01-C-04-01"
+      },
+      {
+        "src": "E-A-01-C-04-01",
+        "rel": "supports",
+        "dst": "C-04"
+      },
+      {
+        "src": "S-A-01-C-04",
+        "rel": "derived_from",
+        "dst": "C-04"
+      },
+      {
+        "src": "S-A-01-C-05",
+        "rel": "grounded_in",
+        "dst": "E-A-01-C-05-01"
+      },
+      {
+        "src": "E-A-01-C-05-01",
+        "rel": "supports",
+        "dst": "C-05"
+      },
+      {
+        "src": "S-A-01-C-05",
+        "rel": "derived_from",
+        "dst": "C-05"
+      },
+      {
+        "src": "S-A-01-C-06",
+        "rel": "grounded_in",
+        "dst": "E-A-01-C-06-01"
+      },
+      {
+        "src": "E-A-01-C-06-01",
+        "rel": "supports",
+        "dst": "C-06"
+      },
+      {
+        "src": "S-A-01-C-06",
+        "rel": "derived_from",
+        "dst": "C-06"
+      },
+      {
+        "src": "S-A-01-C-07",
+        "rel": "grounded_in",
+        "dst": "E-A-01-C-07-01"
+      },
+      {
+        "src": "E-A-01-C-07-01",
+        "rel": "supports",
+        "dst": "C-07"
+      },
+      {
+        "src": "S-A-01-C-07",
+        "rel": "derived_from",
+        "dst": "C-07"
+      },
+      {
+        "src": "S-A-01-C-08",
+        "rel": "grounded_in",
+        "dst": "E-A-01-C-08-01"
+      },
+      {
+        "src": "E-A-01-C-08-01",
+        "rel": "supports",
+        "dst": "C-08"
+      },
+      {
+        "src": "S-A-01-C-08",
+        "rel": "derived_from",
+        "dst": "C-08"
+      },
+      {
+        "src": "S-A-01-C-09",
+        "rel": "grounded_in",
+        "dst": "E-A-01-C-09-01"
+      },
+      {
+        "src": "E-A-01-C-09-01",
+        "rel": "supports",
+        "dst": "C-09"
+      },
+      {
+        "src": "S-A-01-C-09",
+        "rel": "derived_from",
+        "dst": "C-09"
+      },
+      {
+        "src": "S-A-01-C-10",
+        "rel": "grounded_in",
+        "dst": "E-A-01-C-10-01"
+      },
+      {
+        "src": "E-A-01-C-10-01",
+        "rel": "supports",
+        "dst": "C-10"
+      },
+      {
+        "src": "S-A-01-C-10",
+        "rel": "derived_from",
+        "dst": "C-10"
+      },
+      {
+        "src": "S-A-01-C-11",
+        "rel": "grounded_in",
+        "dst": "E-A-01-C-11-01"
+      },
+      {
+        "src": "E-A-01-C-11-01",
+        "rel": "supports",
+        "dst": "C-11"
+      },
+      {
+        "src": "S-A-01-C-11",
+        "rel": "derived_from",
+        "dst": "C-11"
+      },
+      {
+        "src": "S-A-02-C-01",
+        "rel": "grounded_in",
+        "dst": "E-A-02-C-01-01"
+      },
+      {
+        "src": "E-A-02-C-01-01",
+        "rel": "supports",
+        "dst": "C-01"
+      },
+      {
+        "src": "S-A-02-C-01",
+        "rel": "derived_from",
+        "dst": "C-01"
+      },
+      {
+        "src": "S-A-02-C-02",
+        "rel": "grounded_in",
+        "dst": "E-A-02-C-02-01"
+      },
+      {
+        "src": "E-A-02-C-02-01",
+        "rel": "supports",
+        "dst": "C-02"
+      },
+      {
+        "src": "S-A-02-C-02",
+        "rel": "derived_from",
+        "dst": "C-02"
+      },
+      {
+        "src": "S-A-02-C-03",
+        "rel": "derived_from",
+        "dst": "C-03"
+      },
+      {
+        "src": "S-A-02-C-04",
+        "rel": "grounded_in",
+        "dst": "E-A-02-C-04-01"
+      },
+      {
+        "src": "E-A-02-C-04-01",
+        "rel": "supports",
+        "dst": "C-04"
+      },
+      {
+        "src": "S-A-02-C-04",
+        "rel": "derived_from",
+        "dst": "C-04"
+      },
+      {
+        "src": "S-A-02-C-05",
+        "rel": "grounded_in",
+        "dst": "E-A-02-C-05-01"
+      },
+      {
+        "src": "E-A-02-C-05-01",
+        "rel": "supports",
+        "dst": "C-05"
+      },
+      {
+        "src": "S-A-02-C-05",
+        "rel": "derived_from",
+        "dst": "C-05"
+      },
+      {
+        "src": "S-A-02-C-06",
+        "rel": "derived_from",
+        "dst": "C-06"
+      },
+      {
+        "src": "S-A-02-C-07",
+        "rel": "grounded_in",
+        "dst": "E-A-02-C-07-01"
+      },
+      {
+        "src": "E-A-02-C-07-01",
+        "rel": "supports",
+        "dst": "C-07"
+      },
+      {
+        "src": "S-A-02-C-07",
+        "rel": "derived_from",
+        "dst": "C-07"
+      },
+      {
+        "src": "S-A-02-C-08",
+        "rel": "grounded_in",
+        "dst": "E-A-02-C-08-01"
+      },
+      {
+        "src": "E-A-02-C-08-01",
+        "rel": "supports",
+        "dst": "C-08"
+      },
+      {
+        "src": "S-A-02-C-08",
+        "rel": "derived_from",
+        "dst": "C-08"
+      },
+      {
+        "src": "S-A-02-C-09",
+        "rel": "grounded_in",
+        "dst": "E-A-02-C-09-01"
+      },
+      {
+        "src": "E-A-02-C-09-01",
+        "rel": "supports",
+        "dst": "C-09"
+      },
+      {
+        "src": "S-A-02-C-09",
+        "rel": "derived_from",
+        "dst": "C-09"
+      },
+      {
+        "src": "S-A-02-C-10",
+        "rel": "grounded_in",
+        "dst": "E-A-02-C-10-01"
+      },
+      {
+        "src": "E-A-02-C-10-01",
+        "rel": "supports",
+        "dst": "C-10"
+      },
+      {
+        "src": "S-A-02-C-10",
+        "rel": "derived_from",
+        "dst": "C-10"
+      },
+      {
+        "src": "S-A-02-C-11",
+        "rel": "grounded_in",
+        "dst": "E-A-02-C-11-01"
+      },
+      {
+        "src": "E-A-02-C-11-01",
+        "rel": "supports",
+        "dst": "C-11"
+      },
+      {
+        "src": "S-A-02-C-11",
+        "rel": "derived_from",
+        "dst": "C-11"
+      },
+      {
+        "src": "S-A-03-C-01",
+        "rel": "grounded_in",
+        "dst": "E-A-03-C-01-01"
+      },
+      {
+        "src": "E-A-03-C-01-01",
+        "rel": "supports",
+        "dst": "C-01"
+      },
+      {
+        "src": "S-A-03-C-01",
+        "rel": "derived_from",
+        "dst": "C-01"
+      },
+      {
+        "src": "S-A-03-C-02",
+        "rel": "grounded_in",
+        "dst": "E-A-03-C-02-01"
+      },
+      {
+        "src": "E-A-03-C-02-01",
+        "rel": "supports",
+        "dst": "C-02"
+      },
+      {
+        "src": "S-A-03-C-02",
+        "rel": "derived_from",
+        "dst": "C-02"
+      },
+      {
+        "src": "S-A-03-C-03",
+        "rel": "grounded_in",
+        "dst": "E-A-03-C-03-01"
+      },
+      {
+        "src": "E-A-03-C-03-01",
+        "rel": "supports",
+        "dst": "C-03"
+      },
+      {
+        "src": "S-A-03-C-03",
+        "rel": "derived_from",
+        "dst": "C-03"
+      },
+      {
+        "src": "S-A-03-C-04",
+        "rel": "grounded_in",
+        "dst": "E-A-03-C-04-01"
+      },
+      {
+        "src": "E-A-03-C-04-01",
+        "rel": "supports",
+        "dst": "C-04"
+      },
+      {
+        "src": "S-A-03-C-04",
+        "rel": "derived_from",
+        "dst": "C-04"
+      },
+      {
+        "src": "S-A-03-C-05",
+        "rel": "grounded_in",
+        "dst": "E-A-03-C-05-01"
+      },
+      {
+        "src": "E-A-03-C-05-01",
+        "rel": "supports",
+        "dst": "C-05"
+      },
+      {
+        "src": "S-A-03-C-05",
+        "rel": "derived_from",
+        "dst": "C-05"
+      },
+      {
+        "src": "S-A-03-C-06",
+        "rel": "grounded_in",
+        "dst": "E-A-03-C-06-01"
+      },
+      {
+        "src": "E-A-03-C-06-01",
+        "rel": "supports",
+        "dst": "C-06"
+      },
+      {
+        "src": "S-A-03-C-06",
+        "rel": "derived_from",
+        "dst": "C-06"
+      },
+      {
+        "src": "S-A-03-C-07",
+        "rel": "grounded_in",
+        "dst": "E-A-03-C-07-01"
+      },
+      {
+        "src": "E-A-03-C-07-01",
+        "rel": "supports",
+        "dst": "C-07"
+      },
+      {
+        "src": "S-A-03-C-07",
+        "rel": "derived_from",
+        "dst": "C-07"
+      },
+      {
+        "src": "S-A-03-C-08",
+        "rel": "grounded_in",
+        "dst": "E-A-03-C-08-01"
+      },
+      {
+        "src": "E-A-03-C-08-01",
+        "rel": "supports",
+        "dst": "C-08"
+      },
+      {
+        "src": "S-A-03-C-08",
+        "rel": "derived_from",
+        "dst": "C-08"
+      },
+      {
+        "src": "S-A-03-C-09",
+        "rel": "grounded_in",
+        "dst": "E-A-03-C-09-01"
+      },
+      {
+        "src": "E-A-03-C-09-01",
+        "rel": "supports",
+        "dst": "C-09"
+      },
+      {
+        "src": "S-A-03-C-09",
+        "rel": "derived_from",
+        "dst": "C-09"
+      },
+      {
+        "src": "S-A-03-C-10",
+        "rel": "grounded_in",
+        "dst": "E-A-03-C-10-01"
+      },
+      {
+        "src": "E-A-03-C-10-01",
+        "rel": "supports",
+        "dst": "C-10"
+      },
+      {
+        "src": "S-A-03-C-10",
+        "rel": "derived_from",
+        "dst": "C-10"
+      },
+      {
+        "src": "S-A-03-C-11",
+        "rel": "grounded_in",
+        "dst": "E-A-03-C-11-01"
+      },
+      {
+        "src": "E-A-03-C-11-01",
+        "rel": "supports",
+        "dst": "C-11"
+      },
+      {
+        "src": "S-A-03-C-11",
+        "rel": "derived_from",
+        "dst": "C-11"
+      },
+      {
+        "src": "S-A-04-C-01",
+        "rel": "derived_from",
+        "dst": "C-01"
+      },
+      {
+        "src": "S-A-04-C-02",
+        "rel": "grounded_in",
+        "dst": "E-A-04-C-02-01"
+      },
+      {
+        "src": "E-A-04-C-02-01",
+        "rel": "supports",
+        "dst": "C-02"
+      },
+      {
+        "src": "S-A-04-C-02",
+        "rel": "derived_from",
+        "dst": "C-02"
+      },
+      {
+        "src": "S-A-04-C-03",
+        "rel": "grounded_in",
+        "dst": "E-A-04-C-03-01"
+      },
+      {
+        "src": "E-A-04-C-03-01",
+        "rel": "supports",
+        "dst": "C-03"
+      },
+      {
+        "src": "S-A-04-C-03",
+        "rel": "derived_from",
+        "dst": "C-03"
+      },
+      {
+        "src": "S-A-04-C-04",
+        "rel": "grounded_in",
+        "dst": "E-A-04-C-04-01"
+      },
+      {
+        "src": "E-A-04-C-04-01",
+        "rel": "supports",
+        "dst": "C-04"
+      },
+      {
+        "src": "S-A-04-C-04",
+        "rel": "derived_from",
+        "dst": "C-04"
+      },
+      {
+        "src": "S-A-04-C-05",
+        "rel": "grounded_in",
+        "dst": "E-A-04-C-05-01"
+      },
+      {
+        "src": "E-A-04-C-05-01",
+        "rel": "supports",
+        "dst": "C-05"
+      },
+      {
+        "src": "S-A-04-C-05",
+        "rel": "derived_from",
+        "dst": "C-05"
+      },
+      {
+        "src": "S-A-04-C-06",
+        "rel": "grounded_in",
+        "dst": "E-A-04-C-06-01"
+      },
+      {
+        "src": "E-A-04-C-06-01",
+        "rel": "supports",
+        "dst": "C-06"
+      },
+      {
+        "src": "S-A-04-C-06",
+        "rel": "derived_from",
+        "dst": "C-06"
+      },
+      {
+        "src": "S-A-04-C-07",
+        "rel": "grounded_in",
+        "dst": "E-A-04-C-07-01"
+      },
+      {
+        "src": "E-A-04-C-07-01",
+        "rel": "supports",
+        "dst": "C-07"
+      },
+      {
+        "src": "S-A-04-C-07",
+        "rel": "derived_from",
+        "dst": "C-07"
+      },
+      {
+        "src": "S-A-04-C-08",
+        "rel": "grounded_in",
+        "dst": "E-A-04-C-08-01"
+      },
+      {
+        "src": "E-A-04-C-08-01",
+        "rel": "supports",
+        "dst": "C-08"
+      },
+      {
+        "src": "S-A-04-C-08",
+        "rel": "derived_from",
+        "dst": "C-08"
+      },
+      {
+        "src": "S-A-04-C-09",
+        "rel": "grounded_in",
+        "dst": "E-A-04-C-09-01"
+      },
+      {
+        "src": "E-A-04-C-09-01",
+        "rel": "supports",
+        "dst": "C-09"
+      },
+      {
+        "src": "S-A-04-C-09",
+        "rel": "derived_from",
+        "dst": "C-09"
+      },
+      {
+        "src": "S-A-04-C-10",
+        "rel": "grounded_in",
+        "dst": "E-A-04-C-10-01"
+      },
+      {
+        "src": "E-A-04-C-10-01",
+        "rel": "supports",
+        "dst": "C-10"
+      },
+      {
+        "src": "S-A-04-C-10",
+        "rel": "derived_from",
+        "dst": "C-10"
+      },
+      {
+        "src": "S-A-04-C-11",
+        "rel": "grounded_in",
+        "dst": "E-A-04-C-11-01"
+      },
+      {
+        "src": "E-A-04-C-11-01",
+        "rel": "supports",
+        "dst": "C-11"
+      },
+      {
+        "src": "S-A-04-C-11",
+        "rel": "derived_from",
+        "dst": "C-11"
+      },
+      {
+        "src": "S-A-05-C-01",
+        "rel": "grounded_in",
+        "dst": "E-A-05-C-01-01"
+      },
+      {
+        "src": "E-A-05-C-01-01",
+        "rel": "supports",
+        "dst": "C-01"
+      },
+      {
+        "src": "S-A-05-C-01",
+        "rel": "derived_from",
+        "dst": "C-01"
+      },
+      {
+        "src": "S-A-05-C-02",
+        "rel": "grounded_in",
+        "dst": "E-A-05-C-02-01"
+      },
+      {
+        "src": "E-A-05-C-02-01",
+        "rel": "supports",
+        "dst": "C-02"
+      },
+      {
+        "src": "S-A-05-C-02",
+        "rel": "derived_from",
+        "dst": "C-02"
+      },
+      {
+        "src": "S-A-05-C-03",
+        "rel": "derived_from",
+        "dst": "C-03"
+      },
+      {
+        "src": "S-A-05-C-04",
+        "rel": "grounded_in",
+        "dst": "E-A-05-C-04-01"
+      },
+      {
+        "src": "E-A-05-C-04-01",
+        "rel": "supports",
+        "dst": "C-04"
+      },
+      {
+        "src": "S-A-05-C-04",
+        "rel": "derived_from",
+        "dst": "C-04"
+      },
+      {
+        "src": "S-A-05-C-05",
+        "rel": "grounded_in",
+        "dst": "E-A-05-C-05-01"
+      },
+      {
+        "src": "E-A-05-C-05-01",
+        "rel": "supports",
+        "dst": "C-05"
+      },
+      {
+        "src": "S-A-05-C-05",
+        "rel": "derived_from",
+        "dst": "C-05"
+      },
+      {
+        "src": "S-A-05-C-06",
+        "rel": "derived_from",
+        "dst": "C-06"
+      },
+      {
+        "src": "S-A-05-C-07",
+        "rel": "grounded_in",
+        "dst": "E-A-05-C-07-01"
+      },
+      {
+        "src": "E-A-05-C-07-01",
+        "rel": "supports",
+        "dst": "C-07"
+      },
+      {
+        "src": "S-A-05-C-07",
+        "rel": "derived_from",
+        "dst": "C-07"
+      },
+      {
+        "src": "S-A-05-C-08",
+        "rel": "grounded_in",
+        "dst": "E-A-05-C-08-01"
+      },
+      {
+        "src": "E-A-05-C-08-01",
+        "rel": "supports",
+        "dst": "C-08"
+      },
+      {
+        "src": "S-A-05-C-08",
+        "rel": "derived_from",
+        "dst": "C-08"
+      },
+      {
+        "src": "S-A-05-C-09",
+        "rel": "grounded_in",
+        "dst": "E-A-05-C-09-01"
+      },
+      {
+        "src": "E-A-05-C-09-01",
+        "rel": "supports",
+        "dst": "C-09"
+      },
+      {
+        "src": "S-A-05-C-09",
+        "rel": "derived_from",
+        "dst": "C-09"
+      },
+      {
+        "src": "S-A-05-C-10",
+        "rel": "grounded_in",
+        "dst": "E-A-05-C-10-01"
+      },
+      {
+        "src": "E-A-05-C-10-01",
+        "rel": "supports",
+        "dst": "C-10"
+      },
+      {
+        "src": "S-A-05-C-10",
+        "rel": "derived_from",
+        "dst": "C-10"
+      },
+      {
+        "src": "S-A-05-C-11",
+        "rel": "grounded_in",
+        "dst": "E-A-05-C-11-01"
+      },
+      {
+        "src": "E-A-05-C-11-01",
+        "rel": "supports",
+        "dst": "C-11"
+      },
+      {
+        "src": "S-A-05-C-11",
+        "rel": "derived_from",
+        "dst": "C-11"
+      },
+      {
+        "src": "S-A-06-C-01",
+        "rel": "grounded_in",
+        "dst": "E-A-06-C-01-01"
+      },
+      {
+        "src": "E-A-06-C-01-01",
+        "rel": "supports",
+        "dst": "C-01"
+      },
+      {
+        "src": "S-A-06-C-01",
+        "rel": "derived_from",
+        "dst": "C-01"
+      },
+      {
+        "src": "S-A-06-C-02",
+        "rel": "grounded_in",
+        "dst": "E-A-06-C-02-01"
+      },
+      {
+        "src": "E-A-06-C-02-01",
+        "rel": "supports",
+        "dst": "C-02"
+      },
+      {
+        "src": "S-A-06-C-02",
+        "rel": "derived_from",
+        "dst": "C-02"
+      },
+      {
+        "src": "S-A-06-C-03",
+        "rel": "grounded_in",
+        "dst": "E-A-06-C-03-01"
+      },
+      {
+        "src": "E-A-06-C-03-01",
+        "rel": "supports",
+        "dst": "C-03"
+      },
+      {
+        "src": "S-A-06-C-03",
+        "rel": "derived_from",
+        "dst": "C-03"
+      },
+      {
+        "src": "S-A-06-C-04",
+        "rel": "grounded_in",
+        "dst": "E-A-06-C-04-01"
+      },
+      {
+        "src": "E-A-06-C-04-01",
+        "rel": "supports",
+        "dst": "C-04"
+      },
+      {
+        "src": "S-A-06-C-04",
+        "rel": "derived_from",
+        "dst": "C-04"
+      },
+      {
+        "src": "S-A-06-C-05",
+        "rel": "grounded_in",
+        "dst": "E-A-06-C-05-01"
+      },
+      {
+        "src": "E-A-06-C-05-01",
+        "rel": "supports",
+        "dst": "C-05"
+      },
+      {
+        "src": "S-A-06-C-05",
+        "rel": "derived_from",
+        "dst": "C-05"
+      },
+      {
+        "src": "S-A-06-C-06",
+        "rel": "grounded_in",
+        "dst": "E-A-06-C-06-01"
+      },
+      {
+        "src": "E-A-06-C-06-01",
+        "rel": "supports",
+        "dst": "C-06"
+      },
+      {
+        "src": "S-A-06-C-06",
+        "rel": "derived_from",
+        "dst": "C-06"
+      },
+      {
+        "src": "S-A-06-C-07",
+        "rel": "grounded_in",
+        "dst": "E-A-06-C-07-01"
+      },
+      {
+        "src": "E-A-06-C-07-01",
+        "rel": "supports",
+        "dst": "C-07"
+      },
+      {
+        "src": "S-A-06-C-07",
+        "rel": "derived_from",
+        "dst": "C-07"
+      },
+      {
+        "src": "S-A-06-C-08",
+        "rel": "grounded_in",
+        "dst": "E-A-06-C-08-01"
+      },
+      {
+        "src": "E-A-06-C-08-01",
+        "rel": "supports",
+        "dst": "C-08"
+      },
+      {
+        "src": "S-A-06-C-08",
+        "rel": "derived_from",
+        "dst": "C-08"
+      },
+      {
+        "src": "S-A-06-C-09",
+        "rel": "grounded_in",
+        "dst": "E-A-06-C-09-01"
+      },
+      {
+        "src": "E-A-06-C-09-01",
+        "rel": "supports",
+        "dst": "C-09"
+      },
+      {
+        "src": "S-A-06-C-09",
+        "rel": "derived_from",
+        "dst": "C-09"
+      },
+      {
+        "src": "S-A-06-C-10",
+        "rel": "grounded_in",
+        "dst": "E-A-06-C-10-01"
+      },
+      {
+        "src": "E-A-06-C-10-01",
+        "rel": "supports",
+        "dst": "C-10"
+      },
+      {
+        "src": "S-A-06-C-10",
+        "rel": "derived_from",
+        "dst": "C-10"
+      },
+      {
+        "src": "S-A-06-C-11",
+        "rel": "grounded_in",
+        "dst": "E-A-06-C-11-01"
+      },
+      {
+        "src": "E-A-06-C-11-01",
+        "rel": "supports",
+        "dst": "C-11"
+      },
+      {
+        "src": "S-A-06-C-11",
+        "rel": "derived_from",
+        "dst": "C-11"
+      }
+    ]
+  },
+  "unapproved": false,
+  "approved_at": "2026-09-01T13:00:00+09:00",
+  "approved_by": "[픽스처]",
+  "posting_revision": null,
+  "revision_checked": false,
+  "cost": {
+    "calls": 0,
+    "in_tokens": 0,
+    "out_tokens": 0,
+    "usd": 0.0,
+    "priced": false,
+    "model": "[픽스처 — 호출 없음]"
+  },
+  "parse_report": {
+    "parse_mode": "ocr",
+    "ocr_engine": "paddle",
+    "ocr_sha256": "ced6b1005b85912106d02d76ebb75f3133ad854eb377b41ceac8c4684ff04cbb",
+    "line_count": 65,
+    "role_counts": {
+      "header": 29,
+      "item": 22,
+      "ambiguous": 10,
+      "continuation": 4
+    },
+    "merged_continuations": 4,
+    "excluded_blocks": [
+      "recruit.kt.com에서 온라인 지원",
+      "지원서 접수 안내",
+      "채용절차",
+      "서류전형",
+      "직무에 따라 면접 진행을 위한 별도의 자료 제출 또는절차가 진행될 수 있습니다. (포트폴리오 제출등)",
+      "지원방법 및 유의사항",
+      "근무지 정보",
+      "기타사항",
+      "문의처"
+    ],
+    "llm_calls": 0,
+    "emphasis_available": false
+  }
+}
