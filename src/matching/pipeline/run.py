@@ -59,6 +59,12 @@ from ..judge.panel import USAGE_FILENAME, CallBudget, UsageReport, judge_criteri
 from ..model.governance import enforce
 from ..model.graph import EvidenceGraph
 from ..model.objects import Criterion, Requirement, Resume
+
+# `ParseReport`만 가져온다. **OCR 엔진은 여기서 안 딸려 온다** — `parser/ocr.py`가
+# paddle을 함수 안에서 import하므로(`ocr` 선택 그룹), 모듈 수준 import로 늘어나는 짐은
+# Pillow 하나이고 그건 기본 의존성이다. `prepare()` 안의 `parse_posting` 지연 import는
+# 그대로 둔다 — 무거운 것은 그 함수를 **부를 때** 들어온다.
+from ..parser import ParseReport
 from ..rubric.build import build_rubric
 from ..scorer.fact import score_fact
 from ..scorer.gate import run_gates
@@ -105,6 +111,10 @@ class RubricProposal(BaseModel):
     posting_revision: str | None  # API의 modification-timestamp
     approved_at: datetime | None = None
     approved_by: str | None = None
+    # 파싱이 어떻게 됐는지. **화면에 그대로 나간다** (`step9.md` 9번). 임계값 2개가 공고
+    # 1건 실측에서 나온 값이라 다른 공고에서 빗나갈 수 있는데, `role_counts`와 `ambiguous`
+    # 비율만 보면 어디가 틀어졌는지 보인다. 결과에 안 실으면 그걸 볼 방법이 없다.
+    parse_report: ParseReport | None = None
 
 
 class RunResult(BaseModel):
@@ -129,8 +139,10 @@ class RunResult(BaseModel):
     approved_by: str | None
     posting_revision: str | None
     revision_checked: bool  # G7을 실제로 검사했나 (레지스트리가 있었나)
-    # --- 비용. 「이 결과를 만드는 데 n회 / $x」 ---
+    # --- 비용. 「이 결과를 만드는 데 n회 / $x / 모델 <이름>」 ---
     cost: UsageReport
+    # 이 결과의 조건이 어떤 파싱에서 나왔나. `RubricProposal`에서 그대로 옮긴다.
+    parse_report: ParseReport | None = None
 
 
 def _plain_requirement(requirement: Requirement) -> Requirement:
@@ -166,7 +178,7 @@ def prepare(
     # 무거운 의존성(OCR 엔진)을 승인 화면만 쓰는 사람에게 지우지 않는다 (`api/cli.py`와 같다).
     from ..parser import parse_posting
 
-    _requirements, graph, _report = parse_posting(
+    _requirements, graph, report = parse_posting(
         posting_ref, settings, client=client, data_dir=data_dir
     )
     graph.requirements = [_plain_requirement(req) for req in graph.requirements]
@@ -190,6 +202,7 @@ def prepare(
         criteria=criteria,
         graph=graph,
         posting_revision=posting_revision,
+        parse_report=report,
     )
 
 
@@ -331,6 +344,7 @@ def score(
         posting_revision=proposal.posting_revision,
         revision_checked=revision_checked,
         cost=active_budget.report(),
+        parse_report=proposal.parse_report,
     )
 
     if owns_budget:
