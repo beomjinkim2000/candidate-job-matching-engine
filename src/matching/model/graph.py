@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .objects import Criterion, Evidence, GraphObject, Link, Relation, Requirement, Score
 
-# `trace()`가 따라가는 순서. `docs/KAIREN_OS_ANALYSIS.md` §2의 사슬 그대로다.
+# `trace()`가 따라가는 순서. 근거 사슬 그대로다.
 # `contradicts`는 빠져 있다 — 승인 화면에서 뒤집힌 판정을 남기는 관계지 근거 경로가 아니다.
 TRACE_CHAIN: tuple[Relation, ...] = (
     "grounded_in",

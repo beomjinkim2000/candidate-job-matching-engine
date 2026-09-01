@@ -1,6 +1,6 @@
 """파이프라인 전체가 주고받는 Object — **여기가 시스템의 계약이다.**
 
-근거는 문장이 아니라 Link다 (`docs/KAIREN_OS_ANALYSIS.md` §2). 점수 하나에서
+근거는 문장이 아니라 Link다. 점수 하나에서
 `Score → Evidence → Criterion → Requirement → 공고 이미지 좌표`까지 끝까지 이어지고,
 그 사슬을 코드가 대조할 수 있어야 한다. 이 파일은 그 사슬의 마디를 정의한다.
 
@@ -28,7 +28,7 @@ ScoreLayer = Literal["gate", "fact", "judgment"]
 RequirementBranch = Literal["term", "binary", "graded"]
 
 # `rel`을 5개보다 늘리지 않는다 — 종류가 늘면 검산 규칙이 따라 늘고,
-# 24시간 안에 관리가 안 된다 (`docs/KAIREN_OS_ANALYSIS.md` §5).
+# 24시간 안에 관리가 안 된다.
 Relation = Literal[
     "extracted_from",
     "derived_from",

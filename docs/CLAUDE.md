@@ -11,14 +11,15 @@
 | `SCORING_CRITERIA_EXPLAINED.md` | 1차 검토를 쉽게 다시 쓴 것 | **README 쓸 때** |
 | `LEGAL_ARCHITECTURE.md` | **고객사 경유 데이터 구조** (설계만, 구현 안 함) · 승인 게이트의 법적 근거 | **과제 CRITICAL. README 필수 소재** |
 | `IMAGE_ACQUISITION.md` | **사람인 API는 이미지를 안 준다** · 데모 4단계 중 3단계는 API 밖 · 데모 ≠ 프로덕션 이미지 | **crawler·parser 건드리기 전 필독** |
-| `KAIREN_OS_ANALYSIS.md` | 근거를 **Object+Link 그래프**로 모델링 · 검산 G1~G7 · reviewStatus · 근거등급 E2/E1/E0 | **근거 관련 판단이 필요할 때** |
 | `EVIDENCE_IDEAS.md` | 근거 해법 3가지 (판단유탈 대장 · 소거 재채점 · 등수 뒤집기). **채택됨** | step12 구현 전 |
 | `RUBRIC_GENERATION_EVIDENCE.md` | **3차 문헌 검토 분석 — 루브릭을 누가 쓰는가.** 공통 템플릿 1개는 폐기, 조건 유형별로 나눔 · 문체 편향 d=1.90 · 척도 세분성 역관계 · **검증 필요 인용 3건** | **step4·step6 건드리기 전 필독** |
 | `TRADEOFFS.md` | 결정 / 버린 것 / 근거 / 이 선택이 틀리는 조건 | **README「설계 결정과 트레이드오프」 원재료** |
 | `RUNNING.md` | `run.py` 단일 진입점 — 평가자 머신에서 일어나는 일 · OCR을 언제 받나 · 파싱 확인 화면이 비는 이유 · **윈도우 위험 지점 표** | **README「실행 방법」 원재료** · 진입점·부트스트랩 건드리기 전 |
-| `refs/` | 외부 참조 원본 (`Kairen_OS_Concept.html`) · `LINER_PROMPTS.md`(3차 조사 프롬프트 5개) | 원문 확인 · 추가 조사할 때 |
+| `refs/` | `LINER_PROMPTS.md`(3차 조사 프롬프트 5개) | 추가 조사할 때 |
 | `*.docx` | Liner 문헌 검토 원본 **3건** (평가축·가중치 / 척도·심사위원 / **루브릭 생성**) | 인용 원문 확인할 때만 |
-| `PRD.md` `ARCHITECTURE.md` `ADR.md` | Harness 스켈레톤. **아직 템플릿 상태** | 채워야 함 |
+| `PRD.md` | 목표 · 사용자 · 성공 기준 · **안 만든 것과 그 이유** | 범위를 확인할 때 |
+| `ARCHITECTURE.md` | 모듈 경계 · 데이터 흐름 · 승인 게이트 · Link 그래프 · 어댑터 3종 | **구조를 볼 때** |
+| `ADR.md` | 결정 13개. **실측으로 뒤집힌 것은 「개정」으로 남긴다** | **왜 그렇게 했나** 를 물을 때 |
 
 > 1차 검토와 2차 검토의 결론이 어긋나는 곳이 있다 (예: 학력 배점).
 > **2차(`RUBRIC_DESIGN.md`)가 최신이다.**

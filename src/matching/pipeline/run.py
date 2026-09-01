@@ -10,7 +10,7 @@ score(approved, resumes)  →  RunResult
 
 `review_status`가 코드 어딘가의 선택 함수로만 있으면 `human_validated`에 **도달할 경로가
 없다.** 그러면 배지는 영원히 「AI 초안」이고, 우리가 남의 채용 기준을 대신 정한 것이 된다
-(`docs/LEGAL_ARCHITECTURE.md` §4 · `docs/KAIREN_OS_ANALYSIS.md` §3-1).
+(`docs/LEGAL_ARCHITECTURE.md` §4).
 
 - `prepare()`는 채점하지 않는다. **이력서를 아예 받지 않는다** — 받을 수 없으면 실수로
   채점할 수도 없다
@@ -25,7 +25,7 @@ score(approved, resumes)  →  RunResult
 `PostingRegistry.current()`로 현재 값을 다시 조회해 `modification-timestamp`가 다르면
 `ApprovalStale`을 던진다. 공고가 `active=0`이거나 마감일이 지났어도 마찬가지다.
 
-> 근거: Kairen OS — *「`human_validated`는 사람이 **현재 revision**을 확인한 뒤에만 쓴다」*
+> 규칙: 「`human_validated`는 사람이 **현재 revision**을 확인한 뒤에만 쓴다」
 > 이걸 안 하면 **낡은 루브릭으로 계속 채점하면서 「사람 확인함」 배지를 달고 있게 된다.**
 
 레지스트리를 안 주면 G7을 **검사할 수 없다.** 그때는 통과시키되 `revision_checked=False`로

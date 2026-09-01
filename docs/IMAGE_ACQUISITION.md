@@ -173,7 +173,7 @@ title:   "백엔드..." ↔  position.title
 | 공고가 마감됨 | `active=0`, `expiration-date` 지남 | **채점 차단.** 마감된 공고로 랭킹을 돌리지 않는다 |
 | 공고가 **수정됨** | `modification-timestamp`가 바뀜 | **승인 무효화 → 재승인 요구** |
 
-두 번째가 결정적이다. Kairen OS의 규칙이 이렇다.
+두 번째가 결정적이다. 우리가 세운 규칙이 이렇다.
 
 > `human_validated`는 사람이 **현재 revision**을 확인한 뒤에만 쓴다.
 

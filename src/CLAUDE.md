@@ -26,7 +26,7 @@
 **근거는 문장이 아니라 Link다.** 근거 문장은 Link 위에 렌더링하는 결과물이지 저장 단위가
 아니다. 근거는 `Score → grounded_in → Evidence → supports → Criterion → derived_from →
 Requirement → extracted_from → 공고 이미지 좌표`로 끝까지 이어져야 한다.
-설계 근거는 `docs/KAIREN_OS_ANALYSIS.md`.
+
 
 | Object | 담는 것 | 필수 필드 |
 |---|---|---|

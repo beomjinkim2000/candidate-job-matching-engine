@@ -298,7 +298,7 @@ def test_trace_skips_to_derived_from_for_gate_score():
 
 
 def test_relations_stay_at_five():
-    """늘리면 검산 규칙이 따라 늘어난다 (`docs/KAIREN_OS_ANALYSIS.md` §5)."""
+    """늘리면 검산 규칙이 따라 늘어난다."""
     assert set(RELATIONS) == {
         "extracted_from",
         "derived_from",
