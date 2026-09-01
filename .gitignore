@@ -33,8 +33,19 @@ __pycache__/
 # ⚠️ gitignore에는 **줄 끝 주석이 없다.** `pattern  # 설명`은 패턴의 일부가 되어
 #    아무것도 안 막는다. 설명은 반드시 패턴 위 줄에 쓴다.
 
-# 공고 이미지 원본
-data/postings/*/img_*.png
+# 공고 이미지 원본 — **이 제출 레포에서만 예외로 싣는다** (2026-09-01 결정)
+#
+# 원칙은 그대로 「원본 미적재」다(`docs/LEGAL_ARCHITECTURE.md`). 그런데 그 원칙을
+# 곧이곧대로 지키면 **평가자가 아무것도 못 본다** — 이미지를 받으려면 URL이 살아 있어야
+# 하고, 받은 뒤엔 OCR을 6분 돌려야 한다. 둘 중 하나만 어긋나도 화면이 빈다.
+#
+# 그래서 **데모(제출본)와 프로덕션을 가른다** — `docs/IMAGE_ACQUISITION.md`가 이미
+# 그 둘을 나눠 놓았고, 여기가 그 경계다. 싣는 것은 **그림 2장뿐**이고,
+# 전사본·캐시는 아래대로 계속 뺀다. 「원본을 쌓지 않는다」의 대상은 **파이프라인이
+# 만들어 내는 사본**이지 사람이 눈으로 확인할 원본 한 장이 아니다.
+#
+#   data/postings/*/img_*.png     ← 뺐다. 두 장을 싣는다
+#
 # 이미지의 전사본 = 공고 본문 그 자체
 data/postings/*/ocr.json
 # 헤더 역할 분류 캐시 — 섹션 제목을 원문 그대로 담는다. 그것도 공고 본문이다.
@@ -50,6 +61,11 @@ data/.saramin_quota.json
 data/.judge_usage.json
 
 # --- 제작 과정 메타데이터. 제출물이 아니다 ---
+# AI에게 준 작업 규칙 (루트만. src/·tests/의 것은 아키텍처 근거라 함께 싣는다)
+/CLAUDE.md
+# README에 옮겨 쓸 재료. **제출물이 아니라 작성 도구다** — 본인이 쓴 README와
+# 나란히 있으면 「어느 쪽이 제출물인가」가 흐려진다.
+docs/README_MATERIAL.md
 # 하네스 step 정의 (작업 지시서)
 phases/
 # 진행 상황 추적
@@ -60,7 +76,5 @@ docs/HARNESS_SCOREBOARD.md
 docs/HARNESS_VALIDITY.md
 # 하네스 실행기 — 외부 스켈레톤이지 우리 코드가 아니다
 scripts/
-# 스파이크 가상환경
-spike/.venv/
-# 컴파일 산출물
-spike/ocr_check/.vision_ocr
+# OCR 엔진 비교 실험 — 결론만 docs/OCR_EVIDENCE.md에 옮겼다
+spike/
