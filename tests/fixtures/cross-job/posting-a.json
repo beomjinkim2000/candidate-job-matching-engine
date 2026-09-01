@@ -1,0 +1,54 @@
+{
+  "posting_id": "fx-clinical",
+  "job_family": "임상시험 모니터링",
+  "note": "테스트 전용 가짜 공고다. data/postings/의 실제 공고와 아무 관계가 없다.",
+  "requirements": [
+    {
+      "id": "R-01",
+      "text": "GCP 및 ICH-E6 가이드라인을 이해하고 적용할 수 있는 분",
+      "kind": "required",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {"page": 1, "x1": 40, "y1": 120, "x2": 800, "y2": 148, "img_w": 860, "img_h": 2400},
+      "source_span": {"start": 0, "end": 33}
+    },
+    {
+      "id": "R-02",
+      "text": "임상시험 모니터링 업무를 3년 이상 수행한 분",
+      "kind": "required",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {"page": 1, "x1": 40, "y1": 152, "x2": 800, "y2": 180, "img_w": 860, "img_h": 2400},
+      "source_span": {"start": 34, "end": 60}
+    },
+    {
+      "id": "R-03",
+      "text": "EDC 시스템으로 증례 자료를 입력하고 검증해 본 분",
+      "kind": "preferred",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {"page": 1, "x1": 40, "y1": 184, "x2": 800, "y2": 212, "img_w": 860, "img_h": 2400},
+      "source_span": {"start": 61, "end": 90}
+    }
+  ],
+  "duties": [
+    {
+      "id": "D-01",
+      "text": "실시기관을 방문해 증례기록서와 원자료를 대조하고 이탈 사항을 보고하는 업무",
+      "kind": "duty",
+      "evidence_grade": "E1",
+      "ladder_step": 3,
+      "source_bbox": {"page": 1, "x1": 40, "y1": 300, "x2": 800, "y2": 328, "img_w": 860, "img_h": 2400},
+      "source_span": {"start": 120, "end": 160}
+    },
+    {
+      "id": "D-02",
+      "text": "시험책임자와 심사위원회 일정을 협의하고 진행 현황을 정리하는 업무",
+      "kind": "duty",
+      "evidence_grade": "E1",
+      "ladder_step": 3,
+      "source_bbox": {"page": 1, "x1": 40, "y1": 332, "x2": 800, "y2": 360, "img_w": 860, "img_h": 2400},
+      "source_span": {"start": 161, "end": 198}
+    }
+  ]
+}

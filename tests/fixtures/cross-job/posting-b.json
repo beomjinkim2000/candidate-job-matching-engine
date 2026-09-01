@@ -1,0 +1,54 @@
+{
+  "posting_id": "fx-facility",
+  "job_family": "생산 설비 유지보수",
+  "note": "테스트 전용 가짜 공고다. data/postings/의 실제 공고와 아무 관계가 없다.",
+  "requirements": [
+    {
+      "id": "R-01",
+      "text": "PLC 제어반 프로그램을 읽고 수정할 수 있는 분",
+      "kind": "required",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {"page": 1, "x1": 40, "y1": 120, "x2": 800, "y2": 148, "img_w": 900, "img_h": 2100},
+      "source_span": {"start": 0, "end": 27}
+    },
+    {
+      "id": "R-02",
+      "text": "설비 보전 업무를 3년 이상 수행한 분",
+      "kind": "required",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {"page": 1, "x1": 40, "y1": 152, "x2": 800, "y2": 180, "img_w": 900, "img_h": 2100},
+      "source_span": {"start": 28, "end": 50}
+    },
+    {
+      "id": "R-03",
+      "text": "CAD 도면을 해독하고 부품을 도면대로 발주해 본 분",
+      "kind": "preferred",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {"page": 1, "x1": 40, "y1": 184, "x2": 800, "y2": 212, "img_w": 900, "img_h": 2100},
+      "source_span": {"start": 51, "end": 80}
+    }
+  ],
+  "duties": [
+    {
+      "id": "D-01",
+      "text": "생산 라인 설비를 정기 점검하고 돌발 정지가 나면 복구하는 업무",
+      "kind": "duty",
+      "evidence_grade": "E1",
+      "ladder_step": 3,
+      "source_bbox": {"page": 1, "x1": 40, "y1": 300, "x2": 800, "y2": 328, "img_w": 900, "img_h": 2100},
+      "source_span": {"start": 120, "end": 158}
+    },
+    {
+      "id": "D-02",
+      "text": "협력업체와 예비품 재고와 교체 주기를 협의하고 정리하는 업무",
+      "kind": "duty",
+      "evidence_grade": "E1",
+      "ladder_step": 3,
+      "source_bbox": {"page": 1, "x1": 40, "y1": 332, "x2": 800, "y2": 360, "img_w": 900, "img_h": 2100},
+      "source_span": {"start": 159, "end": 195}
+    }
+  ]
+}
