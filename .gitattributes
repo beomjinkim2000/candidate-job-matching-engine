@@ -1,0 +1,10 @@
+# 배치 파일은 CRLF여야 한다.
+# cmd.exe는 .bat을 한 줄씩 읽어 실행하는데, LF만 있는 파일에서는 괄호 블록(`if (...)`)과
+# 파일 끝 줄이 잘리는 사례가 알려져 있다. 우리가 맥에서 만들었다고 윈도우에서 터지면
+# 원인을 찾기 어려운 종류의 실패라, 저장소 차원에서 못박는다.
+*.bat text eol=crlf
+
+# 반대로 셸 스크립트는 LF여야 한다. CRLF면 `\r`가 인자에 붙어
+# "bad interpreter: /bin/sh^M"이 난다.
+*.command text eol=lf
+*.sh text eol=lf
