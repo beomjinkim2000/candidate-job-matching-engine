@@ -26,7 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     acquire.add_argument(
-        "--posting", required=True, type=Path, help="공고 디렉터리 (예: data/postings/kt-nw)"
+        "--posting", required=True, type=Path, help="공고 디렉터리 (예: data/postings/kt-b2c)"
     )
     acquire.add_argument(
         "--source",
@@ -57,6 +57,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parse.add_argument(
         "--reocr", action="store_true", help="ocr.json이 있어도 OCR을 다시 돌린다"
+    )
+    parse.add_argument(
+        "--inspect",
+        nargs="?",
+        const="out/inspect",
+        default=None,
+        type=Path,
+        help=(
+            "이번 실행이 공고를 어떻게 읽었는지 점검용 HTML로 쓴다 "
+            "(기본 out/inspect/{공고}.html). OCR 원문이 실리므로 커밋하지 않는다"
+        ),
     )
     parse.set_defaults(func=_cmd_parse)
     return parser
@@ -112,9 +123,10 @@ def _cmd_parse(args: argparse.Namespace) -> int:
 
         client = OpenAI(api_key=settings.openai_api_key)
 
+    trace: dict | None = {} if args.inspect else None
     try:
         requirements, _, report = parse_posting(
-            ref, settings, client=client, data_dir=data_dir, reocr=args.reocr
+            ref, settings, client=client, data_dir=data_dir, reocr=args.reocr, trace=trace
         )
     except ParseError as exc:
         print(f"실패: {exc}")
@@ -129,6 +141,16 @@ def _cmd_parse(args: argparse.Namespace) -> int:
     for req in requirements:
         kinds[req.kind] += 1
     print(f"  필수 {kinds['required']} · 우대 {kinds['preferred']}")
+
+    if trace is not None:
+        from .inspect_html import render
+
+        target = Path(args.inspect)
+        if target.suffix.lower() != ".html":
+            target = target / f"{ref.posting_id}.html"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(render(trace), encoding="utf-8")
+        print(f"  점검 화면 → {target}")
     return 0
 
 

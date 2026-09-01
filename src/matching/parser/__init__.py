@@ -68,6 +68,7 @@ from .layout import (
     build_blocks,
     classify_lines,
     count_merged,
+    order_band_lines,
     select_lines,
     split_positions,
 )
@@ -91,6 +92,7 @@ __all__ = [
     "classify_lines",
     "parse_posting",
     "run_ocr",
+    "order_band_lines",
     "select_lines",
     "split_positions",
     "verify",
@@ -176,6 +178,7 @@ def parse_posting(
     client=None,
     data_dir: Path | str | None = None,
     reocr: bool = False,
+    trace: dict | None = None,
 ) -> tuple[list[RequirementRecord], EvidenceGraph, ParseReport]:
     """공고 하나를 조건 목록으로. `requirements.json`을 쓰고 `provenance.json`을 채운다.
 
@@ -200,6 +203,15 @@ def parse_posting(
 
     # --- 3-B. 줄 → 역할 ---------------------------------------------------
     roles: dict[str, LineRole] = classify_lines(scoped, settings)
+
+    # 표 안의 칸 라벨은 **좌표로** 정해진다. 3-C보다 먼저 해야 한다 — 나중에 하면
+    # 「수행업무」가 모호한 줄로 분류돼 LLM에 「제목이 아니면 none」이라고 물어보게 되고,
+    # 모델이 none을 주면 그 블록은 역할 없이 남아 **사다리 3단계(담당업무 대응)가
+    # 입력을 잃는다.** 실제로 그랬다. 먼저 세우면 섹션 제목으로 물어보게 되고 duty가 온다.
+    if band is not None:
+        band_lines, roles = order_band_lines(scoped.lines, roles, band, settings)
+        scoped = scoped.model_copy(update={"lines": band_lines})
+
     header_texts = [line.text for line in scoped.lines if roles[line.id] == "header"]
     ambiguous_texts = [line.text for line in scoped.lines if roles[line.id] == "ambiguous"]
 
@@ -239,6 +251,11 @@ def parse_posting(
     # 모호했던 줄 중 역할을 받은 것만 섹션 제목으로 승격한다. 나머지는 그대로 두면
     # `build_blocks`가 항목으로 세지 않고 흘려보낸다.
     for line in scoped.lines:
+        # 밴드 안은 열 구조로 이미 정했다. **LLM이 뒤집지 못하게 한다** — 모델은 조건
+        # 문장을 읽으면 그럴듯한 역할을 붙이고, 그 줄이 제목이 되면 위의 항목들이
+        # 통째로 엉뚱한 섹션으로 넘어간다.
+        if band is not None and band.y_top <= line.bbox.y1 < band.y_bottom:
+            continue
         if roles[line.id] == "ambiguous" and line.text in header_roles:
             roles[line.id] = "header"
 
@@ -253,26 +270,38 @@ def parse_posting(
     groups: list[tuple[Block, list[OcrLine]]] = []
     for block in scored_blocks:
         for item in block.items:
-            lines = _item_lines(ocr, item)
+            lines = _item_lines(scoped, item)
             groups.append((block, lines))
             candidate_texts.append(" ".join(line.text for line in lines))
 
     context = _build_context(blocks, candidate_texts)
-    offsets = ocr.offsets()
-    document = ocr.document()
+    # **기준 문서는 `ocr`이 아니라 `scoped`다.** 조건의 span은 「이 직무로 좁힌 공고를
+    # 읽는 순서대로 이어붙인 글」 안의 위치를 가리킨다. 원본 줄 순서를 기준으로 삼으면,
+    # 병합된 조건의 span이 사이에 낀 **다른 열의 값**(지명 등)까지 삼킨다 —
+    # `_item_lines`가 span 연속성을 지키려고 사이 줄을 전부 넣기 때문이다.
+    # 사영본은 `ocr.json` + `position_band`로 그대로 재현되므로 검증 가능성은 그대로다.
+    offsets = scoped.offsets()
+    document = scoped.document()
 
     graph = EvidenceGraph()
-    requirements: list[RequirementRecord] = []
-    for index, (block, lines) in enumerate(groups, start=1):
+
+    def _record(
+        prefix: str, index: int, lines: list[OcrLine], block: Block
+    ) -> RequirementRecord | None:
         start = offsets[lines[0].id][0]
         end = offsets[lines[-1].id][1]
         text = document[start:end]
         if not text.strip():
-            continue
-        item = ParsedItem(text=text, lines=lines, header_role=block.header_role)
-        kind, grade, step = classify(item, context)
+            return None
+        if prefix == "D":
+            # 담당업무는 사다리를 타지 않는다. 필수/우대는 **지원자 조건**의 구분이고
+            # 담당업무는 그 축 위에 있지 않다. 섹션이 명시했으므로 근거등급은 E2다.
+            kind, grade, step = "duty", "E2", 1
+        else:
+            item = ParsedItem(text=text, lines=lines, header_role=block.header_role)
+            kind, grade, step = classify(item, context)
         record = RequirementRecord(
-            id=f"R-{index:02d}",
+            id=f"{prefix}-{index:02d}",
             text=text,
             kind=kind,
             evidence_grade=grade,
@@ -281,15 +310,35 @@ def parse_posting(
             source_span=Span(start=start, end=end),
             line_ids=[line.id for line in lines],
         )
-        requirements.append(record)
         graph.add(record)
         for line in lines:
             # 사슬의 마지막 마디 — 조건이 **어느 줄에서** 나왔는가.
             # dst는 그래프 밖 식별자다. 원문도 URL도 아니라 커밋해도 된다.
             graph.link(record.id, "extracted_from", f"{ref.posting_id}:{line.id}")
+        return record
+
+    requirements: list[RequirementRecord] = []
+    for index, (block, lines) in enumerate(groups, start=1):
+        record = _record("R", index, lines, block)
+        if record is not None:
+            requirements.append(record)
+
+    # **담당업무도 좌표째 남긴다.** 조건 목록에는 안 올라가지만(별도 `duties`), 루브릭의
+    # 판단 축이 「무엇에 대한 관련성인가」를 여기서 가져간다. KT처럼 자격 요건이 형식적인
+    # 공고에서는 이것이 **직무를 구별하는 유일한 내용**이다 — 버리면 마케터와 개발자를
+    # 같은 잣대로 재게 된다. 좌표를 함께 두는 이유는 판단 점수의 근거 사슬도 이미지까지
+    # 이어져야 하기 때문이다 (G4).
+    duties: list[RequirementRecord] = []
+    for block in blocks:
+        if block.header_role != "duty":
+            continue
+        for item in block.items:
+            record = _record("D", len(duties) + 1, _item_lines(scoped, item), block)
+            if record is not None:
+                duties.append(record)
 
     # --- 3-F. 코드 검증 (LLM 아님) ------------------------------------------
-    violations = verify(requirements, ocr)
+    violations = verify(requirements + duties, scoped)
     if violations:
         head = "; ".join(f"{v.rule} {v.object_id}: {v.message}" for v in violations[:3])
         raise ParseError(f"파싱 검증 실패 {len(violations)}건 — {head}")
@@ -312,7 +361,52 @@ def parse_posting(
         emphasis_available=False,
     )
 
-    _write_requirements(directory, ref, provenance, band, requirements, report)
+    if trace is not None:
+        # **화면은 파이프라인이 실제로 한 일을 보여준다.** 따로 다시 계산하지 않는다 —
+        # 그러면 화면과 결과가 조용히 달라지고, 화면을 믿고 규칙을 고치게 된다.
+        trace.update(
+            posting_id=ref.posting_id,
+            target_position=provenance.target_position,
+            avg_conf=ocr.avg_conf,
+            band=band.model_dump() if band is not None else None,
+            images=[str(path) for path in ref.image_paths],
+            img_w=ocr.img_w,
+            img_h=ocr.img_h,
+            # **밴드로 잘려나간 줄까지 전부 넣는다.** 화면에서 확인해야 하는 것은
+            # 「읽은 것」이 아니라 「읽고 무엇을 버렸나」다. 버린 줄이 안 보이면
+            # 잘못 버린 것을 영영 못 본다.
+            lines=[
+                {
+                    "id": line.id,
+                    "text": line.text,
+                    "x0": line.x0,
+                    "conf": round(line.conf, 3),
+                    "box": line.bbox.model_dump(mode="json"),
+                    "role": roles.get(line.id),
+                    "scoped": line.id in {item.id for item in scoped.lines},
+                    "req": next(
+                        (req.id for req in requirements if line.id in req.line_ids), None
+                    ),
+                }
+                for line in ocr.lines
+            ],
+            sent_to_llm={"headers": header_texts, "ambiguous": ambiguous_texts},
+            header_roles=dict(header_roles),
+            blocks=[
+                {
+                    "header": block.header.text if block.header is not None else None,
+                    "role": block.header_role,
+                    "scored": (block.header_role or "") in SCORED_ROLES,
+                    "items": [" ".join(line.text for line in item) for item in block.items],
+                }
+                for block in blocks
+            ],
+            requirements=[req.model_dump(mode="json") for req in requirements],
+            duties=[req.model_dump(mode="json") for req in duties],
+            report=report.model_dump(mode="json"),
+        )
+
+    _write_requirements(directory, ref, provenance, band, requirements, duties, report)
     _fill_provenance(directory, provenance, report)
     return requirements, graph, report
 
@@ -323,6 +417,7 @@ def _write_requirements(
     provenance: Provenance,
     band: PositionBand | None,
     requirements: list[RequirementRecord],
+    duties: list[RequirementRecord],
     report: ParseReport,
 ) -> None:
     """`requirements.json` — **레포에 남는 유일한 파싱 산출물.**
@@ -338,6 +433,8 @@ def _write_requirements(
         "ocr_sha256": report.ocr_sha256,
         "parse_report": report.model_dump(mode="json"),
         "requirements": [record.model_dump(mode="json") for record in requirements],
+        # 조건이 아니다. 루브릭의 판단 축이 관련성을 재는 **기준**으로만 쓴다.
+        "duties": [record.model_dump(mode="json") for record in duties],
     }
     body = json.dumps(payload, ensure_ascii=False, indent=2)
     (directory / REQUIREMENTS_FILENAME).write_text(body + "\n", encoding="utf-8")

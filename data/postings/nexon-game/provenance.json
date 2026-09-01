@@ -12,8 +12,8 @@
       2533
     ]
   ],
-  "ocr_engine": null,
-  "ocr_sha256": null,
+  "ocr_engine": "paddle",
+  "ocr_sha256": "1b0008146da8999496e27a12a09243973eb82dafdc597fbe763473751ab4aedf",
   "api_verified": false,
   "api_verified_at": null
 }

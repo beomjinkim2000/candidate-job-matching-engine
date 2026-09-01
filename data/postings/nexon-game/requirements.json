@@ -1,0 +1,489 @@
+{
+  "posting_id": "nexon-game",
+  "source_kind": "local",
+  "target_position": null,
+  "position_band": null,
+  "ocr_sha256": "1b0008146da8999496e27a12a09243973eb82dafdc597fbe763473751ab4aedf",
+  "parse_report": {
+    "parse_mode": "ocr",
+    "ocr_engine": "paddle",
+    "ocr_sha256": "1b0008146da8999496e27a12a09243973eb82dafdc597fbe763473751ab4aedf",
+    "line_count": 60,
+    "role_counts": {
+      "ambiguous": 19,
+      "header": 9,
+      "item": 28,
+      "continuation": 4
+    },
+    "merged_continuations": 4,
+    "excluded_blocks": [
+      "모집부문",
+      "접수기간",
+      "전형절차",
+      "근무기간",
+      "기타사항"
+    ],
+    "llm_calls": 0,
+    "emphasis_available": false
+  },
+  "requirements": [
+    {
+      "id": "R-01",
+      "text": "-기졸업자 및 '27년 2월 졸업예정자",
+      "kind": "required",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 168,
+        "y1": 644,
+        "x2": 453,
+        "y2": 667,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 274,
+        "end": 295
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-026"
+      ]
+    },
+    {
+      "id": "R-02",
+      "text": "-인턴십 기간 동안 풀타임 근무가 가능한 분",
+      "kind": "required",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 171,
+        "y1": 675,
+        "x2": 512,
+        "y2": 699,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 296,
+        "end": 320
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-027"
+      ]
+    },
+    {
+      "id": "R-03",
+      "text": "-인턴십 종료 후 정규직 입사가 가능한 분",
+      "kind": "required",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 173,
+        "y1": 709,
+        "x2": 495,
+        "y2": 729,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 321,
+        "end": 344
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-028"
+      ]
+    },
+    {
+      "id": "R-04",
+      "text": "-병역필 또는 면제자로 해외여행에 결격 사유가 없는 분",
+      "kind": "required",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 174,
+        "y1": 741,
+        "x2": 604,
+        "y2": 762,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 345,
+        "end": 375
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-029"
+      ]
+    },
+    {
+      "id": "R-05",
+      "text": "-C++또는C#을 이용한 개발이 가능한 분",
+      "kind": "preferred",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 47,
+        "y1": 1824,
+        "x2": 383,
+        "y2": 1847,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 904,
+        "end": 927
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-048"
+      ]
+    },
+    {
+      "id": "R-06",
+      "text": "-자료구조,알고리즘 등 컴퓨터공학 지식을 갖추고 이를 코드로 구현할 수 있는 분",
+      "kind": "preferred",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 48,
+        "y1": 1855,
+        "x2": 681,
+        "y2": 1878,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 928,
+        "end": 972
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-049"
+      ]
+    },
+    {
+      "id": "R-07",
+      "text": "-생성형 AI 도구를 활용해 코드를 작성·검증할 수 있는 분",
+      "kind": "preferred",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 49,
+        "y1": 1886,
+        "x2": 491,
+        "y2": 1909,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 973,
+        "end": 1006
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-050"
+      ]
+    },
+    {
+      "id": "R-08",
+      "text": "-게임 플레이를 즐기며, 만들고 싶은 게임에 대한 자신만의 생각이 있는 분",
+      "kind": "preferred",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 48,
+        "y1": 2050,
+        "x2": 623,
+        "y2": 2073,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 1026,
+        "end": 1067
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-052"
+      ]
+    },
+    {
+      "id": "R-09",
+      "text": "-개인·팀 프로적트로 게임을 직접 기획하고 완성해 본 경험이 있는 분(출시,공모전,게임쟁 등)",
+      "kind": "preferred",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 47,
+        "y1": 2079,
+        "x2": 777,
+        "y2": 2106,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 1068,
+        "end": 1120
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-053"
+      ]
+    },
+    {
+      "id": "R-10",
+      "text": "-객체지향 프로그래밍을 이해하고,다른 사람이 읽기 쉬운 코드를 작성하려 노력하는 분",
+      "kind": "preferred",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 48,
+        "y1": 2111,
+        "x2": 730,
+        "y2": 2137,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 1121,
+        "end": 1167
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-054"
+      ]
+    },
+    {
+      "id": "R-11",
+      "text": "-Git·SVN 등 협업 도구를 활용하여 팀 개발 경험이 있는 분",
+      "kind": "preferred",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 50,
+        "y1": 2146,
+        "x2": 506,
+        "y2": 2166,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 1168,
+        "end": 1204
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-055"
+      ]
+    },
+    {
+      "id": "R-12",
+      "text": "-Unity,Unreal 등 게임 엔진을 활용한 프로젝트 경험이 있는 분",
+      "kind": "preferred",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 49,
+        "y1": 2176,
+        "x2": 545,
+        "y2": 2199,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 1205,
+        "end": 1245
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-056"
+      ]
+    },
+    {
+      "id": "R-13",
+      "text": "-MySQL 등 데이터베이스 사용 경험이 있는 분",
+      "kind": "preferred",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 48,
+        "y1": 2208,
+        "x2": 419,
+        "y2": 2231,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 1246,
+        "end": 1273
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-057"
+      ]
+    },
+    {
+      "id": "R-14",
+      "text": "- 네트워크·소켓 프로그래밍,멀티스레드 환경에 대한 이해 또는 프로젝트 경험이 있는 분",
+      "kind": "preferred",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 47,
+        "y1": 2239,
+        "x2": 735,
+        "y2": 2262,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 1274,
+        "end": 1322
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-058"
+      ]
+    }
+  ],
+  "duties": [
+    {
+      "id": "D-01",
+      "text": "-넥슨컴퍼니 게임·플랫폼의 클라이언트·서버·엔진 개발에 참여합니다",
+      "kind": "duty",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 48,
+        "y1": 1533,
+        "x2": 589,
+        "y2": 1555,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 700,
+        "end": 736
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-042"
+      ]
+    },
+    {
+      "id": "D-02",
+      "text": "-C++,C#등을 활용해 게임 콘텐츠와시스템을 구현합니다",
+      "kind": "duty",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 49,
+        "y1": 1566,
+        "x2": 517,
+        "y2": 1586,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 737,
+        "end": 768
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-043"
+      ]
+    },
+    {
+      "id": "D-03",
+      "text": "-기존 코드를 분석하고 디버깅·리팩토링·최적화 작업을 수행합니다.",
+      "kind": "duty",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 50,
+        "y1": 1598,
+        "x2": 572,
+        "y2": 1618,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 769,
+        "end": 805
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-044"
+      ]
+    },
+    {
+      "id": "D-04",
+      "text": "-개발 생산성 향상을 위한 툴 제작 및 자동화 업무를 지원합니다.",
+      "kind": "duty",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 50,
+        "y1": 1628,
+        "x2": 547,
+        "y2": 1651,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 806,
+        "end": 842
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-045"
+      ]
+    },
+    {
+      "id": "D-05",
+      "text": "-기획·아트 등 다양한 직군과 협업하며 기능 구현과 라이브 서비스 대응을 경험합니다",
+      "kind": "duty",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 50,
+        "y1": 1660,
+        "x2": 714,
+        "y2": 1680,
+        "img_w": 860,
+        "img_h": 2533
+      },
+      "source_span": {
+        "start": 843,
+        "end": 889
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-046"
+      ]
+    }
+  ]
+}
