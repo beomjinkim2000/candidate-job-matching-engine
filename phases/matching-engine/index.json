@@ -203,7 +203,7 @@
       "name": "entrypoint-api",
       "status": "completed",
       "started_at": "2026-09-01T12:08:41+0900",
-      "completed_at": "2026-09-01T12:28:34+09:00",
+      "completed_at": "2026-09-01T12:29:35+0900",
       "summary": "python run.py — 키를 getpass로 받아 .env(0600)에 쓰고 127.0.0.1:8000에 서버를 띄운 뒤 브라우저를 연다. 진입점 3파일 — run.py · api/cli.py(score 서브커맨드) · api/server.py(POST /score·/prepare·/approve, GET /runs/{id}·/image/{id}·/) + 둘이 공유하는 api/service.py. 채점을 일으키는 엔드포인트는 POST /score 하나. tests/test_api.py 15케이스 통과.",
       "notes": [
         "CLI와 HTTP가 **같은 함수**를 지난다 — api/service.py의 prepare_posting()·score_proposal(). 로직을 양쪽에 복제하면 두 경로의 결과가 갈렸을 때 어느 쪽이 맞는지 알 수 없다. test_api.py가 두 소스에 score_proposal이 있고 server 쪽 호출이 정확히 1회인 것을 검사한다.",
