@@ -183,8 +183,20 @@
     {
       "step": 7,
       "name": "aggregate-rank",
-      "status": "pending",
-      "started_at": "2026-09-01T11:48:56+0900"
+      "status": "completed",
+      "started_at": "2026-09-01T11:48:56+0900",
+      "completed_at": "2026-09-01T12:07:03+0900",
+      "summary": "src/matching/pipeline/ 4파일 — aggregate.py(판단 층 (raw-1)/4 정규화 · 「만점 100」 계약 · 게이트 판정은 run_gates 것을 옮기기만) · rank.py(탈락자 rank=None으로 끝에 분리 · 동점은 판단 층 → candidate_id) · run.py(prepare/score 두 동강 · 승인 게이트 · 검산 G7 · enforce()가 aggregate() 앞 · 원본 파기 · data/runs/{run_id}/result.json) · explain.py(사람이 읽는 랭킹, [등급 · 승인상태] 배지 포함). tests/test_aggregate.py 18케이스 통과, ruff 통과. prepare()로 실제 공고 2건 오프라인 재현 — kt-b2c 11항목(fact 3·judgment 8) / nexon-game 19항목(fact 6·judgment 13), 둘 다 총합 100.000000.",
+      "notes": [
+        "**COST_BUDGET §1의 심사위원 호출 추정이 실제 루브릭과 어긋난다.** §1은 「12명 × 판단항목 2개 × 2명 = 48회」로 잡았는데, step 4가 만든 판단 항목이 kt-b2c 8개·nexon-game 13개다. 완주 1회는 kt-b2c 6명×8×2 = 96회, nexon-game 6명×13×2 = 156회 (이견 0 가정)로 합 ≈252회이고, 3번째 심사위원이 붙으면 최악 378회다. score()는 실행(공고)마다 CallBudget을 새로 만들므로 상한 600(2026-09-01 12:00 실측으로 상향)에는 걸리지 않는다. §1의 표는 step 13-A에서 이 숫자로 고쳐야 한다.",
+        "aggregate()는 채점 안 된 항목이 하나라도 있으면 AggregateError를 던진다 — 부분 합계를 내면 그 지원자의 만점만 줄어 등수 비교가 성립하지 않는다. 그래서 score()는 **게이트 탈락자도 끝까지 채점한다** (탈락 사유만 남기면 「그 외에는 어땠나」를 볼 수 없고, 게이트는 면허·법정자격만 보도록 좁게 설계돼 탈락자가 드물다).",
+        "aggregate()는 settings를 **읽지 않는다.** 배점(35/65)은 build_rubric이 이미 Criterion.weight에 녹여 놓았고 여기서 다시 읽으면 배점이 사는 자리가 둘이 된다. step7.md의 호출 모양을 지키려고 인자만 남기고 그 사실을 docstring에 적었다.",
+        "prepare()가 RequirementRecord의 line_ids를 뗀다. Requirement가 extra=\"forbid\"라 그대로 결과 JSON에 실으면 step 8의 GET /runs/{run_id}가 되읽을 때 ValidationError가 난다. 역참조는 requirements.json에 그대로 남으므로 잃는 것이 없다.",
+        "G7은 레지스트리(사람인 API)가 없으면 **검사할 수 없다.** 통과시키되 RunResult.revision_checked=False로 남기고 explain() 머리에 경고를 찍는다 — 「검사해서 통과」와 「검사 못 함」이 화면에서 같아 보이면 안 된다. 키 미발급 상태(docs/SCHEDULE.md §2 경로 B)가 정확히 이 경우다.",
+        "게이트 탈락 사유는 Score.rationale(run_gates가 쓴 문장)을 쓴다. render_rationale()의 문단은 좌표까지 담은 추적 기록이라 「왜 떨어졌나」 한 줄로는 안 읽힌다 — 추적 기록은 AxisScore.rationale에 그대로 남아 있다.",
+        "판단 층 항목이 있는데 client가 없으면 ValueError를 던진다. 조용히 건너뛰면 그 항목들이 0점이 되어 「근거를 못 냈다」와 「경험이 없다」가 같은 점수가 된다. --no-judge는 step 8에서 명시적 경로로 붙인다.",
+        "score()에 now= 인자를 뒀다. run_id가 시각에서 나오므로 테스트가 재현 가능한 실행 id를 만들 수 있어야 한다."
+      ]
     },
     {
       "step": 8,

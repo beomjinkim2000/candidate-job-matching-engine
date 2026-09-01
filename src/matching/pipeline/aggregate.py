@@ -109,16 +109,20 @@ def normalize_raw(layer: str, raw: float) -> float:
     return min(max(unit, 0.0), 1.0)
 
 
-def _gate_result(breakdown: list[AxisScore]) -> GateResult:
-    """게이트 축만 골라 `run_gates()`의 판정을 그대로 옮긴다.
+def _gate_result(failures: list[tuple[str, str]]) -> GateResult:
+    """`run_gates()`가 내린 판정을 그대로 옮긴다. 여기서 다시 판정하지 않는다.
+
+    사유는 **`Score.rationale`(게이트가 쓴 문장)**을 쓴다. `render_rationale()`의 문단은
+    좌표까지 담은 추적 기록이라 「왜 떨어졌나」 한 줄로는 읽히지 않는다 — 근거 사슬은
+    `AxisScore.rationale`에 그대로 남아 있으므로 잃는 것이 없다.
 
     게이트 항목이 하나도 없으면 **통과**다 (`scorer/gate.py`의 계약과 같다).
     """
-    failed = [axis.criterion_id for axis in breakdown if axis.layer == GATE_LAYER and axis.raw <= 0]
-    reasons = [
-        axis.rationale for axis in breakdown if axis.layer == GATE_LAYER and axis.raw <= 0
-    ]
-    return GateResult(passed=not failed, failed_criteria=failed, reasons=reasons)
+    return GateResult(
+        passed=not failures,
+        failed_criteria=[criterion_id for criterion_id, _ in failures],
+        reasons=[reason for _, reason in failures],
+    )
 
 
 def aggregate(
@@ -158,6 +162,7 @@ def aggregate(
 
     index = graph.index()
     breakdown: list[AxisScore] = []
+    gate_failures: list[tuple[str, str]] = []
     for criterion in criteria:
         score = by_criterion.pop(criterion.id, None)
         if score is None:
@@ -175,6 +180,9 @@ def aggregate(
                 f"{criterion.id}의 공고 조건({criterion.requirement_id})이 그래프에 없다 — "
                 "검산 G3이 먼저 막았어야 한다"
             )
+
+        if criterion.layer == GATE_LAYER and score.value <= 0:
+            gate_failures.append((criterion.id, score.rationale))
 
         unit = normalize_raw(criterion.layer, score.value)
         breakdown.append(
@@ -205,7 +213,7 @@ def aggregate(
         candidate_id=candidate_id,
         total=round(fsum(axis.weighted for axis in breakdown), 6),
         rank=None,  # 랭킹은 `rank()`가 매긴다. 혼자서는 자기 등수를 모른다
-        gate=_gate_result(breakdown),
+        gate=_gate_result(gate_failures),
         breakdown=breakdown,
         graph_ref=graph_ref,
     )

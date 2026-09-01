@@ -152,7 +152,7 @@ def prepare(
     *,
     client=None,
     data_dir: Path | str | None = None,
-    registry: "PostingRegistry | None" = None,
+    registry: PostingRegistry | None = None,
     registry_posting_id: str | None = None,
 ) -> RubricProposal:
     """공고 하나를 파싱해 **승인 대기 상태의 루브릭**으로 만든다. 채점하지 않는다.
@@ -196,7 +196,7 @@ def prepare(
 def _check_approval(
     proposal: RubricProposal,
     settings: Settings,
-    registry: "PostingRegistry | None",
+    registry: PostingRegistry | None,
     registry_posting_id: str | None,
 ) -> tuple[bool, bool]:
     """승인 게이트와 검산 G7. `(미승인인가, revision을 실제로 검사했는가)`.
@@ -213,7 +213,9 @@ def _check_approval(
                 "지금 게시 중인 공고인지 확인되지 않은 상태로 채점하지 않는다 (검산 G7)"
             )
         if not current.active:
-            raise ApprovalStale(f"{proposal.posting_id}: 마감된 공고다 (active=0) — 채점하지 않는다")
+            raise ApprovalStale(
+                f"{proposal.posting_id}: 마감된 공고다 (active=0) — 채점하지 않는다"
+            )
         if current.expiration_date is not None and current.expiration_date < date.today():
             raise ApprovalStale(
                 f"{proposal.posting_id}: 마감일({current.expiration_date})이 지났다 — "
@@ -245,7 +247,7 @@ def score(
     settings: Settings,
     *,
     client=None,
-    registry: "PostingRegistry | None" = None,
+    registry: PostingRegistry | None = None,
     registry_posting_id: str | None = None,
     budget: CallBudget | None = None,
     data_dir: Path | str | None = None,
