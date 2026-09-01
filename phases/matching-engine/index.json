@@ -159,10 +159,26 @@
     {
       "step": 6,
       "name": "judge-layer",
-      "status": "error",
+      "status": "completed",
       "started_at": "2026-09-01T11:15:11+0900",
-      "error_message": "[3회 시도 후 실패] Step did not update status",
-      "failed_at": "2026-09-01T11:41:06+0900"
+      "completed_at": "2026-09-01T11:58:00+0900",
+      "summary": "src/matching/judge/ 4파일(schema·prompt·bias·panel) + CallBudget. tests/test_judge.py 22케이스(오프라인 20 + live 2) 전부 통과. **live 실측 완료** — 재현성 합동 σ=0.3015 (4셀 × 11회 = 44호출), 순서 불변성 stable(rank_changes 0, 8호출). 임계 σ≤0.5 통과.",
+      "summary_data": {
+        "repeat_sigma": 0.3015,
+        "repeat_n": 11,
+        "cells": 4,
+        "scale": "raw 1~5",
+        "order_stable": true,
+        "live_calls": 52,
+        "live_in_tokens": 99410,
+        "live_out_tokens": 9612
+      },
+      "notes": [
+        "하네스가 이 step을 error로 남겼다 — 코드와 테스트는 커밋됐는데(1,512줄) 세션이 index.json 상태를 못 올렸다. 「3회 시도 후 실패: Step did not update status」. 산출물을 직접 검사해 완료 처리했다: 오프라인 20케이스 통과 · ruff 통과 · **미실행이던 live 2건을 실제로 돌렸다.**",
+        "**σ 측정 표본이 처음엔 전부 포화 지점이었다.** 상위 2명 × 판단항목 2개로 재니 네 셀이 [1,1,…] 아니면 [5,5,…]로 나와 σ=0.0000이었다. 상위권은 판단 항목에서 척도의 양 끝에 붙어 흔들릴 자리가 없다. 그 0을 잡음 바닥으로 쓰면 step 11의 홀드아웃이 **무엇이든 통과시킨다** — 심사가 지적한 「분산 > 0은 채점 노이즈만으로 통과」가 바로 이 형태다.",
+        "**위·중위를 한 명씩 섞도록 고쳤다**(`top[0]`과 `top[len//2]`). 라벨은 여전히 안 본다 — 순위는 사실 층 점수(결정적)로만 매긴다. 다시 재니 σ=0.3015이고, A-01/C-04가 11회 중 1회 1→3으로 흔들린 것이 그 값의 출처다. 이제 step 11의 홀드아웃 문턱이 raw 척도로 **sd > 0.603**이라는 실제 바가 된다.",
+        "step 6 세션 자신은 이 함정을 알고 **항목**을 kind가 다른 것으로 골랐다(형식 요건 두 건이 뽑히는 것을 피하려고). 맞는 방향이었지만 **지원자 쪽 포화**를 놓쳤다. 한쪽만 막으면 다른 쪽으로 새어 나온다."
+      ]
     },
     {
       "step": 7,

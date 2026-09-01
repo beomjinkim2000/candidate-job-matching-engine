@@ -598,8 +598,16 @@ def _live_cells():
         heaviest_of_kind.values(), key=lambda c: (-c.weight, c.id)
     )[:LIVE_CRITERIA]
 
+    # **상위 2명으로 재면 안 된다.** 처음엔 그렇게 했고 네 셀이 전부 [1,1,…] 아니면
+    # [5,5,…]로 나와 σ=0이었다. 상위권은 판단 항목에서 척도의 **양 끝**에 붙는다 —
+    # 흔들릴 자리가 없는 곳에서 잰 0은 「안정적이다」가 아니라 「잴 것이 없다」이고,
+    # 그 0을 잡음 바닥으로 쓰면 step 11 홀드아웃이 무엇이든 통과시킨다.
+    # 위·중위를 한 명씩 섞어 **척도 가운데가 표본에 들어오게** 한다. 여기서도 라벨은
+    # 안 본다 — 순위는 사실 층 점수(결정적)로만 매긴다.
+    picked = [top[0], top[len(top) // 2]] if len(top) > 2 else top
+
     client = OpenAI(api_key=settings.openai_api_key)
-    return settings, client, top[:LIVE_CANDIDATES], picked_criteria
+    return settings, client, picked[:LIVE_CANDIDATES], picked_criteria
 
 
 def _repo_data_dir() -> Path:
