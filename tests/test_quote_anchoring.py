@@ -82,3 +82,22 @@ def test_가린_자리를_인용하면_버린다():
     fragment = f"성명: {MASK_CHAR * 3}"
     quote = QuoteRef(start=0, end=len(fragment), text=fragment)
     assert keep_quotes(_out(quote), doc) == []
+
+
+def test_가린_조각이_섞여_있어도_나머지가_많으면_받는다():
+    """**가리는 것과 채점하는 것이 부딪히는 자리다.**
+
+    학력 조건(「정규 4년제 대학을 졸업했거나…」)을 채점하려면 학력 줄을 인용해야 하는데
+    그 줄에는 학교 이름이 가려져 있다. 「하나라도 있으면 버린다」로 두면 인용이 전부
+    버려지고 **그 지원자의 채점이 통째로 죽는다.** 실측으로 죽었다 (`A-01 / C-03`).
+
+    위 테스트와 짝이다 — 위는 **가린 값 자체**를 근거로 삼은 경우고, 여기는 가린 조각이
+    **곁가지**인 경우다. 가르는 것은 임의의 임계값이 아니라 **어느 쪽이 더 많은가**다.
+    """
+    line = f"2018.03 ~ 2026.02  {MASK_CHAR * 5} 경영학과 학사 졸업"
+    doc = f"■ 학력사항\n{line}\n- 학점 3.82/4.5"
+    start = doc.index(line)
+    quote = QuoteRef(start=start, end=start + len(line), text=line)
+
+    kept = keep_quotes(_out(quote), doc)
+    assert [(s.start, s.end) for s in kept] == [(start, start + len(line))]
