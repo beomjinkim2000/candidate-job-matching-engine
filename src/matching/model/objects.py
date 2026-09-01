@@ -136,4 +136,20 @@ class Link(_Object):
     dst: str
 
 
+class Resume(_Object):
+    """지원자 이력서 한 통. **그래프 Object가 아니다.**
+
+    `GraphObject` 합집합에 넣지 않았다 — 그래프에 담기는 것은 「우리가 만든 판단의
+    마디」이고 이력서 원문은 **입력**이다. 담으면 `score()`가 끝나고 원본을 버릴 때
+    (`docs/LEGAL_ARCHITECTURE.md` §3-③) 그래프에서 이력서를 도로 파내야 한다.
+
+    `intended_type`(완벽/부분/미스)을 여기 두지 않은 것도 같은 이유다. 그건 목업
+    데이터셋의 **라벨**이지 채점 입력이 아니고, 채점 경로가 볼 수 있는 자리에 두면
+    유형 분리 테스트가 자기 자신을 검사하게 된다 (`tests/CLAUDE.md` 「순환」).
+    """
+
+    candidate_id: str
+    text: str
+
+
 GraphObject = Requirement | Criterion | Evidence | Score

@@ -73,7 +73,11 @@ class Settings:
     gate_kinds: list[str] = field(default_factory=lambda: list(DEFAULT_GATE_KINDS))
     kind_shares: dict[str, float] = field(default_factory=lambda: dict(DEFAULT_KIND_SHARES))
     judge_disagreement_threshold: int = 2  # 5점 척도에서 2점 이상 벌어지면 3번째 심사위원
-    experience_saturation_k: float = 1.0  # **임의값.** 함수 형태는 step 5에서 확정
+    # 포화함수 `1 - exp(-k · 보유/요구)`의 계수. **임의값이다** (docs/TRADEOFFS.md A-4).
+    # 2.0으로 둔 근거는 「요구를 정확히 채운 사람이 0.865를 받는다」는 것 하나뿐이다 —
+    # 1.0이면 요구를 다 채우고도 0.632라 미달자와 잘 안 갈린다. 함수 **형태**(선형 금지)에는
+    # 문헌 근거가 있지만 이 숫자에는 없다. 그 사실을 지우지 마라.
+    experience_saturation_k: float = 2.0
 
     # --- 파싱 (step 3). 값의 출처는 docs/OCR_EVIDENCE.md ---
     ocr_engine: str = "paddle"  # "paddle" | "vision". EasyOCR은 신뢰도 0.396으로 탈락 (§1)
@@ -153,7 +157,7 @@ def load_settings(path: str | None = None) -> Settings:
             for kind, default in DEFAULT_KIND_SHARES.items()
         },
         judge_disagreement_threshold=_env_int("MATCHING_JUDGE_DISAGREEMENT_THRESHOLD", 2),
-        experience_saturation_k=_env_float("MATCHING_EXPERIENCE_SATURATION_K", 1.0),
+        experience_saturation_k=_env_float("MATCHING_EXPERIENCE_SATURATION_K", 2.0),
         ocr_engine=_env("MATCHING_OCR_ENGINE", "paddle") or "paddle",
         header_x_threshold=_env_int("MATCHING_HEADER_X_THRESHOLD", 100),
         continuation_tolerance=_env_int("MATCHING_CONTINUATION_TOLERANCE", 4),
