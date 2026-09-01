@@ -124,7 +124,7 @@
       "name": "rubric-builder",
       "status": "completed",
       "started_at": "2026-09-01T10:47:15+0900",
-      "completed_at": "2026-09-01T10:56:16+09:00",
+      "completed_at": "2026-09-01T10:56:53+0900",
       "summary": "src/matching/rubric/ 3파일 — anchors.py(ANCHOR_TEMPLATE 1/3/5, 조건 문구를 앞에 붙여 조사 회피) · build.py(층 배정 gate/fact/judgment · 가중치 배분 · derived_from Link) · review.py(승인은 review_status만). 실제 공고 2건에서 루브릭 생성 완주 — kt-b2c 11항목(fact 3·judgment 8) / nexon-game 19항목(fact 6·judgment 13), 둘 다 총합 정확히 100.000000, 항목 겹침 0건, G3 위반 0건. tests/test_rubric.py 16케이스 통과.",
       "notes": [
         "**docs/RUBRIC_GENERATION_EVIDENCE.md §7과 어긋나는 채로 뒀다.** 그 문서는 「공통 템플릿 하나는 유지하지 않는다. 조건 유형별로 나눈다(지금 생각: 3개)」를 확정으로 적었는데, step4.md 명세는 ANCHOR_TEMPLATE 하나를 코드로 못박고 있다. step4.md를 따랐다 — ① step4.md가 그 문서보다 나중이다(문서 2026-08-31 22:31, step4.md는 2026-09-01 커밋에서 최종 수정) ② 문서 §7 자신이 「유형별 템플릿을 몇 개로 할 것인가」를 **미정**으로 남겼고, 미정인 설계를 24시간 안에 확정하는 것이 이 step의 일이 아니다. **어긋난 사실을 지우지 않는다** — 다음 사람이 유형별 템플릿을 넣을 자리는 anchors.py 하나뿐이다.",
