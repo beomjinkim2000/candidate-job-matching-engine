@@ -40,6 +40,7 @@
 
 from __future__ import annotations
 
+from bisect import bisect_left
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
@@ -107,11 +108,16 @@ def classify_lines(result: OcrResult, settings: Settings) -> dict[str, LineRole]
     | # | 조건 | 판정 |
     |---|---|---|
     | 1 | 첫 글자가 불릿 | `item` |
-    | 2 | 불릿 없음 + `x0 > 직전 item의 x0 + continuation_tolerance` | `continuation` |
+    | 2 | 불릿 없음 + 직전 item보다 `tolerance`~`max_indent`만큼 들여씀 | `continuation` |
     | 3 | `x0 < settings.header_x_threshold` | `header` |
     | 4 | 그 외 | `ambiguous` (3-C가 문자열만 보고 판정) |
 
     `step3.md`는 3번을 맨 앞에 뒀다. **실측에서 뒤로 밀었다** — 이유는 모듈 문서.
+
+    2번의 **상한도 실측에서 생겼다.** 원래는 하한만 있어서 「직전 항목보다 오른쪽」이면
+    전부 이어지는 줄이었는데, 다단 표에서는 **오른쪽 열 전체가 그 조건을 만족한다.**
+    공고 A에서 근무지 열(x0 720)이 수행업무 항목(x0 244)에 붙어 조건 문구에
+    지명이 섞였다. 이어지는 줄의 들여쓰기는 글자 몇 칸이지 열 하나가 아니다.
     """
     roles: dict[str, LineRole] = {}
     last_item_x0: int | None = None
@@ -126,7 +132,12 @@ def classify_lines(result: OcrResult, settings: Settings) -> dict[str, LineRole]
         # --- 2. 직전 항목보다 더 들여썼으면 그 항목이 이어지는 것이다 ---------
         # **이 규칙을 빼지 마라.** 실측에서 한 조건이 두 줄에 걸쳐 있었고, 병합하지
         # 않으면 조건 하나가 조건 둘로 세어져 배점이 갈라진다. 점수 문제다.
-        if last_item_x0 is not None and line.x0 > last_item_x0 + settings.continuation_tolerance:
+        if (
+            last_item_x0 is not None
+            and last_item_x0 + settings.continuation_tolerance
+            < line.x0
+            <= last_item_x0 + settings.continuation_max_indent
+        ):
             roles[line.id] = "continuation"
             continue
 
@@ -295,3 +306,123 @@ def select_lines(
         if inside or line.x0 < settings.header_x_threshold:
             kept.append(line)
     return kept
+
+
+def _x_clusters(lines: list[OcrLine], gap: int) -> list[list[OcrLine]]:
+    """x0가 `gap`보다 크게 벌어지면 다른 열로 본다.
+
+    표의 격자를 복원하지 않는다. 필요한 판정은 **「같은 열인가」** 하나뿐이고,
+    자는 `continuation_max_indent`를 그대로 쓴다 — 「이어지는 줄의 들여쓰기는
+    이보다 작다」와 「이보다 벌어지면 다른 열이다」는 같은 문장이다.
+    """
+    clusters: list[list[OcrLine]] = []
+    for line in sorted(lines, key=lambda item: item.x0):
+        if clusters and line.x0 - clusters[-1][-1].x0 <= gap:
+            clusters[-1].append(line)
+        else:
+            clusters.append([line])
+    return clusters
+
+
+def order_band_lines(
+    lines: list[OcrLine],
+    roles: dict[str, LineRole],
+    band: PositionBand,
+    settings: Settings,
+) -> tuple[list[OcrLine], dict[str, LineRole]]:
+    """밴드 안의 줄을 **읽는 순서**로 다시 세우고, 그 안의 역할을 다시 매긴다.
+
+    ## 왜 필요한가 — 셀 라벨은 자기 내용의 한가운데 있다
+
+    `split_positions`가 고친 것과 **같은 원인이 한 단계 아래에서 또 나온다.** 셀 라벨이
+    세로 가운데 정렬이라 OCR의 y 순서에서 **자기 내용보다 뒤에 나온다.**
+
+    실측(공고 A, B2C 밴드): 「우대사항」 라벨은 y=2723인데 그 첫 조건은 y=2699다.
+    줄 순서대로 블록을 묶으면 그 조건이 **앞 섹션(수행업무)에 붙고**, 정작 우대사항
+    블록은 **항목 0개**가 된다. 실제로 이 공고의 우대 조건이 통째로 사라졌다 —
+    표시 문제가 아니라 **그 직무를 다른 직무와 구별하는 내용 전부**가 빠지는 문제다.
+
+    ## 제목 판별을 LLM에서 **열 구조**로 옮긴다
+
+    처음엔 3-C가 역할을 준 줄을 라벨로 썼다. **틀렸다.** LLM에게는 문자열만 가는데,
+    조건 문장 「서로 다른 이해관계를 조율하며 …하시는 분」은 읽으면 영락없이 우대 조건이라
+    `preferred`가 돌아온다. 그 줄이 라벨이 되자 **그 위의 수행업무 4건이 우대 조건으로
+    넘어갔다** — 담당업무를 지원자의 자격으로 세는 것이라 점수가 통째로 틀린다.
+
+    LLM은 「이 제목이 무슨 성격인가」에 답할 수 있지만 **「이 줄이 제목인가」에는 못 답한다.**
+    그건 뜻이 아니라 배치의 문제이고, 배치는 OCR이 준다. 그래서 여기서는 좌표로 가른다.
+
+    ## 규칙
+
+    1. **행 라벨 열**(`x0 < header_x_threshold`, `split_positions`가 쓰는 그 열)은
+       내용이 아니라 이 행의 이름이다. `band.label`에 이미 있으므로 뒤로 뺀다 —
+       버리지는 않는다(줄 수가 달라지면 보고서가 거짓말을 한다)
+    2. 남은 줄을 x0로 묶는다. **맨 왼쪽 묶음이 섹션 제목, 그 오른쪽 묶음이 내용**이다.
+       더 오른쪽 묶음은 **다른 열**(근무지 등)이라 조건이 아니다
+    3. 내용 줄을 **가장 가까운 제목**에 배정한다. 경계는 제목 사이의 중점 —
+       `split_positions`와 같은 규칙이고 새 임계값이 없다
+    4. 칸 안에서는 들여쓰기 기준을 **그 칸의 왼쪽 끝**으로 다시 잡는다. 공고 전체에
+       하나인 `header_x_threshold`는 칸 안에서는 자가 되지 못한다 — 실제로 불릿이
+       OCR에서 떨어져 나간 조건 한 건이 그 때문에 통째로 사라졌다
+
+    묶음이 하나뿐이면(제목과 내용이 안 갈린다) **손대지 않고 그대로 돌려준다** —
+    잘못 세우는 것보다 안 세우는 것이 낫다.
+    """
+    inside = [line for line in lines if band.y_top <= line.bbox.y1 < band.y_bottom]
+    if not inside:
+        return lines, roles
+
+    row_label = [line for line in inside if line.x0 < settings.header_x_threshold]
+    body = [line for line in inside if line.x0 >= settings.header_x_threshold]
+    clusters = _x_clusters(body, settings.continuation_max_indent)
+    if len(clusters) < 2:
+        return lines, roles
+
+    labels = sorted(clusters[0], key=lambda line: (line.bbox.y1 + line.bbox.y2) / 2)
+    content = clusters[1]
+    # 세 번째 묶음부터는 표의 다른 열이다. 조건도 제목도 아니므로 블록에서 빠진다.
+    others = [line for cluster in clusters[2:] for line in cluster] + row_label
+
+    centers = [(line.bbox.y1 + line.bbox.y2) / 2 for line in labels]
+    bounds = [(centers[i] + centers[i + 1]) / 2 for i in range(len(centers) - 1)]
+
+    buckets: list[list[OcrLine]] = [[] for _ in labels]
+    for line in content:
+        center = (line.bbox.y1 + line.bbox.y2) / 2
+        buckets[bisect_left(bounds, center)].append(line)
+
+    updated = dict(roles)
+    for line in labels:
+        updated[line.id] = "header"
+    for line in others:
+        updated[line.id] = "ambiguous"
+
+    ordered: list[OcrLine] = []
+    for label, bucket in zip(labels, buckets, strict=True):
+        ordered.append(label)
+        bucket.sort(key=lambda line: line.bbox.y1)
+        baseline = min((line.x0 for line in bucket), default=0)
+        last_item_x0: int | None = None
+        for line in bucket:
+            if _bullet(line.text) is not None:
+                updated[line.id] = "item"
+                last_item_x0 = line.x0
+            elif (
+                last_item_x0 is not None
+                and last_item_x0 + settings.continuation_tolerance
+                < line.x0
+                <= last_item_x0 + settings.continuation_max_indent
+            ):
+                updated[line.id] = "continuation"
+            elif line.x0 <= baseline + settings.continuation_tolerance:
+                # 칸의 왼쪽 끝에 붙은 줄. 불릿이 OCR에서 떨어져 나갔어도 항목이다.
+                updated[line.id] = "item"
+                last_item_x0 = line.x0
+            else:
+                updated[line.id] = "ambiguous"
+            ordered.append(line)
+    ordered.extend(others)
+
+    head = [line for line in lines if line.bbox.y1 < band.y_top]
+    tail = [line for line in lines if line.bbox.y1 >= band.y_bottom]
+    return head + ordered + tail, updated

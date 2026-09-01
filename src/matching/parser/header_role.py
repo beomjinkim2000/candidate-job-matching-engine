@@ -50,9 +50,15 @@ _SYSTEM = (
     "- duty: **입사 후 하게 될 일**이 나열되는 섹션의 제목. 지원자 조건이 아니다\n"
     "- context: 회사·팀·인재상 소개. 조건도 업무도 아니다\n"
     "- excluded: 복리후생·근무조건·전형절차·제출서류·문의처 등 **채점과 무관한** 섹션의 제목\n"
-    f"- {NOT_A_HEADER}: 섹션 제목이 **아니다**. 본문 한 줄이거나 표의 칸이다\n\n"
-    "판단 기준은 **그 제목 아래에 무엇이 오는가**이다. 표현이 사전에 없는 말이어도\n"
+    f"- {NOT_A_HEADER}: 섹션 제목이 **아니다**. 조건·업무 내용 그 자체이거나,\n"
+    "  날짜·지명처럼 값만 있는 줄이다\n\n"
+    "판단 기준은 **그 뒤에 무엇이 오는가**이다. 표현이 사전에 없는 말이어도\n"
     "(예: 완곡한 구어체 제목) 뜻으로 고른다.\n"
+    "**표 안에 있다는 이유로 제목이 아니라고 하지 마라.** 표로 짠 공고에서는\n"
+    "섹션 제목이 곧 칸이다 — 옆 칸에 무엇이 오는지 알리는 말이면\n"
+    f"제목이고 {NOT_A_HEADER}가 아니다.\n"
+    "**대신 제목은 뒤에 올 목록을 알리는 말이지, 그 목록의 한 줄이 아니다.**\n"
+    "사람이나 경험을 서술하는 완결된 문장은 조건 그 자체이므로 제목이 아니다.\n"
     "확실하지 않으면 context를 고른다 — 그 섹션은 표시만 되고 채점에 안 들어간다."
 )
 
@@ -93,8 +99,17 @@ class RoleCache(BaseModel):
 
 
 def fingerprint(headers: list[str], ambiguous: list[str]) -> str:
-    """캐시 키. 줄 하나만 달라져도 다른 값이 나와야 한다."""
-    payload = json.dumps({"h": headers, "a": ambiguous}, ensure_ascii=False, sort_keys=False)
+    """캐시 키. 줄 하나만 달라져도 다른 값이 나와야 한다.
+
+    **프롬프트도 키에 넣는다.** 안 넣으면 지시문을 고쳐도 캐시가 맞아떨어져 **옛 판정이
+    조용히 재사용된다** — 프롬프트를 왜 고쳤는지가 결과에 반영되지 않고, 고쳤는데 안 바뀐
+    이유를 찾느라 엉뚱한 데를 판다. 실제로 한 번 그랬다.
+    """
+    payload = json.dumps(
+        {"h": headers, "a": ambiguous, "p": hashlib.sha256(_SYSTEM.encode()).hexdigest()[:12]},
+        ensure_ascii=False,
+        sort_keys=False,
+    )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
@@ -146,6 +161,29 @@ def classify_headers(
     if not headers and not ambiguous:
         return {}
 
+    payload = _ask(client, model, headers, ambiguous)
+    known = set(headers) | set(ambiguous)
+    roles, answered = _collect(payload, known)
+
+    missing = [text for text in headers if text not in answered]
+    if missing:
+        # **한 번 더 묻는다. 빠진 줄만.** 모델은 목록이 길면 몇 줄을 조용히 흘린다
+        # (실측: 25줄 중 1줄). 여기서 포기하면 공고 하나가 통째로 파싱 불가가 되는데,
+        # 원인은 판단 실패가 아니라 누락이다. 되묻는 비용은 공고당 최대 1회다.
+        retry_roles, retry_answered = _collect(_ask(client, model, missing, []), known)
+        roles.update(retry_roles)
+        answered |= retry_answered
+        missing = [text for text in headers if text not in answered]
+
+    if missing:
+        # 두 번 물어도 답이 없는 줄. 헤더로 판정됐는데 역할도 「제목 아님」도 못 받으면
+        # 그 섹션의 항목들이 사다리 1단계를 못 타고, 조용히 두면 근거 등급이 이유 없이 낮아진다.
+        raise HeaderRoleError(f"두 번 물어도 응답에 없는 섹션 제목 {len(missing)}개: {missing[:3]}")
+    return roles
+
+
+def _ask(client, model: str, headers: list[str], ambiguous: list[str]) -> dict:
+    """호출 1회. 보내는 것은 **문자열뿐**이다."""
     response = client.chat.completions.create(
         model=model,
         temperature=0,
@@ -160,22 +198,29 @@ def classify_headers(
     )
     content = response.choices[0].message.content
     try:
-        payload = json.loads(content or "")
+        return json.loads(content or "")
     except json.JSONDecodeError as exc:
         raise HeaderRoleError(f"역할 분류 응답을 읽을 수 없다: {exc}") from exc
 
-    known = set(headers) | set(ambiguous)
+
+def _collect(payload: dict, known: set[str]) -> tuple[dict[str, HeaderRole], set[str]]:
+    """응답에서 역할과 **답이 온 줄**을 뽑는다.
+
+    「none이라고 답했다」와 「답을 안 했다」는 다르다. 전자는 계약이 정의한 정상 응답이고
+    (반환 dict에서 키가 빠지는 것으로 표현된다), 후자만 실패다. 둘을 합치면 표의 열
+    제목처럼 2단계가 헤더로 잘못 올린 줄 하나에 파싱 전체가 멈춘다.
+    """
     roles: dict[str, HeaderRole] = {}
+    answered: set[str] = set()
     for entry in payload.get("labels", []):
         text, role = entry.get("text"), entry.get("role")
         # **모델이 지어낸 줄을 받지 않는다.** 우리가 보낸 줄만 통과시킨다 — 안 그러면
         # 존재하지 않는 섹션이 블록으로 생기고 그 아래 항목이 조건으로 올라간다.
-        if text in known and role in HEADER_ROLES:
+        if text not in known:
+            continue
+        if role in HEADER_ROLES:
             roles[text] = role  # type: ignore[assignment]
-
-    missing = [text for text in headers if text not in roles]
-    if missing:
-        # 헤더로 판정된 줄에 역할이 없으면 그 섹션의 항목들이 사다리 1단계를 못 탄다.
-        # 조용히 두면 근거 등급이 이유 없이 낮아진다.
-        raise HeaderRoleError(f"역할이 안 나온 섹션 제목 {len(missing)}개: {missing[:3]}")
-    return roles
+            answered.add(text)
+        elif role == NOT_A_HEADER:
+            answered.add(text)
+    return roles, answered

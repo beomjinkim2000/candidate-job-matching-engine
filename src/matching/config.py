@@ -71,6 +71,10 @@ class Settings:
     ocr_engine: str = "paddle"  # "paddle" | "vision". EasyOCR은 신뢰도 0.396으로 탈락 (§1)
     header_x_threshold: int = 100  # **실측.** x0 띠 사이 빈 구간(60~125)의 중앙 (§3)
     continuation_tolerance: int = 4  # **실측.** 띠 2·3 간격(~15px)보다 훨씬 작게 (§3)
+    # 이어지는 줄의 **상한**. 없으면 오른쪽 열이 「더 들여쓴 줄」로 보여 앞 항목에 붙는다 —
+    # 확보한 공고 A에서 근무지 열(x0 720)이 수행업무 항목(x0 244)에 실제로 붙었다.
+    # 값은 §3의 x0 띠 사이 빈 구간(65~70px)보다 작게 잡는다. 열 간격이자 「같은 열인가」의 자다.
+    continuation_max_indent: int = 60
     ambiguous_fallback_ratio: float = 0.5  # **임의값.** 넘으면 VLM 폴백 조건 — 지금은 예외
 
     # --- 모델·단가 (docs/COST_BUDGET.md) ---
@@ -141,6 +145,7 @@ def load_settings(path: str | None = None) -> Settings:
         ocr_engine=_env("MATCHING_OCR_ENGINE", "paddle") or "paddle",
         header_x_threshold=_env_int("MATCHING_HEADER_X_THRESHOLD", 100),
         continuation_tolerance=_env_int("MATCHING_CONTINUATION_TOLERANCE", 4),
+        continuation_max_indent=_env_int("MATCHING_CONTINUATION_MAX_INDENT", 60),
         ambiguous_fallback_ratio=_env_float("MATCHING_AMBIGUOUS_FALLBACK_RATIO", 0.5),
         header_model=_env("MATCHING_HEADER_MODEL", "gpt-4o-mini") or "gpt-4o-mini",
         judge_model=_env("MATCHING_JUDGE_MODEL", "gpt-4o") or "gpt-4o",

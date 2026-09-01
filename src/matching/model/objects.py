@@ -17,7 +17,10 @@ from pydantic import BaseModel, ConfigDict
 
 ReviewStatus = Literal["draft", "human_validated"]
 EvidenceGrade = Literal["E2", "E1", "E0"]
-RequirementKind = Literal["required", "preferred", "gate"]
+# `duty`는 **지원자에게 요구되는 조건이 아니다** — 입사 후 할 일이다. 그래서 게이트에도
+# 사실 채점에도 들어가지 않고, 판단 채점에서 「이 경험이 이 일과 맞는가」의 자로만 쓰인다.
+# 조건으로 세면 이미 그 일을 해본 사람만 점수를 받는데, 두 공고 다 신입·인턴 공고다.
+RequirementKind = Literal["required", "preferred", "gate", "duty"]
 ScoreLayer = Literal["gate", "fact", "judgment"]
 
 # `rel`을 5개보다 늘리지 않는다 — 종류가 늘면 검산 규칙이 따라 늘고,

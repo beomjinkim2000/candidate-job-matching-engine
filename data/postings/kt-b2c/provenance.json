@@ -1,8 +1,8 @@
 {
-  "posting_id": "kt-nw",
+  "posting_id": "kt-b2c",
   "source_kind": "local",
   "acquired_at": "2026-09-01T04:11:41.363640+09:00",
-  "target_position": "NW인프라운용",
+  "target_position": "B2C마케팅&세일즈",
   "image_sha256": [
     "efd37556dcc64cde38db4d5a71529f005a655f7e84b07da09ef12eba47b200d2"
   ],
@@ -12,8 +12,8 @@
       4920
     ]
   ],
-  "ocr_engine": null,
-  "ocr_sha256": null,
+  "ocr_engine": "paddle",
+  "ocr_sha256": "ced6b1005b85912106d02d76ebb75f3133ad854eb377b41ceac8c4684ff04cbb",
   "api_verified": false,
   "api_verified_at": null
 }

@@ -1,0 +1,306 @@
+{
+  "posting_id": "kt-b2c",
+  "source_kind": "local",
+  "target_position": "B2C마케팅&세일즈",
+  "position_band": {
+    "label": "B2C마케팅&세일즈",
+    "y_top": 2455,
+    "y_bottom": 2783
+  },
+  "ocr_sha256": "ced6b1005b85912106d02d76ebb75f3133ad854eb377b41ceac8c4684ff04cbb",
+  "parse_report": {
+    "parse_mode": "ocr",
+    "ocr_engine": "paddle",
+    "ocr_sha256": "ced6b1005b85912106d02d76ebb75f3133ad854eb377b41ceac8c4684ff04cbb",
+    "line_count": 65,
+    "role_counts": {
+      "header": 29,
+      "item": 22,
+      "ambiguous": 10,
+      "continuation": 4
+    },
+    "merged_continuations": 4,
+    "excluded_blocks": [
+      "recruit.kt.com에서 온라인 지원",
+      "지원서 접수 안내",
+      "채용절차",
+      "서류전형",
+      "직무에 따라 면접 진행을 위한 별도의 자료 제출 또는절차가 진행될 수 있습니다. (포트폴리오 제출등)",
+      "지원방법 및 유의사항",
+      "근무지 정보",
+      "기타사항",
+      "문의처"
+    ],
+    "llm_calls": 0,
+    "emphasis_available": false
+  },
+  "requirements": [
+    {
+      "id": "R-01",
+      "text": "·AX기술(AI, Cloud, Data 등)에기본적인관심과 이해가 있고\n새로운 기술 트렌드를 유연하게 받아들이시는 분",
+      "kind": "preferred",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 243,
+        "y1": 2688,
+        "x2": 595,
+        "y2": 2732,
+        "img_w": 860,
+        "img_h": 4920
+      },
+      "source_span": {
+        "start": 420,
+        "end": 485
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-084",
+        "L-087"
+      ]
+    },
+    {
+      "id": "R-02",
+      "text": "서로다른이해관계를조율하며원활하게소통(갈등관리, 협상등)하시는분",
+      "kind": "preferred",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 244,
+        "y1": 2737,
+        "x2": 676,
+        "y2": 2754,
+        "img_w": 860,
+        "img_h": 4920
+      },
+      "source_span": {
+        "start": 486,
+        "end": 520
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-088"
+      ]
+    },
+    {
+      "id": "R-03",
+      "text": "·정규4년제 대학을 졸업했거나2027년2월까지 졸업 가능한분",
+      "kind": "required",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 46,
+        "y1": 2903,
+        "x2": 467,
+        "y2": 2929,
+        "img_w": 860,
+        "img_h": 4920
+      },
+      "source_span": {
+        "start": 580,
+        "end": 613
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-090"
+      ]
+    },
+    {
+      "id": "R-04",
+      "text": "•남성의경우,병역필또는면제된분",
+      "kind": "required",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 46,
+        "y1": 2935,
+        "x2": 291,
+        "y2": 2961,
+        "img_w": 860,
+        "img_h": 4920
+      },
+      "source_span": {
+        "start": 614,
+        "end": 630
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-091"
+      ]
+    },
+    {
+      "id": "R-05",
+      "text": "·해외여행및체류에 결격사유가없는분",
+      "kind": "required",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 48,
+        "y1": 2968,
+        "x2": 314,
+        "y2": 2990,
+        "img_w": 860,
+        "img_h": 4920
+      },
+      "source_span": {
+        "start": 631,
+        "end": 649
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-092"
+      ]
+    },
+    {
+      "id": "R-06",
+      "text": "·2026년12월 중 입사 가능한 분",
+      "kind": "required",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 49,
+        "y1": 3001,
+        "x2": 266,
+        "y2": 3022,
+        "img_w": 860,
+        "img_h": 4920
+      },
+      "source_span": {
+        "start": 650,
+        "end": 670
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-093"
+      ]
+    }
+  ],
+  "duties": [
+    {
+      "id": "D-01",
+      "text": "B2C 채널을 관리하고 세일즈 전략을 세웁니다",
+      "kind": "duty",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 243,
+        "y1": 2504,
+        "x2": 529,
+        "y2": 2522,
+        "img_w": 860,
+        "img_h": 4920
+      },
+      "source_span": {
+        "start": 276,
+        "end": 301
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-069"
+      ]
+    },
+    {
+      "id": "D-02",
+      "text": "·B2C유통채널(도매·소매·온라인등)관리 및판매 전략수립",
+      "kind": "duty",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 244,
+        "y1": 2533,
+        "x2": 581,
+        "y2": 2550,
+        "img_w": 860,
+        "img_h": 4920
+      },
+      "source_span": {
+        "start": 302,
+        "end": 333
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-070"
+      ]
+    },
+    {
+      "id": "D-03",
+      "text": "·B2C고객을위한 상품마케팅및세일즈기획",
+      "kind": "duty",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 244,
+        "y1": 2555,
+        "x2": 505,
+        "y2": 2572,
+        "img_w": 860,
+        "img_h": 4920
+      },
+      "source_span": {
+        "start": 334,
+        "end": 355
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-073"
+      ]
+    },
+    {
+      "id": "D-04",
+      "text": "·지역상권 및시장환경분석을기반으로한시장점유율확대 전략수립",
+      "kind": "duty",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 242,
+        "y1": 2577,
+        "x2": 636,
+        "y2": 2599,
+        "img_w": 860,
+        "img_h": 4920
+      },
+      "source_span": {
+        "start": 356,
+        "end": 387
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-075"
+      ]
+    },
+    {
+      "id": "D-05",
+      "text": "·KT상품판매를위한새로운채널발굴및유통망운영·관리",
+      "kind": "duty",
+      "evidence_grade": "E2",
+      "ladder_step": 1,
+      "source_bbox": {
+        "page": 1,
+        "x1": 242,
+        "y1": 2600,
+        "x2": 580,
+        "y2": 2622,
+        "img_w": 860,
+        "img_h": 4920
+      },
+      "source_span": {
+        "start": 388,
+        "end": 414
+      },
+      "review_status": "draft",
+      "line_ids": [
+        "L-077"
+      ]
+    }
+  ]
+}
