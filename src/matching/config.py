@@ -102,7 +102,11 @@ class Settings:
     # (COST_BUDGET.md §2). .env에 넣기 전까지 USD 환산은 0이고, 그 사실이 결과에 드러나야 한다.
     price_in_per_1m: float = 0.0  # 입력 100만 토큰당 USD
     price_out_per_1m: float = 0.0  # 출력 100만 토큰당 USD
-    max_total_calls: int = 200  # 완주 1회 최악 추정 134회 위 (§1). 넘으면 step 6 CallBudget이 예외
+    # **실측으로 올렸다 (2026-09-01 12:00).** 원래 200이었고 근거는 「완주 1회 최악 추정
+    # 134회」였는데, **완주 전에 이미 149회**였다 (docs/COST_BUDGET.md §4-1). 이 난간이
+    # 막으려던 것은 돈이 아니라 실수인데, 실측 단가가 호출당 $0.0064라 잔액 $4가
+    # 630회에 해당한다 — 돈은 넉넉하고 난간만 낮았다. 넘으면 step 6 CallBudget이 예외.
+    max_total_calls: int = 600
 
     # --- 심사위원 재현 (step 6) ---
     judge_seed: int | None = None  # 지원되면 고정, 안 되면 None
@@ -175,7 +179,7 @@ def load_settings(path: str | None = None) -> Settings:
         judge_model=_env("MATCHING_JUDGE_MODEL", Settings.judge_model) or Settings.judge_model,
         price_in_per_1m=_env_float("MATCHING_PRICE_IN_PER_1M", 0.0),
         price_out_per_1m=_env_float("MATCHING_PRICE_OUT_PER_1M", 0.0),
-        max_total_calls=_env_int("MATCHING_MAX_TOTAL_CALLS", 200),
+        max_total_calls=_env_int("MATCHING_MAX_TOTAL_CALLS", 600),
         judge_seed=_env_opt_int("MATCHING_JUDGE_SEED"),
         judge_repeat_n=_env_int("MATCHING_JUDGE_REPEAT_N", 11),
         judge_order_check=_env_bool("MATCHING_JUDGE_ORDER_CHECK", False),
