@@ -15,12 +15,17 @@ step 8이 만든 것은 **문 두 개(터미널·HTTP)와 그 안쪽 함수 하�
 | 이미지가 없으면 404 **+ 사유** | 바탕을 못 주면 좌표가 값을 잃는다. 조용한 빈 칸 금지 |
 | 뒤집기·삭제가 배점을 다시 돌린다 | 「만점 100」. 안 돌리면 총합이 100이 아니다 |
 | CLI와 HTTP가 같은 함수를 지난다 | 두 경로가 갈리면 어느 쪽이 맞는지 알 수 없다 |
+| `GET /trace`가 LLM을 안 부른다 | 되돌아오는 화면이다. 호출이 새면 예산($5)이 새로고침으로 샌다 |
+| 캐시가 없으면 부르는 대신 멈춘다 | 「맞기를 바란다」는 방어가 아니다. 어긋난 날 돈이 나간다 |
+| `GET /resume`이 채점과 같은 글 | 다른 문자열 위에 그리면 **근거 사슬이 거짓말**을 한다 |
+| 무엇을 가렸는지 함께 준다 | 가린 사실을 감추면 마스킹이 있었는지조차 알 수 없다 |
 
 심사위원은 `test_aggregate.py`와 같은 **고정 픽스처**다.
 """
 
 from __future__ import annotations
 
+import hashlib
 import inspect
 import json
 from datetime import datetime
@@ -33,8 +38,10 @@ from fastapi.testclient import TestClient
 from matching.api import cli, server, service
 from matching.config import Settings
 from matching.model import BBox, EvidenceGraph, Requirement, Resume, Span
+from matching.parser import OcrLine, OcrResult
 from matching.pipeline import RubricProposal
 from matching.rubric import build_rubric
+from matching.source import PROVENANCE_FILENAME, Provenance
 
 POSTING_ID = "test-posting"
 REVISION = "1756700000"
@@ -151,6 +158,102 @@ class _LeakyClient:
 
     def create(self, **_kwargs):
         raise RuntimeError(f"connect failed: https://example.test/x?access-key={self.LEAK}")
+
+
+# --- 합성 공고 한 장 ---------------------------------------------------------
+#
+# **실물 `data/`를 쓰지 않는다.** `ocr.json`은 공고 본문이라 커밋되지 않으므로 CI에는
+# 없고, 제출용 데이터셋에 테스트가 의존하면 그 데이터를 못 고치게 된다
+# (`tests/CLAUDE.md` 「픽스처는 제출 데이터와 분리한다」).
+#
+# 줄 판정은 좌표로 갈린다 — x0가 `header_x_threshold`(100) 미만이면 섹션 제목이고,
+# 불릿으로 시작하면 항목이다 (`parser/layout.classify_lines`).
+POSTING_LINES: tuple[tuple[str, str, int, int], ...] = (
+    ("L-001", "지원자격", 40, 100),
+    ("L-002", f"· {FACT_TEXT}", 140, 140),
+    ("L-003", f"· {JUDGMENT_TEXT}", 140, 180),
+    ("L-004", "우대사항", 40, 240),
+    ("L-005", "· 대규모 트래픽 처리 경험", 140, 280),
+    ("L-006", "복리후생", 40, 340),
+    ("L-007", "· 재택근무 가능", 140, 380),
+)
+
+# 3-C가 LLM에게 물어볼 줄과 받을 답. `복리후생`이 `excluded`인 것이 요점이다 —
+# 안 가리면 「재택근무 가능」이 지원자에게 요구되는 조건으로 들어간다.
+POSTING_HEADERS = ["지원자격", "우대사항", "복리후생"]
+POSTING_ROLES = {"지원자격": "requirement", "우대사항": "preferred", "복리후생": "excluded"}
+
+
+def _seed_posting(data_dir: Path) -> Path:
+    """`ocr.json` + `provenance.json` + 이미지 자리. **`header_roles.json`은 안 쓴다.**
+
+    캐시를 미리 깔면 「캐시가 없을 때 LLM을 부르는가」를 시험할 수 없다. 캐시는
+    `POST /prepare`가 만든다 — 실제 경로가 그렇다.
+    """
+    directory = data_dir / service.POSTINGS_SUBDIR / POSTING_ID
+    directory.mkdir(parents=True, exist_ok=True)
+    # 이미지는 **열리지 않는다.** OCR 결과가 파일로 있으므로 파서는 이미지를 안 본다.
+    image = directory / "img_1.png"
+    image.write_bytes(b"fixture-not-a-real-image")
+
+    lines = [
+        OcrLine(
+            id=line_id,
+            text=text,
+            conf=0.95,
+            x0=x0,
+            height=20,
+            bbox=BBox(page=1, x1=x0, y1=y1, x2=x0 + 400, y2=y1 + 20, img_w=860, img_h=2533),
+        )
+        for line_id, text, x0, y1 in POSTING_LINES
+    ]
+    ocr = OcrResult(
+        engine="paddle",
+        engine_version="fixture",
+        image_path=str(image),
+        img_w=860,
+        img_h=2533,
+        lines=lines,
+        avg_conf=0.95,
+        elapsed_sec=0.0,
+    )
+    (directory / server.OCR_FILENAME).write_text(ocr.model_dump_json(indent=2), encoding="utf-8")
+
+    provenance = Provenance(
+        posting_id=POSTING_ID,
+        source_kind="local",
+        acquired_at=datetime(2026, 9, 1, 4, 0).astimezone(),
+        image_sha256=[hashlib.sha256(image.read_bytes()).hexdigest()],
+        image_size=[(860, 2533)],
+    )
+    (directory / PROVENANCE_FILENAME).write_text(
+        provenance.model_dump_json(indent=2), encoding="utf-8"
+    )
+    return directory
+
+
+class _HeaderClient:
+    """헤더 역할 분류에만 답하는 대역. **부른 횟수를 센다** — 그 숫자가 시험 대상이다."""
+
+    def __init__(self, roles: dict[str, str] | None = None) -> None:
+        self.roles = dict(roles if roles is not None else POSTING_ROLES)
+        self.calls = 0
+        self.chat = SimpleNamespace(completions=self)
+
+    def create(self, **kwargs):
+        self.calls += 1
+        body = " ".join(str(message.get("content", "")) for message in kwargs["messages"])
+        labels = [{"text": text, "role": role} for text, role in self.roles.items() if text in body]
+        return SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=json.dumps({"labels": labels}, ensure_ascii=False)
+                    )
+                )
+            ],
+            usage=SimpleNamespace(prompt_tokens=200, completion_tokens=40),
+        )
 
 
 def _seed_resumes(data_dir: Path, candidate_ids=("A-01", "A-02")) -> None:
@@ -438,6 +541,156 @@ def test_이미지가_없으면_404와_사유가_함께_나온다(tmp_path):
     assert response.status_code == 404
     detail = response.json()["detail"]
     assert "이미지 없음" in detail and "좌표 표시 불가" in detail
+
+
+def test_trace가_파싱을_보여주되_LLM을_다시_부르지_않는다(tmp_path):
+    """화면 ②는 stepper로 **몇 번이고 되돌아오는 자리**다. 새로고침이 호출을 만들면
+    예산 $5가 화면 조작으로 사라진다.
+
+    「호출이 0인가」를 세는 방식이 요점이다 — 응답의 `llm_calls`는 파서가 스스로 적은
+    값이라 파서를 믿는 검사이고, `_HeaderClient.calls`는 **실제로 부른 횟수**다. 둘 다 본다.
+    """
+    _seed_posting(tmp_path)
+    llm = _HeaderClient()
+    client = _client(tmp_path, judge=llm)
+
+    prepared = client.post("/prepare", json={"posting_id": POSTING_ID})
+    assert prepared.status_code == 200
+    assert llm.calls == 1  # 헤더 역할 분류 1회. 공고당 이것뿐이다
+
+    first = client.get(f"/trace/{POSTING_ID}")
+    assert first.status_code == 200
+    body = first.json()
+    assert llm.calls == 1  # ← 이 줄이 이 테스트의 전부다
+    assert body["cached"] is False
+    assert body["parse_report"]["llm_calls"] == 0
+
+    # 화면이 필요로 하는 것: 줄마다 좌표·판정·조건 역참조.
+    assert [line["id"] for line in body["lines"]] == [item[0] for item in POSTING_LINES]
+    header = next(line for line in body["lines"] if line["text"] == "지원자격")
+    assert header["role"] == "header" and header["box"]["img_w"] == body["img_w"]
+    item = next(line for line in body["lines"] if line["text"].endswith(FACT_TEXT))
+    assert item["role"] == "item" and item["req"] is not None
+
+    # **모델이 본 것이 이게 전부라는 걸 화면이 보여줘야 한다.** 좌표도 이미지도 안 갔다.
+    assert body["sent_to_llm"]["headers"] == POSTING_HEADERS
+    assert body["header_roles"] == POSTING_ROLES
+    excluded = next(block for block in body["blocks"] if block["header"] == "복리후생")
+    assert excluded["scored"] is False  # 복리후생이 조건으로 올라가면 점수가 틀린다
+
+    second = client.get(f"/trace/{POSTING_ID}")
+    assert second.status_code == 200
+    assert second.json()["cached"] is True
+    assert llm.calls == 1
+    assert {k: v for k, v in second.json().items() if k != "cached"} == {
+        k: v for k, v in body.items() if k != "cached"
+    }
+
+
+def test_trace는_캐시가_없으면_LLM을_부르는_대신_멈춘다(tmp_path):
+    """**「캐시가 맞기를 바란다」는 방어가 아니다.** 어긋난 날 조용히 돈이 나간다.
+
+    `POST /prepare`를 거치지 않은 공고는 헤더 역할 캐시가 없다. 그때 이 엔드포인트가
+    LLM으로 넘어가면 GET 하나가 유료 호출이 된다 — 부를 클라이언트를 아예 안 넘기므로
+    구조적으로 불가능하고, 그 사실이 409와 사유로 나온다.
+    """
+    _seed_posting(tmp_path)
+    llm = _HeaderClient()
+    client = _client(tmp_path, judge=llm)
+
+    response = client.get(f"/trace/{POSTING_ID}")
+    assert response.status_code == 409
+    assert llm.calls == 0
+    assert "/prepare" in response.json()["detail"]
+
+
+def test_없는_공고의_trace는_404이고_경로_조각은_400이다(tmp_path):
+    """조용히 빈 값을 주지 않는다. 경로 조각은 `_safe_id`가 먼저 막는다."""
+    client = _client(tmp_path)
+
+    missing = client.get("/trace/없는-공고")
+    assert missing.status_code == 404
+    assert "공고가 없다" in missing.json()["detail"]
+
+    traversal = client.get("/trace/..%5C..%5Cetc")
+    assert traversal.status_code == 400
+
+
+def test_resume이_채점이_읽은_문자열을_그대로_준다(tmp_path):
+    """근거를 **다른 문자열 위에** 그리면 근거 사슬이 거짓말을 한다.
+
+    검산 G2가 「인용이 원문에 실재하는가」를 파이프라인 안에서 재는데, 화면은 그 원문을
+    HTTP로 따로 받는다. 그 둘이 어긋나면 검산이 통과한 결과가 화면에서 어긋난 자리를
+    하이라이트한다. 그래서 **실제 채점 결과의 span으로** 이 응답을 자른다.
+    """
+    client = _client(tmp_path, proposal=_proposal())
+    scored = client.post("/score", json={"posting_id": POSTING_ID})
+    assert scored.status_code == 200
+
+    evidence = [item for item in scored.json()["graph"]["evidence"] if item["resume_id"] == "A-01"]
+    assert evidence, "판단 층 인용이 하나도 없다 — 이 테스트가 아무것도 재지 못한다"
+
+    response = client.get("/resume/A-01")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["posting_id"] == POSTING_ID
+    assert body["length"] == len(body["text"]) == len(RESUMES["A-01"])
+    for item in evidence:
+        span = item["span"]
+        assert body["text"][span["start"] : span["end"]] == item["quote"]
+
+
+def test_resume이_무엇을_가렸는지_함께_준다(tmp_path):
+    """가린 사실을 감추면 마스킹이 있었는지조차 알 수 없다 (`step9.md` 4번).
+
+    길이 보존도 같이 본다 — 가리면서 길이가 바뀌면 위 테스트의 오프셋이 전부 어긋난다.
+    """
+    _seed_resumes(tmp_path)
+    text = (
+        "성명: 강유리 (여 / 1999.04.11 / 만 26세)\n"
+        "한국대학교 컴퓨터공학과 졸업 (2018.03 ~ 2022.02)\n"
+        "Python으로 사내 정산 배치를 만들었습니다.\n"
+    )
+    directory = tmp_path / service.RESUMES_SUBDIR / POSTING_ID
+    (directory / "A-09.json").write_text(
+        json.dumps({"candidate_id": "A-09", "text": text}, ensure_ascii=False), encoding="utf-8"
+    )
+    client = _client(tmp_path)
+
+    body = client.get("/resume/A-09").json()
+    assert "강유리" not in body["text"] and "한국대학교" not in body["text"]
+    assert len(body["text"]) == len(text)  # 마스킹이 길이를 바꾸면 span이 전부 어긋난다
+    # 경력 기간(`2018.03`)은 남는다 — 가리면 연차를 못 센다 (`scorer/mask.py`).
+    assert "2018.03" in body["text"]
+    assert "이름" in body["masked_fields"] and "학교명" in body["masked_fields"]
+    for item in body["masked"]:
+        segment = body["text"][item["start"] : item["end"]]
+        assert set(segment) <= {body["mask_char"], "\n"}, item
+
+
+def test_없는_이력서는_404이고_같은_id가_둘이면_409다(tmp_path):
+    """조용히 하나를 고르면 **다른 공고의 이력서 위에** 근거를 그리게 된다."""
+    client = _client(tmp_path)
+
+    missing = client.get("/resume/A-99")
+    assert missing.status_code == 404
+    assert "A-99" in missing.json()["detail"]
+    assert client.get("/resume/..%5C..%5Cetc").status_code == 400
+
+    # 같은 지원자 식별자를 다른 공고에도 놓는다.
+    other = tmp_path / service.RESUMES_SUBDIR / "다른-공고"
+    other.mkdir(parents=True, exist_ok=True)
+    (other / "A-01.json").write_text(
+        json.dumps({"candidate_id": "A-01", "text": "다른 공고의 지원자다.\n"}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    ambiguous = client.get("/resume/A-01")
+    assert ambiguous.status_code == 409
+    assert "posting_id" in ambiguous.json()["detail"]
+    # 공고를 지정하면 그 공고의 것을 준다.
+    picked = client.get("/resume/A-01", params={"posting_id": "다른-공고"})
+    assert picked.status_code == 200
+    assert picked.json()["posting_id"] == "다른-공고"
 
 
 def test_첫_화면이_열린다(tmp_path):
