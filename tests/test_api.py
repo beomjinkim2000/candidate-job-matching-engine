@@ -28,6 +28,7 @@ from __future__ import annotations
 import hashlib
 import inspect
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -40,11 +41,14 @@ from matching.config import Settings
 from matching.model import BBox, EvidenceGraph, Requirement, Resume, Span
 from matching.parser import OcrLine, OcrResult
 from matching.pipeline import RubricProposal
-from matching.rubric import build_rubric
+from matching.rubric import build_rubric, is_countable
 from matching.source import PROVENANCE_FILENAME, Provenance
 
 POSTING_ID = "test-posting"
 REVISION = "1756700000"
+
+# 갈래 분류 프롬프트가 조건에 붙이는 번호 (`rubric/branch.build_prompt`).
+_NUMBERED_ITEM = re.compile(r"^(\d+)\. (.+)$", re.MULTILINE)
 
 # 조건 문구에 직군 어휘를 넣지 않는다 — 층 배정은 **문자의 종류**로만 갈린다.
 FACT_TEXT = "Python 및 SQL 활용 경험"
@@ -233,7 +237,14 @@ def _seed_posting(data_dir: Path) -> Path:
 
 
 class _HeaderClient:
-    """헤더 역할 분류에만 답하는 대역. **부른 횟수를 센다** — 그 숫자가 시험 대상이다."""
+    """공고 준비가 부르는 **텍스트 분류 둘**에 답하는 대역 — 헤더 역할과 조건 갈래.
+
+    **부른 횟수를 센다.** 그 숫자가 시험 대상이다.
+
+    갈래는 **옛 글자 모양 규칙 그대로** 답한다 (`is_countable`). 이 픽스처의 층 배정을
+    그대로 두기 위해서다 — 여기서 재는 것은 「몇 번 불렀나」이지 「잘 분류하나」가 아니고,
+    갈래 판정 자체는 `test_rubric.py`가 본다.
+    """
 
     def __init__(self, roles: dict[str, str] | None = None) -> None:
         self.roles = dict(roles if roles is not None else POSTING_ROLES)
@@ -243,7 +254,30 @@ class _HeaderClient:
     def create(self, **kwargs):
         self.calls += 1
         body = " ".join(str(message.get("content", "")) for message in kwargs["messages"])
+        schema = kwargs.get("response_format", {}).get("json_schema", {}).get("name")
+        if schema == "requirement_branches":
+            return self._branches(body)
         labels = [{"text": text, "role": role} for text, role in self.roles.items() if text in body]
+        return SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=json.dumps({"labels": labels}, ensure_ascii=False)
+                    )
+                )
+            ],
+            usage=SimpleNamespace(prompt_tokens=200, completion_tokens=40),
+        )
+
+    def _branches(self, body: str):
+        """번호가 매겨져 온 조건에 갈래로 답한다."""
+        labels = [
+            {
+                "index": int(match.group(1)),
+                "branch": "term" if is_countable(match.group(2)) else "graded",
+            }
+            for match in _NUMBERED_ITEM.finditer(body)
+        ]
         return SimpleNamespace(
             choices=[
                 SimpleNamespace(
@@ -556,12 +590,14 @@ def test_trace가_파싱을_보여주되_LLM을_다시_부르지_않는다(tmp_p
 
     prepared = client.post("/prepare", json={"posting_id": POSTING_ID})
     assert prepared.status_code == 200
-    assert llm.calls == 1  # 헤더 역할 분류 1회. 공고당 이것뿐이다
+    # 헤더 역할 1회 + 조건 갈래 1회. **공고당 이 둘뿐이다** — 둘 다 텍스트만 보내고
+    # 둘 다 캐시가 맞으면 0회다 (`rubric/branch.py`).
+    assert llm.calls == 2
 
     first = client.get(f"/trace/{POSTING_ID}")
     assert first.status_code == 200
     body = first.json()
-    assert llm.calls == 1  # ← 이 줄이 이 테스트의 전부다
+    assert llm.calls == 2  # ← 이 줄이 이 테스트의 전부다
     assert body["cached"] is False
     assert body["parse_report"]["llm_calls"] == 0
 
@@ -581,7 +617,7 @@ def test_trace가_파싱을_보여주되_LLM을_다시_부르지_않는다(tmp_p
     second = client.get(f"/trace/{POSTING_ID}")
     assert second.status_code == 200
     assert second.json()["cached"] is True
-    assert llm.calls == 1
+    assert llm.calls == 2
     assert {k: v for k, v in second.json().items() if k != "cached"} == {
         k: v for k, v in body.items() if k != "cached"
     }

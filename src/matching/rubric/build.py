@@ -5,13 +5,17 @@
 | 조건 | 가는 층 | 이유 |
 |---|---|---|
 | `settings.gate_kinds`에 걸림 | `gate` | 없으면 그 일을 법적으로 못 한다 |
-| 보유 여부를 문자열로 셀 수 있음 | `fact` | 코드가 센다 |
-| 그 외 | `judgment` | 심사위원이 판단한다 |
+| 갈래가 `term` | `fact` | 이름이 있어 코드가 센다 |
+| 갈래가 `binary`·`graded` | `judgment` | 낱말 대조로는 확인되지 않는다 |
 | `kind == "duty"` | `judgment` **고정** | 아래 |
 
-**분류를 직군 어휘로 하지 않는다.** 판단 기준은 *「이 조건의 충족 여부를 문자열 대조로
-확인할 수 있는가」*이지 *「이게 어느 직군의 기술인가」*가 아니다. 그래서 이 파일에는
-직군명도 기술명도 없고, `is_countable()`이 보는 것은 **문자의 종류**뿐이다.
+**갈래는 `rubric/branch.py`가 정한다** — 조건 문구만 LLM에 보내 `term`/`binary`/`graded`로
+받고, 못 부르면 옛 `is_countable()`로 떨어진다. 세 갈래로 나눈 이유와 두 갈래가 틀린
+지점은 그 파일의 docstring에 있다.
+
+**분류를 직군 어휘로 하지 않는다.** 판단 기준은 *「이 조건의 충족 여부를 어떻게
+확인하는가」*이지 *「이게 어느 직군의 기술인가」*가 아니다. 그래서 이 파일에는 직군명도
+기술명도 없고, `is_countable()`이 보는 것은 **문자의 종류**뿐이다.
 
 ## 담당업무는 조건이 아니지만 버리지도 않는다
 
@@ -32,11 +36,12 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from math import fsum
 
 from ..config import Settings
 from ..model.graph import EvidenceGraph
-from ..model.objects import Criterion, Requirement, ScoreLayer
+from ..model.objects import Criterion, Requirement, RequirementBranch, ScoreLayer
 from .anchors import make_anchors
 
 # 총점. 과제 요구가 「0~100점」이다.
@@ -58,8 +63,18 @@ GATE_MARKERS: dict[str, tuple[str, ...]] = {
     "license": ("면허", "국가자격", "법정자격", "법정 자격"),
 }
 
+# 갈래 → 층. **이 표가 세 갈래 설계의 전부다.**
+# `binary`와 `graded`가 같은 층으로 가는데도 갈래를 합치지 않는 이유는 기준점이 다르기
+# 때문이다 (`anchors.ANCHOR_TEMPLATES`) — 층은 「누가 채점하나」이고 갈래는
+# 「무엇을 묻나」라서, 하나로 접으면 충족형 질문을 만들 자리가 사라진다.
+BRANCH_LAYERS: dict[RequirementBranch, ScoreLayer] = {
+    "term": "fact",
+    "binary": "judgment",
+    "graded": "judgment",
+}
+
 # 「문자열로 셀 수 있는가」의 두 신호. **둔한 신호지만 결정적이다.**
-# 의미 판정을 LLM에게 넘기면 「세는 것은 코드가, 판단하는 것은 심사위원이」가 무너진다.
+# LLM을 못 부를 때 떨어지는 자리이고(`branch.fallback_branch`), 그때도 파이프라인은 돈다.
 _LATIN_TOKEN = re.compile(r"[A-Za-z][A-Za-z0-9+#._-]*")
 _DIGIT = re.compile(r"\d")
 # 한 글자짜리 라틴 토큰은 문장 부스러기일 확률이 높다. 두 글자부터 이름으로 본다.
@@ -91,30 +106,54 @@ def is_gate(requirement: Requirement, settings: Settings) -> bool:
 
 
 def is_countable(text: str) -> bool:
-    """충족 여부를 문자열 대조로 확인할 수 있는가.
+    """충족 여부를 문자열 대조로 확인할 수 있는가. **폴백 규칙이다.**
 
     보는 것은 **문자의 종류**뿐이다 — 라틴 문자로 된 이름(도구·자격증·표준 이름)이나
     수치(연차·기한·점수)가 있으면 이력서에서 같은 문자열을 찾아 셀 수 있다.
 
-    **이 규칙이 틀리는 곳을 적어 둔다.** 「병역필 또는 면제된 분」처럼 라틴 문자도 숫자도
-    없지만 사실상 이분법인 조건은 판단 층으로 간다. 반대로 서술형 조건에 연도가 하나
-    끼어 있으면 사실 층으로 온다. 고치려면 상태 어휘 사전이 필요한데, 사전은 목록 밖
-    표현에 **조용히** 실패한다 — 파서에서 섹션 제목 사전을 뺀 이유와 같다.
-    지금은 틀리는 방향이 보이게 두고, `layer`를 결과에 실어 확인할 수 있게 한다.
+    **이 규칙이 어디서 틀리는지는 이미 안다.** 라틴 문자도 숫자도 없지만 사실상 이분법인
+    조건이 판단 층으로 가고, 서술형 조건에 연도가 하나 끼면 사실 층으로 온다. 실측 공고
+    두 건에서 필수 조건 여러 개가 그렇게 어긋났고, 그래서 판정을 `rubric/branch.py`로
+    옮겼다. 여기 남은 것은 **LLM을 못 부를 때 떨어질 자리**다 — 파싱 추적 화면이
+    `client=None`으로 도는데 거기서 죽으면 안 된다.
     """
     if _DIGIT.search(text):
         return True
     return any(len(match.group()) >= _LATIN_MIN for match in _LATIN_TOKEN.finditer(text))
 
 
-def assign_layer(requirement: Requirement, settings: Settings) -> ScoreLayer:
+def branch_of(
+    requirement: Requirement,
+    branches: Mapping[str, RequirementBranch] | None = None,
+) -> RequirementBranch:
+    """조건 하나의 갈래. **담당업무는 언제나 `graded`다.**
+
+    담당업무는 「이 일을 할 수 있는가」의 정도를 재는 자이지 충족/미충족을 묻는 조건이
+    아니다. 분류기에도 안 보내고(`branch.resolve_branches`) 여기서도 되묻지 않는다.
+
+    `branches`에 없으면 옛 규칙으로 정한다 — 인자를 안 주는 호출부(테스트·재조립)가
+    갑자기 다른 층 배정을 받지 않게 하는 자리이기도 하다.
+    """
+    if requirement.kind == "duty":
+        return "graded"
+    given = branches.get(requirement.id) if branches else None
+    if given is not None:
+        return given
+    return "term" if is_countable(requirement.text) else "graded"
+
+
+def assign_layer(
+    requirement: Requirement,
+    settings: Settings,
+    branches: Mapping[str, RequirementBranch] | None = None,
+) -> ScoreLayer:
     """조건 하나가 어느 층으로 가는가. **순서가 규칙이다.**"""
     # 담당업무는 자격이 아니다. 게이트·사실 채점에 **절대** 들어가지 않는다.
     if requirement.kind == "duty":
         return "judgment"
     if is_gate(requirement, settings):
         return "gate"
-    return "fact" if is_countable(requirement.text) else "judgment"
+    return BRANCH_LAYERS[branch_of(requirement, branches)]
 
 
 def make_label(text: str) -> str:
@@ -179,12 +218,18 @@ def build_rubric(
     settings: Settings,
     graph: EvidenceGraph,
     duties: list[Requirement] | None = None,
+    branches: Mapping[str, RequirementBranch] | None = None,
 ) -> list[Criterion]:
     """조건 목록과 담당업무 목록을 루브릭 항목으로 바꾼다.
 
     `requirements.json`의 **두 목록을 다 받는다** — `requirements`(조건)와
     `duties`(담당업무). 담당업무 섹션이 없는 공고에서는 `duties`가 빈 목록으로 오고,
     **그때도 총합은 100이다.**
+
+    `branches`는 `rubric/branch.resolve_branches()`가 만든 `{조건 id: 갈래}`다.
+    **안 주면 옛 글자 모양 규칙으로 떨어진다** — 루브릭을 다시 짓는 호출부
+    (`api/service.py`의 승인·`--no-judge`)는 제안서에 저장된 갈래를 도로 넘겨야
+    층 배정이 승인 전후로 흔들리지 않는다.
 
     각 항목에 `derived_from` Link를 반드시 건다. 안 걸면 검산 G3이 차단한다 —
     그 Link가 「이 항목이 공고에서 나왔다」의 유일한 증거이기 때문이다.
@@ -196,7 +241,8 @@ def build_rubric(
             items.append(duty)
             seen.add(duty.id)
 
-    layers = {req.id: assign_layer(req, settings) for req in items}
+    branch_by_id = {req.id: branch_of(req, branches) for req in items}
+    layers = {req.id: assign_layer(req, settings, branches) for req in items}
     by_layer: dict[str, list[Requirement]] = {}
     for req in items:
         by_layer.setdefault(layers[req.id], []).append(req)
@@ -224,9 +270,11 @@ def build_rubric(
             id=f"C-{index:02d}",
             requirement_id=req.id,
             label=make_label(req.text),
-            anchors=make_anchors(req),
+            # 기준점이 갈래를 따라 갈린다. `binary`는 충족형, 나머지는 서술형이다.
+            anchors=make_anchors(req, branch_by_id[req.id]),
             weight=weights.get(req.id, 0.0),
             layer=layers[req.id],
+            branch=branch_by_id[req.id],
         )
         # 조건이 아직 그래프에 없으면 함께 담는다 — 없으면 `derived_from`이 허공을 가리켜
         # G3이 「이어진 조건이 없다」로 막는다. 루브릭만 그래프에 넣는 경로를 막아 둔다.

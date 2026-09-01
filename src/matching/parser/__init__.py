@@ -138,7 +138,10 @@ class ParseReport(BaseModel):
     role_counts: dict[str, int]
     merged_continuations: int
     excluded_blocks: list[str]
-    llm_calls: int  # 이 공고를 파싱하며 부른 LLM 횟수. 캐시가 맞으면 0
+    # 이 공고를 **준비하며** 부른 LLM 횟수. 캐시가 맞으면 0.
+    # 파서가 적는 것은 자기 몫(헤더 역할 분류)뿐이고, 루브릭의 조건 갈래 분류 몫은
+    # `pipeline/run.prepare()`가 여기에 더한다 — 화면의 「LLM 호출」이 총합이어야 한다.
+    llm_calls: int
     emphasis_available: bool  # 항상 False — OCR이 굵기·색을 주지 않는다
 
 

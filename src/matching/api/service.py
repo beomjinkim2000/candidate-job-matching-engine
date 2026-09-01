@@ -259,16 +259,24 @@ def without_judgment(
     graph = proposal.graph.model_copy(deep=True)
     dropped = [item.label for item in graph.criteria if item.layer == JUDGMENT_LAYER]
     stale = {item.id for item in graph.criteria}
+    # **제안서가 이미 정한 갈래를 그대로 쓴다.** 다시 물으면 LLM을 한 번 더 부르고,
+    # 안 물으면 옛 글자 모양 규칙으로 떨어져 **여기서만 층이 달라진다** — 그러면 화면이
+    # 「판단 층을 뺐다」고 말하면서 실제로는 다른 항목을 뺀 셈이 된다.
+    branches = {item.requirement_id: item.branch for item in proposal.criteria}
     graph.criteria = []
     graph.links = [link for link in graph.links if link.src not in stale]
 
-    kept = [req for req in graph.requirements if assign_layer(req, settings) != JUDGMENT_LAYER]
+    kept = [
+        req
+        for req in graph.requirements
+        if assign_layer(req, settings, branches) != JUDGMENT_LAYER
+    ]
     if not kept:
         raise EntryError(
             "판단 층을 빼면 채점할 항목이 하나도 남지 않는다 — 이 공고는 --no-judge로 못 돈다"
         )
 
-    criteria = build_rubric(kept, settings, graph)
+    criteria = build_rubric(kept, settings, graph, branches=branches)
     return proposal.model_copy(update={"criteria": criteria, "graph": graph}), dropped
 
 
@@ -381,7 +389,13 @@ def apply_decisions(
     scratch.criteria = []
     scratch.links = []
     scratch.requirements = []
-    fresh = build_rubric([req.model_copy(deep=True) for req in survivors], settings, scratch)
+    # 갈래는 승인 대상이 아니다 — 화면에서 할 수 있는 것은 승인·뒤집기·삭제 셋뿐이다.
+    # 그래서 다시 묻지 않고 제안서의 값을 그대로 넘긴다. 안 넘기면 배분이 **다른 층
+    # 배정 위에서** 다시 계산되어 승인이 점수를 바꾼 것이 된다.
+    branches = {item.requirement_id: item.branch for item in proposal.criteria}
+    fresh = build_rubric(
+        [req.model_copy(deep=True) for req in survivors], settings, scratch, branches=branches
+    )
     weights = {item.requirement_id: item.weight for item in fresh}
 
     updated: list[Criterion] = []

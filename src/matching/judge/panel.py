@@ -53,7 +53,7 @@ from ..model.graph import EvidenceGraph
 from ..model.objects import Criterion, Evidence, Resume, Score, Span
 from ..scorer.mask import MASK_CHAR, mask_sensitive
 from ..source.base import default_data_dir
-from .prompt import GENERIC_EXAMPLES, MAX_QUOTES, ScoringExample, build_prompt, prompt_sha256
+from .prompt import MAX_QUOTES, ScoringExample, build_prompt, examples_for, prompt_sha256
 from .schema import RESPONSE_FORMAT, JudgeCall, JudgeOutput
 
 JUDGMENT_LAYER = "judgment"
@@ -511,7 +511,9 @@ def judge_criterion(
         )
 
     active_budget = budget if budget is not None else CallBudget(settings)
-    shown = list(examples) if examples is not None else list(GENERIC_EXAMPLES)
+    # 예시도 **항목의 갈래**를 따른다. 충족형 항목에 서술형 예시를 주면 지시문과 기준점이
+    # 충족 여부를 물어도 예시가 「행동과 성과를 써야 5점」이라고 말한다.
+    shown = list(examples) if examples is not None else list(examples_for(criterion))
 
     masked, _ = mask_sensitive(resume_text)
     messages = build_prompt(criterion, masked, shown)
