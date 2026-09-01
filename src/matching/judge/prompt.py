@@ -80,6 +80,28 @@ GENERIC_EXAMPLES: tuple[ScoringExample, ...] = (
 )
 
 
+# 충족형 항목의 채점 예시. **재는 것이 다르므로 예시도 달라야 한다** —
+# 위 예시를 그대로 쓰면 「행동과 성과를 써야 5점」이라는 신호가 프롬프트에 남아,
+# 기준점만 바꿔도 모델이 옛 잣대로 돌아간다.
+SATISFACTION_EXAMPLES: tuple[ScoringExample, ...] = (
+    ScoringExample(
+        excerpt="(해당 사항에 대한 언급이 이력서에 없음)",
+        score=1,
+        why="충족한다고도 아니라고도 볼 근거가 없다.",
+    ),
+    ScoringExample(
+        excerpt="해당 사항은 추후 협의 가능합니다.",
+        score=3,
+        why="충족하는 쪽으로 읽히지만 이력서만으로 단정할 수 없다.",
+    ),
+    ScoringExample(
+        excerpt="2026년 2월에 마쳤습니다.",
+        score=5,
+        why="조건과 표현은 다르지만 충족한다는 것이 분명히 드러난다.",
+    ),
+)
+
+
 _SYSTEM = (
     "너는 채용 서류를 채점하는 심사위원이다. **주어진 항목 하나만** 채점한다.\n"
     "\n"
@@ -104,6 +126,65 @@ _SYSTEM = (
     f"7. `{MASK_CHAR}`는 개인정보를 가린 자리다. **그 자리는 인용하지 않는다.**\n"
 )
 
+# 충족형 지시문 — **「예/아니오인데 이력서가 다른 말로 적는」 항목에만 쓴다**
+# (`rubric/branch.py`의 `binary`).
+#
+# 위 지시문의 5번이 「서술이 얼마나 구체적인가」를 묻는데, 충족 여부만 묻는 항목에서는
+# 그 질문 자체가 성립하지 않는다. 기준점만 바꾸고 지시문을 그대로 두면 모델이 지시문을
+# 따라 옛 잣대로 돌아간다 — 기준점과 지시문이 다른 말을 하면 이기는 쪽은 지시문이다.
+#
+# **인용 규칙(1~4·7)은 글자 하나 바꾸지 않았다.** 근거 없는 점수를 만들지 않는 것은
+# 항목의 성격과 무관한 이 프로젝트의 불변식이다.
+_SYSTEM_SATISFACTION = (
+    "너는 채용 서류를 채점하는 심사위원이다. **주어진 항목 하나만** 채점한다.\n"
+    "이 항목은 **충족했는가 아닌가**를 묻는다. 얼마나 잘했는지를 묻지 않는다.\n"
+    "\n"
+    "1. **인용을 먼저 쓴다.** 판단의 근거가 된 이력서 구간을 quotes에 담고, 그다음\n"
+    "   reasoning을 쓰고, score는 **맨 마지막**에 쓴다. 점수를 먼저 정하면 근거는\n"
+    "   사후 정당화가 된다.\n"
+    "2. **인용을 지어내지 않는다.** start·end는 이력서 원문의 문자 위치이고 text는 그\n"
+    "   구간의 글자 그대로다. 지어낼 바에는 비우는 게 낫다.\n"
+    "   **다만 낮은 점수에도 인용이 필요하다.** 1점은 「인용할 것이 없다」가 아니라\n"
+    "   「인용한 그 자리로는 충족을 확인할 수 없다」는 판정이다.\n"
+    "   그러니 **이 항목과 가장 가까운 자리**를 인용하고 왜 확인되지 않는지를 쓴다.\n"
+    "   **정말로 스칠 문장조차 하나도 없을 때만** quotes를 비운다.\n"
+    f"3. 인용은 최대 {MAX_QUOTES}개까지만 담는다. 많이 담는다고 좋은 채점이 아니다.\n"
+    "4. **응답 길이가 평가에 영향을 주지 않게 하라.** 이력서가 길다고 높은 점수가\n"
+    "   아니고, 네 답을 길게 쓴다고 좋은 채점이 되는 것도 아니다.\n"
+    "5. **표현이 조건과 다른 것은 감점 사유가 아니다.** 이력서는 같은 사실을 조건과\n"
+    "   다른 말로 적는다. 뜻이 같으면 충족한 것이다.\n"
+    "6. **구체적인 행동·성과 서술을 요구하지 마라.** 이 항목이 묻는 것은 충족 여부뿐이고,\n"
+    "   충족했다는 사실에는 서술할 행동도 성과도 없을 수 있다. 서술이 짧다는 이유로\n"
+    "   점수를 깎지 않는다.\n"
+    "7. **총점을 계산하지 마라.** 이 항목의 "
+    f"{SCALE_MIN}~{SCALE_MAX}점만 낸다. 합산은 코드가 한다.\n"
+    f"8. `{MASK_CHAR}`는 개인정보를 가린 자리다. **그 자리는 인용하지 않는다.**\n"
+)
+
+# 갈래 → 지시문. 모르는 값이 오면 서술형으로 떨어진다 (`.get`의 기본값).
+SYSTEM_BY_BRANCH: dict[str, str] = {
+    "term": _SYSTEM,
+    "graded": _SYSTEM,
+    "binary": _SYSTEM_SATISFACTION,
+}
+
+# 갈래 → 기본 채점 예시. `panel`이 예시를 따로 안 주면 이 표에서 고른다.
+EXAMPLES_BY_BRANCH: dict[str, tuple[ScoringExample, ...]] = {
+    "term": GENERIC_EXAMPLES,
+    "graded": GENERIC_EXAMPLES,
+    "binary": SATISFACTION_EXAMPLES,
+}
+
+
+def system_for(criterion: Criterion) -> str:
+    """이 항목에 쓸 지시문. **기준점과 같은 갈래를 본다** — 둘이 어긋나면 안 된다."""
+    return SYSTEM_BY_BRANCH.get(criterion.branch, _SYSTEM)
+
+
+def examples_for(criterion: Criterion) -> tuple[ScoringExample, ...]:
+    """이 항목에 쓸 기본 채점 예시."""
+    return EXAMPLES_BY_BRANCH.get(criterion.branch, GENERIC_EXAMPLES)
+
 
 def with_offsets(text: str) -> str:
     """줄마다 시작 오프셋을 앞에 붙인다. **프롬프트에만 있는 표기다.**"""
@@ -124,6 +205,9 @@ def build_prompt(
 
     `masked_resume`는 이미 마스킹된 글이어야 한다 — 마스킹 전 글을 넣으면 이름·나이·
     학교가 심사위원에게 그대로 간다. 마스킹을 거는 자리는 `panel.judge_criterion()`이다.
+
+    **지시문은 항목의 갈래가 고른다** (`system_for`). 충족형 항목에 서술형 지시문이
+    가면 기준점만 바꾼 것이 무효가 된다 — 모델은 기준점보다 지시문을 따른다.
     """
     anchors = "\n".join(
         f"{level}점 — {criterion.anchors[level]}" for level in sorted(criterion.anchors)
@@ -153,7 +237,7 @@ def build_prompt(
     ]
 
     return [
-        {"role": "system", "content": _SYSTEM},
+        {"role": "system", "content": system_for(criterion)},
         {"role": "user", "content": "\n".join(body)},
     ]
 

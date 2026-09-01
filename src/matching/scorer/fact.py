@@ -209,8 +209,8 @@ def score_fact(
             if terms:
                 value, spans, rationale = _score_terms(document, terms, table)
             else:
-                # 사실 층에 온 항목은 숫자든 라틴 토큰이든 하나는 갖고 있어야 한다
-                # (`rubric/build.py`의 `is_countable`). 여기 오면 그 가정이 깨진 것이다.
+                # 사실 층에 온 항목은 **이력서에서 찾을 이름**을 갖고 있어야 한다
+                # (`rubric/branch.py`의 `term` 갈래). 여기 오면 그 가정이 깨진 것이다.
                 value, spans, rationale = (
                     0.0,
                     [],

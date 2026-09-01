@@ -22,6 +22,10 @@ EvidenceGrade = Literal["E2", "E1", "E0"]
 # 조건으로 세면 이미 그 일을 해본 사람만 점수를 받는데, 두 공고 다 신입·인턴 공고다.
 RequirementKind = Literal["required", "preferred", "gate", "duty"]
 ScoreLayer = Literal["gate", "fact", "judgment"]
+# 조건이 **이력서에서 어떻게 확인되는가.** 층 배정과 기준점 선택이 둘 다 이 값에서 나온다
+# (`rubric/branch.py`). 층으로 갈음할 수 없다 — `binary`와 `graded`는 같은 판단 층인데
+# 기준점이 다르고, 그 차이가 「충족 여부만 묻는 항목에 성과 서술을 요구하지 않는다」이다.
+RequirementBranch = Literal["term", "binary", "graded"]
 
 # `rel`을 5개보다 늘리지 않는다 — 종류가 늘면 검산 규칙이 따라 늘고,
 # 24시간 안에 관리가 안 된다 (`docs/KAIREN_OS_ANALYSIS.md` §5).
@@ -35,6 +39,7 @@ Relation = Literal[
 
 RELATIONS: tuple[Relation, ...] = get_args(Relation)
 EVIDENCE_GRADES: tuple[EvidenceGrade, ...] = get_args(EvidenceGrade)
+REQUIREMENT_BRANCHES: tuple[RequirementBranch, ...] = get_args(RequirementBranch)
 
 
 class _Object(BaseModel):
@@ -96,6 +101,10 @@ class Criterion(_Object):
     anchors: dict[int, str]  # {1: "...", 3: "...", 5: "..."}
     weight: float
     layer: ScoreLayer
+    # 이 항목의 조건이 어떻게 확인되는가. **심사위원 프롬프트가 이 값으로 갈린다** —
+    # `binary`는 충족 여부만 묻고, `graded`는 서술의 구체성을 본다. 기본값이 있는 것은
+    # 이 필드가 생기기 전에 저장된 `result.json`도 그대로 읽히게 하기 위해서다.
+    branch: RequirementBranch = "graded"
     review_status: ReviewStatus = "draft"
 
 

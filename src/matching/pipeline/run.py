@@ -65,11 +65,12 @@ from ..model.objects import Criterion, Requirement, Resume
 # Pillow 하나이고 그건 기본 의존성이다. `prepare()` 안의 `parse_posting` 지연 import는
 # 그대로 둔다 — 무거운 것은 그 함수를 **부를 때** 들어온다.
 from ..parser import ParseReport
+from ..rubric.branch import BRANCHES_FILENAME, resolve_branches
 from ..rubric.build import build_rubric
 from ..scorer.fact import score_fact
 from ..scorer.gate import run_gates
 from ..scorer.normalize import load_aliases
-from ..source.base import PostingRef, SourceKind, default_data_dir
+from ..source.base import PostingRef, SourceKind, default_data_dir, posting_dir
 from .aggregate import CandidateResult, aggregate
 from .rank import rank as rank_results
 
@@ -169,7 +170,16 @@ def prepare(
 ) -> RubricProposal:
     """공고 하나를 파싱해 **승인 대기 상태의 루브릭**으로 만든다. 채점하지 않는다.
 
-    `client`는 파서의 헤더 역할 분류(공고당 1회, 텍스트만)에만 쓰인다. 이미지는 안 간다.
+    `client`가 쓰이는 자리는 둘이고 **둘 다 텍스트만 보낸다. 이미지는 안 간다.**
+
+    | 어디 | 무엇을 보내나 | 횟수 |
+    |---|---|---|
+    | 파서의 헤더 역할 분류 | 섹션 제목 문자열 몇 개 | 공고당 1회 |
+    | 루브릭의 조건 갈래 분류 | 조건 문구 | 공고당 1회 |
+
+    둘 다 캐시가 맞으면 0회다. **못 부르면(`client=None`) 갈래는 옛 글자 모양 규칙으로
+    떨어지고**, 헤더 역할은 캐시가 없으면 `ParseError`로 멈춘다 — 후자는 기본값을 고를
+    수 없는 판정이라 그렇다 (`parser/header_role.py`).
 
     `registry_posting_id`는 **사람인 공고 ID**다. 우리 쪽 식별자(`posting_ref.posting_id`)와
     다르다 (`source/registry.py`). 안 주면 우리 식별자로 조회하고, 못 찾으면
@@ -187,7 +197,25 @@ def prepare(
     # 유지하므로(`R-*` 다음 `D-*`) 반환값을 다시 대조할 필요가 없다.
     scored = [req for req in graph.requirements if req.kind != "duty"]
     duties = [req for req in graph.requirements if req.kind == "duty"]
-    criteria = build_rubric(scored, settings, graph, duties)
+
+    # 조건이 **이력서에서 어떻게 확인되는가**를 먼저 정한다. 층 배정과 기준점이 둘 다
+    # 여기서 나오므로 루브릭을 짓기 전이어야 한다 (`rubric/branch.py`).
+    root = Path(data_dir) if data_dir is not None else default_data_dir()
+    branch_result = resolve_branches(
+        scored,
+        client=client,
+        cache_path=posting_dir(root, posting_ref.posting_id) / BRANCHES_FILENAME,
+        model=settings.header_model,
+    )
+    criteria = build_rubric(scored, settings, graph, duties, branches=branch_result.branches)
+
+    # **화면의 「LLM 호출」은 이 공고를 준비하며 부른 총 횟수여야 한다.** 파서 것만 세면
+    # 갈래 분류 1회가 회계에서 사라지고, 그런 「없는 지출」이 이 프로젝트에서 이미 사고를
+    # 냈다 (`judge/panel.py`의 `spend`).
+    if branch_result.llm_calls:
+        report = report.model_copy(
+            update={"llm_calls": report.llm_calls + branch_result.llm_calls}
+        )
 
     posting_revision: str | None = None
     if registry is not None:

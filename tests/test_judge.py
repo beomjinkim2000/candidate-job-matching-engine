@@ -37,16 +37,19 @@ from matching.judge import (
     GENERIC_EXAMPLES,
     MAX_QUOTES,
     RESPONSE_SCHEMA,
+    SATISFACTION_EXAMPLES,
     BudgetExceeded,
     CallBudget,
     JudgeOutput,
     NoGroundedResponse,
     build_prompt,
+    examples_for,
     judge_criterion,
     keep_quotes,
     order_check,
     panel,
     prompt_sha256,
+    system_for,
 )
 from matching.model import BBox, Criterion, EvidenceGraph, Requirement, Resume, Span, check
 from matching.rubric import make_anchors
@@ -94,15 +97,16 @@ def _requirement() -> Requirement:
     )
 
 
-def _criterion(layer: str = "judgment") -> Criterion:
+def _criterion(layer: str = "judgment", branch: str = "graded") -> Criterion:
     requirement = _requirement()
     return Criterion(
         id="C-01",
         requirement_id=requirement.id,
         label="여러 이해관계를 조율해 본 경험이 있는 분",
-        anchors=make_anchors(requirement),
+        anchors=make_anchors(requirement, branch),  # type: ignore[arg-type]
         weight=20.0,
         layer=layer,  # type: ignore[arg-type]
+        branch=branch,  # type: ignore[arg-type]
     )
 
 
@@ -479,6 +483,79 @@ def test_프롬프트가_마스킹된_글만_들고_간다():
     """마스킹 전 글을 넣으면 이름·나이·학교가 심사위원에게 그대로 간다."""
     messages = build_prompt(_criterion(), MASKED_TEXT, GENERIC_EXAMPLES)
     assert "강유리" not in messages[1]["content"]
+
+
+# --- 충족형 항목 (`rubric/branch.py`의 `binary`) -----------------------------
+
+
+def test_충족형_항목은_지시문_기준점_예시가_한꺼번에_갈린다():
+    """**셋 중 하나만 바꾸면 아무것도 안 바뀐다.**
+
+    「해외여행에 결격사유가 없는가」 같은 항목에는 서술할 행동도 성과도 없다. 그런데
+    기준점만 충족형으로 바꾸고 지시문·예시를 그대로 두면 모델은 **지시문을 따른다** —
+    실측에서 그런 항목이 15점 만점에 2.5점을 받았고, 그건 지원자가 못 갖춘 것이 아니라
+    자가 잘못 놓인 것이었다.
+    """
+    satisfaction = build_prompt(_criterion(branch="binary"), MASKED_TEXT, SATISFACTION_EXAMPLES)
+    narrative = build_prompt(_criterion(), MASKED_TEXT, GENERIC_EXAMPLES)
+
+    system, body = satisfaction[0]["content"], satisfaction[1]["content"]
+    assert "충족했는가 아닌가" in system
+    assert "구체적인 행동·성과 서술을 요구하지 마라" in system
+    assert "표현이 조건과 다른 것은 감점 사유가 아니다" in system
+    # 기준점도 예시도 「성과를 서술했는가」를 묻지 않는다
+    assert "달성한 성과" not in body
+    assert "충족한다는 것이 이력서에 분명히 드러남" in body
+
+    # 서술형은 지금까지 그대로다 — 갈래가 다르면 프롬프트가 다르다는 것이 요점이다
+    assert satisfaction[0]["content"] != narrative[0]["content"]
+    assert "달성한 성과" in narrative[1]["content"]
+
+
+def test_인용_규칙은_충족형에서도_그대로다():
+    """**근거 없는 점수를 만들지 않는다는 불변식은 항목의 성격과 무관하다.**
+
+    충족형은 「서술이 구체적인가」를 안 묻지만, 그렇다고 인용 없이 점수를 내도 되는
+    항목이 되는 것은 아니다. 완화되면 검산 G1이 어차피 막는다.
+    """
+    system = build_prompt(_criterion(branch="binary"), MASKED_TEXT, SATISFACTION_EXAMPLES)[0][
+        "content"
+    ]
+
+    assert "인용을 먼저 쓴다" in system
+    assert "인용을 지어내지 않는다" in system
+    assert f"최대 {MAX_QUOTES}개" in system
+    assert "그 자리는 인용하지 않는다" in system  # 마스킹
+
+
+def test_예시를_안_주면_갈래에_맞는_예시가_붙는다():
+    """`panel`이 예시를 고르는 자리. **충족형에 서술형 예시가 붙으면 지시문이 무효가 된다.**"""
+    client, completions = fake_client(
+        _reply(5, [_quote(F_RUN)]), _reply(5, [_quote(F_RESULT)])
+    )
+    _judge(client, criterion=_criterion(branch="binary"))
+
+    sent = completions.calls[0]["messages"]
+    assert examples_for(_criterion(branch="binary")) == SATISFACTION_EXAMPLES
+    assert examples_for(_criterion()) == GENERIC_EXAMPLES
+    assert SATISFACTION_EXAMPLES[2].excerpt in sent[1]["content"]
+    assert GENERIC_EXAMPLES[2].excerpt not in sent[1]["content"]
+
+
+def test_갈래가_없는_옛_결과도_그대로_읽힌다():
+    """`branch`에 기본값을 둔 이유. 이 필드가 생기기 전에 저장된 `result.json`이 있다."""
+    stored = {
+        "id": "C-09",
+        "requirement_id": "R-09",
+        "label": "옛 결과에서 온 항목",
+        "anchors": {"1": "…", "3": "…", "5": "…"},
+        "weight": 10.0,
+        "layer": "judgment",
+    }
+    restored = Criterion.model_validate(stored)
+
+    assert restored.branch == "graded"
+    assert system_for(restored) == build_prompt(_criterion(), MASKED_TEXT, [])[0]["content"]
 
 
 # --- 비용 -----------------------------------------------------------------

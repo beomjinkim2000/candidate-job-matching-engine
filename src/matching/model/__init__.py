@@ -11,6 +11,7 @@ from .graph import TRACE_CHAIN, EvidenceGraph
 from .objects import (
     EVIDENCE_GRADES,
     RELATIONS,
+    REQUIREMENT_BRANCHES,
     BBox,
     Criterion,
     Evidence,
@@ -19,6 +20,7 @@ from .objects import (
     Link,
     Relation,
     Requirement,
+    RequirementBranch,
     RequirementKind,
     Resume,
     ReviewStatus,
@@ -31,6 +33,7 @@ from .render import render_rationale
 __all__ = [
     "EVIDENCE_GRADES",
     "RELATIONS",
+    "REQUIREMENT_BRANCHES",
     "TRACE_CHAIN",
     "BBox",
     "Criterion",
@@ -42,6 +45,7 @@ __all__ = [
     "Link",
     "Relation",
     "Requirement",
+    "RequirementBranch",
     "RequirementKind",
     "Resume",
     "ReviewStatus",
