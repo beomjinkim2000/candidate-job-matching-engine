@@ -1,0 +1,7 @@
+{
+  "posting_id": "kt-b2c",
+  "note": "그림은 커밋하지 않는다(공고 본문). 여기 적힌 곳에서 받아 provenance.json의 image_sha256과 대조하고, 다르면 저장하지 않는다. 순서는 image_sha256과 같다.",
+  "image_url": [
+    "https://www.saraminimage.co.kr/recruit/bbs_recruit26/41_kt_img_260824.png"
+  ]
+}

@@ -5,15 +5,31 @@
 1. 파이썬 버전 확인 (3.11 미만이면 무엇을 깔아야 하는지 알리고 멈춘다)
 2. 의존성 확인 — 없으면 `.venv`를 만들어 설치하고 그 파이썬으로 다시 실행한다
 3. `.env`에 `OPENAI_API_KEY`가 있으면 **묻지 않고 넘어간다**. 없으면 받아서 쓴다
-4. 데이터 점검 — 무엇이 되고 무엇이 안 되는지 **먼저 말한다**
-5. OCR은 **필요할 때만** 받는다 (아래)
-6. `127.0.0.1`에 서버를 띄우고, **응답이 온 뒤에** 브라우저를 연다
+4. 공고 이미지가 없으면 `provenance.json`의 URL에서 받고 **sha256을 대조한다** (아래)
+5. 데이터 점검 — 무엇이 되고 무엇이 안 되는지 **먼저 말한다**
+6. OCR은 **필요할 때만** 받고 돌린다 (아래)
+7. `127.0.0.1`에 서버를 띄우고, **응답이 온 뒤에** 브라우저를 연다
 
 ## 로직을 셸 스크립트에 두지 않는다
 
 `start.command`(맥)·`start.bat`(윈도우)는 **`python run.py` 한 줄짜리 껍데기**다.
 zsh와 배치의 문법이 다르므로 로직을 양쪽에 두면 두 벌을 고쳐야 하고, 한 벌은
 반드시 뒤처진다. 분기는 전부 여기 파이썬에 있다.
+
+## 레포엔 URL만, 그림은 실행할 때 — 그리고 **해시를 대조한다**
+
+이미지와 그 전사본(`ocr.json`)은 **공고 본문 그 자체**라 커밋하지 않는다
+(원본 미적재 원칙, `docs/LEGAL_ARCHITECTURE.md`). 대신 `image_source.json`에
+**받는 곳(`image_url`)** 을 한 줄 남긴다 — URL은 본문이 아니라 출처다.
+
+받은 파일은 `provenance.json`에 이미 적혀 있던 `image_sha256`과 대조하고,
+**다르면 저장하지 않고 지운다.** 이게 이 설계의 핵심이다 —
+커밋된 `requirements.json`의 bbox 좌표는 **특정 그림 위에서만** 뜻이 있다.
+그림이 바뀌었는데 그려 주면 **틀린 근거를 그럴듯하게** 보여주는 꼴이고,
+그건 아무것도 안 보여주는 것보다 나쁘다.
+
+**받기에 실패해도 서버는 뜬다.** 조건은 이미 커밋돼 있어 채점·랭킹·근거가 그대로 된다.
+못 쓰게 되는 것은 파싱 확인 화면 하나뿐이고, 그 사실을 **화면이 비기 전에** 적는다.
 
 ## OCR을 기본으로 받지 않는다
 
@@ -25,15 +41,11 @@ PaddleOCR·paddlepaddle은 휠만 수백 MB이고 모델 가중치를 첫 실행
 받는 경우는 둘뿐이다.
 
 - `data/postings/<공고>/`에 이미지가 있는데 `ocr.json`이 없을 때 —
-  **사용자가 직접 이미지를 넣었다는 뜻**이다. 그때만 묻고 받는다
+  방금 받았거나 사용자가 직접 넣었다는 뜻이다. 그때만 묻고 받는다
 - `--with-ocr`로 명시했을 때
 
-## 저장소에 공고 이미지가 없다 — 조용히 비우지 않는다
-
-이미지와 그 전사본(`ocr.json`)은 **공고 본문 그 자체**라 커밋하지 않는다
-(원본 미적재 원칙, `docs/LEGAL_ARCHITECTURE.md`). 그래서 평가자 머신에서는
-파싱 확인 화면이 빈다. 그걸 화면이 비고 나서 알게 하지 않는다 — 서버를 띄우기 전에
-**무엇이 없고 왜 없는지, 넣으면 무엇이 되는지**를 터미널에 먼저 적는다.
+**OCR은 오래 걸린다** (실측: 4920px 376초 · 2533px 232초). 그래서 시작하기 전에
+어림한 소요를 먼저 말하고, 돌릴지 묻는다. 말없이 10분 멈춰 있으면 죽은 줄 안다.
 
 ## 키를 화면에 찍지 않는다
 
@@ -60,12 +72,15 @@ from __future__ import annotations
 
 import argparse
 import getpass
+import hashlib
+import json
 import os
 import socket
 import subprocess
 import sys
 import threading
 import time
+import urllib.parse
 import urllib.request
 import warnings
 import webbrowser
@@ -101,6 +116,22 @@ BOOTSTRAP_FLAG = "MATCHING_BOOTSTRAPPED"
 IMAGE_GLOB = "img_*.png"
 OCR_FILENAME = "ocr.json"
 REQUIREMENTS_FILENAME = "requirements.json"
+PROVENANCE_FILENAME = "provenance.json"
+# 「어디서 받는가」. `provenance.json`과 나눠 둔 이유는 `fetch_images()` 설명에 있다.
+IMAGE_SOURCE_FILENAME = "image_source.json"
+
+# 이미지 내려받기. 수 MB짜리라 진행을 보여 준다.
+DOWNLOAD_TIMEOUT_SECONDS = 30
+DOWNLOAD_CHUNK = 1 << 16
+
+# OCR 소요 어림. **이 숫자를 미리 말하지 않으면 사람이 죽은 줄 안다.**
+#
+# 공고 id로 표를 만들지 않는다 — 그러면 새 공고를 넣는 사람이 코드를 고쳐야 하고,
+# 「직군 무관 일반화」와 어긋난다. 세로 픽셀에 비례한다고 보고 실측 둘로 눈금을 잡았다:
+# 4920px→376초, 2533px→232초 (각각 0.076·0.092 초/px). 중간값을 쓴다.
+# 정확할 필요는 없다. **자리를 뜨지 않고 기다릴지 판단할 수 있으면 된다.**
+OCR_SECONDS_PER_PIXEL = 0.084
+OCR_SECONDS_FLOOR = 60
 
 # import 이름 → 배포 이름. 배포 이름은 pyproject에서 읽으므로 여기 목록은
 # **「무엇이 없으면 못 뜬다」**를 판정하는 데만 쓴다.
@@ -433,6 +464,179 @@ def ensure_key() -> None:
         say(f"      공용 PC라면 다 쓴 뒤 {ENV_PATH.name}를 지운다.")
 
 
+# ----------------------------------------------------------- 공고 이미지 확보
+
+
+def read_json(path: Path) -> dict:
+    """작은 JSON 하나를 **표준 라이브러리로** 읽는다. 없거나 깨졌으면 빈 표다.
+
+    `matching.source.read_provenance`를 쓰지 않는 이유는 하나다 — 이 단계는
+    pydantic이 있든 없든 같은 답을 내야 하고, 여기서 필요한 건 두 필드뿐이다.
+    """
+    if not path.is_file():
+        return {}
+    try:
+        table = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return table if isinstance(table, dict) else {}
+
+
+def encoded_url(url: str) -> str:
+    """비-ASCII가 섞인 URL을 퍼센트 인코딩한다.
+
+    `urllib`은 한글·공백이 든 주소를 그대로 못 보내고 `UnicodeEncodeError`를 던진다.
+    사람인 주소는 전부 ASCII라 지금은 안 걸리지만, **새 공고를 넣는 사람**이 한글
+    파일명을 쓸 수 있다. 그때 「받지 못했다: UnicodeEncodeError」만 보면 원인을 못 찾는다.
+
+    ASCII면 손대지 않는다 — 이미 인코딩된 주소를 다시 인코딩해 `%`가 `%25`가 되는
+    사고를 원천 차단한다.
+    """
+    if url.isascii():
+        return url
+    parts = urllib.parse.urlsplit(url)
+    return urllib.parse.urlunsplit(
+        (
+            parts.scheme,
+            parts.netloc,
+            urllib.parse.quote(parts.path, safe="/%"),
+            urllib.parse.quote(parts.query, safe="=&%"),
+            parts.fragment,
+        )
+    )
+
+
+def download_and_verify(url: str, expected: str, target: Path, label: str) -> bool:
+    """받아서 **해시가 맞을 때만** 저장한다.
+
+    ## 해시 대조가 이 함수의 존재 이유다
+
+    커밋돼 있는 것은 조건과 **좌표**(`requirements.json`의 `source_bbox`)다. 좌표는
+    특정 이미지 위에서만 뜻이 있다. 그림이 한 픽셀이라도 다르면 근거를 클릭했을 때
+    엉뚱한 곳에 네모가 그려지고, 그건 **틀린 근거를 그럴듯하게 보여주는 것**이라
+    아무것도 안 보여주는 것보다 나쁘다.
+
+    그래서 다르면 **조용히 쓰지 않고 지운다.** 해시가 다르다는 건 공고가 바뀌었다는
+    뜻이고, 그러면 커밋된 조건이 낡은 것이다 — 검산 G7이 승인에 대해 하는 말과 같다.
+
+    받는 동안 해시를 같이 계산한다. 다 받고 나서 다시 읽으면 수 MB를 두 번 읽는다.
+    """
+    # 최종 파일 이름으로 바로 받지 않는다. 중간에 끊기면 **반쪽짜리 그림**이 남고,
+    # 다음 실행은 그걸 「이미 있다」로 보고 넘어간다.
+    staging = target.with_name(target.name + ".part")
+    digest = hashlib.sha256()
+    received = 0
+    show_progress = bool(sys.stdout and sys.stdout.isatty())
+
+    request = urllib.request.Request(
+        encoded_url(url),
+        # 기본 `Python-urllib/3.x`를 거르는 CDN이 있다. 신분을 속이는 게 아니라
+        # 브라우저가 보내는 것과 같은 수준을 보낸다.
+        headers={"User-Agent": "Mozilla/5.0 (compatible; matching-engine/0.1)"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=DOWNLOAD_TIMEOUT_SECONDS) as response:
+            total = int(response.headers.get("Content-Length") or 0)
+            with staging.open("wb") as handle:
+                while True:
+                    chunk = response.read(DOWNLOAD_CHUNK)
+                    if not chunk:
+                        break
+                    handle.write(chunk)
+                    digest.update(chunk)
+                    received += len(chunk)
+                    if show_progress:
+                        size = f"{received / 1048576:.1f} MB"
+                        of = f" / {total / 1048576:.1f} MB" if total else ""
+                        print(f"\r  {label}: {size}{of}   ", end="", flush=True)
+    except Exception as exc:
+        # 네트워크·DNS·HTTP·디스크 — 무엇이든 여기서 끝낸다. 서버는 그대로 뜬다.
+        staging.unlink(missing_ok=True)
+        if show_progress:
+            print("\r", end="")
+        say(f"  {label}: 받지 못했다 — {type(exc).__name__}: {exc}")
+        return False
+
+    if show_progress:
+        print("\r", end="")
+
+    actual = digest.hexdigest()
+    if actual != expected:
+        staging.unlink(missing_ok=True)
+        say(f"  {label}: 해시가 다르다 — 저장하지 않는다")
+        say(f"    기록 {expected[:16]}… · 받은 것 {actual[:16]}…")
+        say("    공고가 바뀌었다는 뜻이다. 커밋된 조건과 좌표는 예전 그림의 것이라,")
+        say("    이 그림 위에 네모를 그리면 엉뚱한 곳을 가리킨다. 그래서 버린다.")
+        return False
+
+    staging.replace(target)
+    say(f"  {label}: 받았다 ({received / 1048576:.1f} MB · 해시 일치)")
+    return True
+
+
+def fetch_images() -> None:
+    """이미지가 없는 공고를 `image_source.json`의 URL에서 받는다.
+
+    ## 왜 레포에 URL만 두는가
+
+    그림 자체는 **공고 본문**이라 커밋하지 않는다. URL은 본문이 아니라 **가져오는 곳**
+    이다. 그래서 저장소에는 한 줄만 남기고, 실행하는 사람이 자기 머신으로 받는다.
+    「고객사가 이미지를 보낸다」는 프로덕션 구조의 데모 대역이기도 하다.
+
+    ## 왜 `provenance.json`이 아니라 별도 파일인가
+
+    `provenance.json`은 **「우리가 무엇을 파싱했는가」의 증거**이고, 거기 URL을 넣지
+    않는 것이 명시된 계약이다 — `tests/test_provenance.py::test_provenance_file_leaks_nothing`
+    이 `https?://`와 키 목록을 직접 검사한다(`docs/SCHEDULE.md` §3 ·
+    `docs/LEGAL_ARCHITECTURE.md` §②도 같은 말이다). 게다가 `write_provenance()`는
+    그 파일을 **처음부터 다시 만들기 때문에** `acquire`를 한 번 더 부르면 URL이 사라진다.
+
+    그래서 둘을 나눴다. **증거(해시)는 `provenance.json`, 가져오는 곳은
+    `image_source.json`.** 대조는 두 파일을 맞춰 본다 — 순서가 같다는 것이 계약이다.
+
+    ## 실패해도 서버는 뜬다
+
+    망이 없거나 URL이 죽었으면 그 사실만 적고 넘어간다. `requirements.json`이 커밋돼
+    있어 **채점·랭킹·근거는 그대로 된다.** 못 쓰게 되는 것은 파싱 확인 화면 하나다.
+    """
+    postings = data_dir() / "postings"
+    if not postings.is_dir():
+        return
+
+    jobs = []
+    for directory in sorted(postings.iterdir()):
+        if not directory.is_dir() or sorted(directory.glob(IMAGE_GLOB)):
+            continue  # 이미 있으면 건드리지 않는다
+        urls = read_json(directory / IMAGE_SOURCE_FILENAME).get("image_url") or []
+        hashes = read_json(directory / PROVENANCE_FILENAME).get("image_sha256") or []
+        if not urls:
+            continue
+        if len(urls) != len(hashes):
+            # 대조할 수 없으면 **받지 않는다.** 해시 없는 그림은 좌표의 근거가 못 된다.
+            say(
+                f"{directory.name}: {IMAGE_SOURCE_FILENAME}의 URL {len(urls)}개와 "
+                f"{PROVENANCE_FILENAME}의 해시 {len(hashes)}개가 안 맞는다 — 받지 않는다"
+            )
+            continue
+        jobs.append((directory, urls, hashes))
+
+    if not jobs:
+        return
+
+    say(RULE)
+    say("공고 이미지를 받는다. 저장소에는 URL만 있고 그림은 없다 —")
+    say("그림은 공고 본문이라 커밋하지 않는다 (원본 미적재 원칙).")
+    say("받은 뒤 provenance.json의 sha256과 대조하고, 다르면 저장하지 않는다.")
+    say(RULE)
+
+    for directory, urls, hashes in jobs:
+        # 길이가 같은 것은 위에서 이미 걸렀다. `strict`로 그 전제를 코드에 박아 둔다.
+        for index, (url, expected) in enumerate(zip(urls, hashes, strict=True), start=1):
+            target = directory / f"img_{index}.png"
+            download_and_verify(url, expected, target, f"{directory.name} {index}쪽")
+    say(RULE)
+
+
 # --------------------------------------------------------------- 데이터 점검
 
 
@@ -503,14 +707,21 @@ def preflight() -> None:
     say(f"  채점·랭킹·근거: {verdict}")
 
     traceable = [row[0] for row in postings if row[2] and row[3]]
+    imageless = [row[0] for row in postings if not row[2]]
     if traceable:
         say("  파싱 확인 화면: 가능 ({})".format(", ".join(traceable)))
-    else:
-        say("  파싱 확인 화면: 불가 — 공고 이미지와 OCR 결과가 저장소에 없다")
-        say("    공고 이미지와 그 전사본(ocr.json)은 공고 본문 그 자체라 커밋하지 않는다")
-        say("    (원본 미적재 원칙 · docs/LEGAL_ARCHITECTURE.md).")
-        say("    직접 보려면 data/postings/<공고>/img_1.png 로 이미지를 두고 다시 실행한다.")
-        say("    그때 OCR 패키지를 받을지 물어본다 — 지금은 받지 않는다.")
+    if imageless:
+        say("  파싱 확인 화면: 불가 ({}) — 그림이 없다".format(", ".join(imageless)))
+        say("    그림은 공고 본문이라 커밋하지 않는다 (원본 미적재 원칙 ·")
+        say("    docs/LEGAL_ARCHITECTURE.md). 대신 image_source.json에 받는 곳을 적어 두고")
+        say("    실행할 때 내려받아 provenance.json의 sha256과 대조한다. 방금 그게 안 됐다 —")
+        say("    망이 막혔거나, URL이 죽었거나, 공고가 바뀌어 해시가 달라졌다.")
+        say("    직접 넣어도 된다: data/postings/<공고>/img_1.png")
+    pending = [row[0] for row in postings if row[2] and not row[3]]
+    if pending:
+        say("  파싱 확인 화면: 그림은 있고 OCR 결과가 아직 없다 ({})".format(", ".join(pending)))
+    say("")
+    say("  채점·랭킹은 위 어느 경우에도 영향받지 않는다 — 조건이 이미 커밋돼 있다.")
     say(RULE)
 
 
@@ -535,64 +746,102 @@ def ask_yes(question: str, default: bool = True) -> bool:
     return answer[0] in ("y", "1")
 
 
-def warm_ocr_models() -> None:
-    """모델 가중치를 미리 받는다.
+def ocr_estimate_seconds(posting_id: str) -> int:
+    """이 공고를 OCR하는 데 얼마나 걸릴지. 세로 픽셀에서 어림한다."""
+    table = read_json(data_dir() / "postings" / posting_id / PROVENANCE_FILENAME)
+    heights = [size[1] for size in table.get("image_size") or [] if len(size) == 2]
+    if not heights:
+        return OCR_SECONDS_FLOOR * 5
+    return max(OCR_SECONDS_FLOOR, int(sum(heights) * OCR_SECONDS_PER_PIXEL))
 
-    **새 프로세스에서 한다.** 방금 깐 paddle을 같은 프로세스에서 import하면 캐시가 낡아
-    엉뚱한 실패가 난다. 그리고 이걸 안 해 두면 첫 파싱 요청이 브라우저에서 몇 분 동안
-    아무 말 없이 멈춰 보인다 — 그 침묵이 「고장」으로 읽힌다.
+
+def run_ocr_for(posting_id: str) -> bool:
+    """`ocr.json`을 만든다. **새 프로세스에서 돌린다.**
+
+    방금 깐 paddle을 같은 프로세스에서 import하면 캐시가 낡아 엉뚱한 실패가 난다.
+    그리고 이 호출이 모델 가중치를 받는 시점이기도 하다 — 「필요할 때만 받는다」의
+    「필요할 때」가 바로 여기다.
+
+    **LLM을 부르지 않는다.** `load_or_run_ocr`은 그림에서 줄과 좌표만 뽑는다.
+    헤더 역할 분류(공고당 1회 LLM)는 화면에서 파싱을 누를 때 일어난다.
     """
-    say("OCR 모델 가중치를 받는다. 처음 한 번이고 몇 분 걸린다.")
-    # `_paddle()`이 우리가 쓰는 모델 조합을 정하는 **단 한 곳**이다. 생성자 인자를
-    # 여기 베끼면 두 곳이 갈라져 미리 받은 모델과 실제로 쓰는 모델이 달라진다.
-    code = "from matching.parser.ocr import _paddle; _paddle()"
+    seconds = ocr_estimate_seconds(posting_id)
+    say(f"  {posting_id}: OCR 시작 — 약 {seconds // 60}분 {seconds % 60}초 걸린다. 기다린다.")
+    code = (
+        "import sys; from pathlib import Path; "
+        "from matching.source import image_paths; "
+        "from matching.parser.ocr import load_or_run_ocr; "
+        "d = Path(sys.argv[1]); "
+        "result, fresh = load_or_run_ocr(d, image_paths(d)); "
+        "print(f'  줄 {len(result.lines)}개 · 평균 신뢰도 {result.avg_conf} "
+        "· {result.elapsed_sec}초')"
+    )
+    directory = data_dir() / "postings" / posting_id
     environment = dict(os.environ)
     existing = environment.get("PYTHONPATH", "")
     environment["PYTHONPATH"] = str(SRC) + (os.pathsep + existing if existing else "")
     try:
-        done = subprocess.run([sys.executable, "-c", code], cwd=str(ROOT), env=environment)
+        done = subprocess.run(
+            [sys.executable, "-c", code, str(directory)], cwd=str(ROOT), env=environment
+        )
     except OSError as exc:  # pragma: no cover
-        say(f"모델을 미리 받지 못했다 ({exc}). 첫 파싱 때 받는다.")
-        return
+        say(f"  {posting_id}: OCR을 실행하지 못했다 ({exc})")
+        return False
     if done.returncode != 0:
-        say("모델을 미리 받지 못했다. 첫 파싱 때 다시 시도한다.")
-    else:
-        say("OCR 준비 완료.")
+        say(f"  {posting_id}: OCR이 실패했다. 화면에서 파싱을 누르면 다시 시도한다.")
+        return False
+    return True
 
 
 def setup_ocr(force: bool) -> None:
-    """OCR을 **필요할 때만** 깐다. 채점 경로는 여기서 무슨 일이 나든 살아 있어야 한다."""
-    absent = missing_modules(OCR_MODULES)
-    if not absent:
-        if force:
-            say("OCR은 이미 설치돼 있다.")
-        return
+    """OCR을 **필요할 때만** 깔고 돌린다.
 
+    채점 경로는 여기서 무슨 일이 나든 살아 있어야 한다 — 설치가 깨져도, 망이 없어도,
+    사용자가 거절해도 서버는 뜬다.
+    """
     waiting = postings_awaiting_ocr()
-    if not force and not waiting:
+    absent = missing_modules(OCR_MODULES)
+
+    if not waiting and not force:
         return
 
+    if absent:
+        say(RULE)
+        if waiting:
+            say("이미지는 있는데 OCR 결과가 없는 공고: {}".format(", ".join(waiting)))
+            say("이 그림에서 줄과 좌표를 뽑으려면 OCR이 필요하다.")
+        say("받을 것: {} — 수백 MB이고 모델 가중치를 또 받는다.".format(", ".join(absent)))
+        say("건너뛰어도 채점·랭킹·근거는 그대로 된다.")
+        say(RULE)
+
+        if not force and not ask_yes("지금 받을까?", default=True):
+            say("건너뛴다. 나중에 받으려면 `python run.py --with-ocr`.")
+            return
+
+        if not pip_install(Path(sys.executable), declared_dependencies("ocr"), "OCR (선택)"):
+            # 윈도우·특정 파이썬 버전에서 paddlepaddle 휠이 없을 수 있다.
+            # **여기서 멈추지 않는다** — OCR이 없어도 채점은 된다.
+            say("OCR 설치가 실패했다. 서버는 그대로 띄운다 — 채점·랭킹은 영향받지 않는다.")
+            say('  파싱 확인 화면만 못 쓴다. 직접 깔려면: python -m pip install "paddlepaddle"')
+            return
+
+    if not waiting:
+        say("OCR 준비됨 — 지금 돌릴 공고는 없다.")
+        return
+
+    total = sum(ocr_estimate_seconds(posting_id) for posting_id in waiting)
     say(RULE)
-    if waiting:
-        say("이미지는 있는데 OCR 결과가 없는 공고: {}".format(", ".join(waiting)))
-        say("이걸 파싱하려면 OCR이 필요하다.")
-    say("받을 것: {} — 수백 MB이고 모델 가중치를 첫 실행에 또 받는다.".format(", ".join(absent)))
-    say("건너뛰어도 채점·랭킹·근거는 그대로 된다.")
+    say(f"OCR을 돌려 둘 수 있다. 공고 {len(waiting)}개, 다 합쳐 약 {total // 60}분이다.")
+    say("**지금 안 돌려도 된다.** 대신 화면에서 파싱을 누를 때 같은 시간이 걸리고,")
+    say("그때는 브라우저가 아무 말 없이 멈춰 보인다. 여기서 돌리면 진행이 보인다.")
     say(RULE)
 
-    if not force and not ask_yes("지금 받을까?", default=True):
-        say("건너뛴다. 나중에 받으려면 `python run.py --with-ocr`.")
+    if not ask_yes("지금 돌릴까?", default=True):
+        say("건너뛴다. 화면에서 파싱을 누르면 그때 돈다 (공고당 수 분).")
         return
 
-    python = Path(sys.executable)
-    if not pip_install(python, declared_dependencies("ocr"), "OCR (선택)"):
-        # 윈도우·특정 파이썬 버전에서 paddlepaddle 휠이 없을 수 있다.
-        # **여기서 멈추지 않는다** — OCR이 없어도 채점은 된다.
-        say("OCR 설치가 실패했다. 서버는 그대로 띄운다 — 채점·랭킹은 영향받지 않는다.")
-        say('  파싱 확인 화면만 못 쓴다. 직접 깔려면: python -m pip install "paddlepaddle"')
-        return
-
-    warm_ocr_models()
+    for posting_id in waiting:
+        run_ocr_for(posting_id)
 
 
 # ------------------------------------------------------------------ 서버
@@ -688,6 +937,11 @@ def parse_args(argv: list):
         action="store_true",
         help="OCR을 묻지도 받지도 않는다",
     )
+    parser.add_argument(
+        "--no-fetch",
+        action="store_true",
+        help="공고 이미지를 내려받지 않는다 (망이 없을 때)",
+    )
     return parser.parse_args(argv)
 
 
@@ -699,6 +953,9 @@ def main(argv: list | None = None) -> int:
 
     bootstrap(raw)  # 여기서 재실행되면 돌아오지 않는다
     ensure_key()
+    # 점검보다 **먼저** 받는다. 순서를 뒤집으면 방금 받은 그림을 「없다」고 적는다.
+    if not options.no_fetch:
+        fetch_images()
     preflight()
     if not options.no_ocr:
         setup_ocr(force=options.with_ocr)
