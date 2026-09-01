@@ -121,7 +121,10 @@ def test_g1_catches_score_without_grounding():
 
 
 def test_g1_allows_gate_score_linked_by_derived_from():
-    """게이트 Score는 이력서 인용이 아니라 조건 자체에서 나온다 — G1의 유일한 예외."""
+    """게이트 Score는 이력서 인용이 아니라 조건 자체에서 나온다 — G1의 예외 ①.
+
+    예외 ②(사실 층 0점)는 step 5에서 열렸고 `tests/test_scorer.py`가 본다.
+    """
     graph = clean_graph()
     graph.add(
         Score(

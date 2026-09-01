@@ -14,7 +14,7 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict
 
 from .graph import EvidenceGraph
-from .objects import EVIDENCE_GRADES, Evidence, Requirement
+from .objects import EVIDENCE_GRADES, Criterion, Evidence, Requirement
 
 
 class Violation(BaseModel):
@@ -49,8 +49,15 @@ def check(graph: EvidenceGraph, resume_texts: dict[str, str]) -> list[Violation]
     violations: list[Violation] = []
 
     # --- G1. 모든 Score에 grounded_in Link가 1개 이상 -----------------------
-    # 예외: layer == "gate"인 Score는 탈락 판정이라 이력서 인용이 아니라 조건 자체에서
-    # 나온다. `derived_from`으로 Requirement에 붙어 있으면 통과시킨다.
+    # 예외가 둘 있다. 둘 다 **인용할 구간이 애초에 없는 경우**이고, 그때도 근거를 비우지
+    # 않고 `derived_from`으로 항목·조건에 잇게 한다.
+    #
+    #   ① layer == "gate" — 탈락 판정은 이력서 인용이 아니라 조건 자체에서 나온다.
+    #   ② layer == "fact" 이고 value == 0 — 「이력서 전체에서 못 찾았다」가 결론이라
+    #      인용할 자리가 없다 (step 5, `scorer/fact.py`).
+    #
+    # **②에 `value == 0` 조건이 붙어 있는 것이 요점이다.** 빼면 사실 층 점수 전체가
+    # 근거 없이 통과할 수 있고, 그러면 G1이 아무것도 막지 않는다.
     for score in graph.scores:
         grounded = [
             link for link in graph.out(score.id, "grounded_in")
@@ -58,10 +65,12 @@ def check(graph: EvidenceGraph, resume_texts: dict[str, str]) -> list[Violation]
         ]
         if grounded:
             continue
-        if score.layer == "gate":
+
+        exempt = score.layer == "gate" or (score.layer == "fact" and score.value == 0)
+        if exempt:
             derived = [
                 link for link in graph.out(score.id, "derived_from")
-                if isinstance(index.get(link.dst), Requirement)
+                if isinstance(index.get(link.dst), (Requirement, Criterion))
             ]
             if derived:
                 continue
@@ -69,7 +78,10 @@ def check(graph: EvidenceGraph, resume_texts: dict[str, str]) -> list[Violation]
                 Violation(
                     rule="G1",
                     object_id=score.id,
-                    message="게이트 점수인데 derived_from으로 이어진 조건이 없다",
+                    message=(
+                        "인용할 구간이 없는 점수인데 derived_from으로 이어진 "
+                        "항목·조건이 없다"
+                    ),
                 )
             )
             continue
