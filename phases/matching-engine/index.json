@@ -159,7 +159,10 @@
     {
       "step": 6,
       "name": "judge-layer",
-      "status": "pending"
+      "status": "error",
+      "started_at": "2026-09-01T11:15:11+0900",
+      "error_message": "[3회 시도 후 실패] Step did not update status",
+      "failed_at": "2026-09-01T11:41:06+0900"
     },
     {
       "step": 7,
