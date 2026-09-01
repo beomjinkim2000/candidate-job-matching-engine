@@ -20,6 +20,13 @@ DEFAULT_WEIGHTS: dict[str, float] = {"fact": 35.0, "judgment": 65.0}
 # --- 0층 게이트로 취급할 조건 종류. 면허·법정 자격증만 (src/CLAUDE.md) ---
 DEFAULT_GATE_KINDS: list[str] = ["license"]
 
+# --- 층 **안에서** kind가 갖는 상대 몫 (step 4). 층 총합은 위 DEFAULT_WEIGHTS다 ---
+# **임의값.** 근거가 있는 것은 순서(`required > preferred ≥ duty`)뿐이고 3:2:1이라는
+# 숫자가 아니다. 문헌이 「가중치를 흔들어도 등수는 거의 안 바뀐다」고 보고하므로
+# (docs/TRADEOFFS.md A-3) 숫자를 정교하게 맞추는 데 시간을 쓰지 않았다.
+# 담당업무(`duty`)가 가장 가벼운 이유: 명시된 요구가 아니라 직무 설명이다.
+DEFAULT_KIND_SHARES: dict[str, float] = {"required": 3.0, "preferred": 2.0, "duty": 1.0}
+
 
 def _env(name: str, default: str | None = None) -> str | None:
     value = os.environ.get(name)
@@ -64,6 +71,7 @@ class Settings:
     # --- 배점·게이트 ---
     weights: dict[str, float] = field(default_factory=lambda: dict(DEFAULT_WEIGHTS))
     gate_kinds: list[str] = field(default_factory=lambda: list(DEFAULT_GATE_KINDS))
+    kind_shares: dict[str, float] = field(default_factory=lambda: dict(DEFAULT_KIND_SHARES))
     judge_disagreement_threshold: int = 2  # 5점 척도에서 2점 이상 벌어지면 3번째 심사위원
     experience_saturation_k: float = 1.0  # **임의값.** 함수 형태는 step 5에서 확정
 
@@ -140,6 +148,10 @@ def load_settings(path: str | None = None) -> Settings:
             "judgment": _env_float("MATCHING_WEIGHT_JUDGMENT", DEFAULT_WEIGHTS["judgment"]),
         },
         gate_kinds=_env_list("MATCHING_GATE_KINDS", list(DEFAULT_GATE_KINDS)),
+        kind_shares={
+            kind: _env_float(f"MATCHING_KIND_SHARE_{kind.upper()}", default)
+            for kind, default in DEFAULT_KIND_SHARES.items()
+        },
         judge_disagreement_threshold=_env_int("MATCHING_JUDGE_DISAGREEMENT_THRESHOLD", 2),
         experience_saturation_k=_env_float("MATCHING_EXPERIENCE_SATURATION_K", 1.0),
         ocr_engine=_env("MATCHING_OCR_ENGINE", "paddle") or "paddle",
