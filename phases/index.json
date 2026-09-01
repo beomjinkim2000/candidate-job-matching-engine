@@ -1,9 +1,0 @@
-{
-  "phases": [
-    {
-      "dir": "matching-engine",
-      "status": "error",
-      "failed_at": "2026-09-01T11:41:06+0900"
-    }
-  ]
-}
