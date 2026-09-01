@@ -225,12 +225,90 @@
     {
       "step": 9,
       "name": "result-ui",
-      "status": "pending"
+      "status": "pending",
+      "started_at": "2026-09-01T12:29:35+0900"
     },
     {
       "step": 11,
       "name": "selected-tests",
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-09-01T13:20:00+0900",
+      "completed_at": "2026-09-01T14:05:00+0900",
+      "summary": "tests/CLAUDE.md의 8개 케이스 전부 존재. 신규 4파일 — test_generalization.py(직군 교차) · test_types_separate.py(유형 분리) · test_holdout.py(홀드아웃) · test_verbosity.py(장황함, @live) + conftest.py(스텁 심사위원 2종·픽스처 로더·repeat_sigma) + tests/fixtures/cross-job/(가짜 공고 2·이력서 8). **실물 API 호출 0회** — data/.judge_usage.json이 645회·$5.952 그대로이고 git status가 data/에 변경 없음. 직군 교차 실측: 양방향 4건 모두 하락 21.88점(임계 15). 홀드아웃은 skip — 저장된 완주 결과(data/runs/)가 아직 없다. 장황함은 @live라 미실행.",
+      "summary_data": {
+        "openai_calls": 0,
+        "usage_file_unchanged": {
+          "calls": 645,
+          "usd": 5.952
+        },
+        "cross_job_drop": {
+          "threshold": 15.0,
+          "judge": "ConstantJudge (항목·이력서 무관 고정 점수) — 하락이 결정적 층에서만 나온다",
+          "measured": {
+            "FA-01: 임상→설비": 21.88,
+            "FA-02: 임상→설비": 21.88,
+            "FB-01: 설비→임상": 21.88,
+            "FB-02: 설비→임상": 21.88
+          },
+          "note": "두 공고 다 「3년 이상」 경력 조건을 일부러 겹쳐 두었다. 그 항목은 직군을 바꿔도 점수가 그대로라 하락에 0점을 기여한다 — 하락 21.88은 나머지 두 항목의 배점 합이다."
+        },
+        "cross_job_drop_overlap_judge": {
+          "judge": "OverlapJudge (글자 겹침 대역) — 보조 확인용, 임계 없음",
+          "measured": {
+            "FA-01": 70.62,
+            "FA-02": 70.62,
+            "FB-01": 78.75,
+            "FB-02": 70.62
+          }
+        },
+        "type_separation": {
+          "group_means": {
+            "완벽": 99.31,
+            "부분": 41.97,
+            "미스": 11.35
+          },
+          "group_ranges": {
+            "완벽": [
+              99.09,
+              99.53
+            ],
+            "부분": [
+              29.2,
+              56.11
+            ],
+            "미스": [
+              11.35,
+              11.35
+            ]
+          },
+          "judge": "OverlapJudge"
+        },
+        "holdout": {
+          "status": "skipped",
+          "repeat_sigma_read": 0.3015,
+          "threshold": 0.603,
+          "reason": "data/runs/에 저장된 완주 결과가 없다 — 채점을 다시 하지 않는 설계라 잴 입력이 없다",
+          "blocker": "완주 결과가 생겨도 절반만 잴 수 있다. 홀드아웃 4건 중 판단 층은 kt-b2c R-02 하나뿐이고 kt-b2c R-01·nexon-game R-07·R-13은 전부 사실 층이다(라틴 토큰이 있어 is_countable이 참). σ가 5점 척도 값이라 0~1 커버리지와 나란히 놓을 수 없어 nexon-game은 잴 항목이 0개다."
+        },
+        "verbosity": {
+          "status": "not_run",
+          "threshold": 10.0,
+          "reason": "@live. 예산 $5를 이미 넘겼다 (645회 · $5.952)"
+        },
+        "live_marks_excluded_by_default": true,
+        "test_counts": {
+          "new_files": 5,
+          "new_cases": 20,
+          "default_run_deselected_live": 3
+        }
+      },
+      "notes": [
+        "**직군 교차의 심사위원을 상수로 고정했다.** 내용에 반응하는 스텁을 쓰면 하락이 스텁의 재주인지 엔진의 성질인지 구별되지 않는다. ConstantJudge를 쓰면 판단 층 65점이 두 공고에서 완전히 같은 값이 되어 남는 차이가 전부 게이트·사실 층과 루브릭 가중치에서 나온다 — 그 층은 LLM이 없는 결정적 코드다. 전제가 실제로 성립하는지를 test_상수_심사위원에서_판단_층은_두_공고에_같은_값을_낸다가 따로 검사한다.",
+        "**픽스처 공고를 의료·제조로 잡았다.** 확보한 실제 공고 2건이 둘 다 IT·게임이라 그 둘로 재면 「우리 파서가 IT 공고 두 개를 구별한다」까지만 말하게 된다.",
+        "**홀드아웃 조건 선정(step 10)과 홀드아웃 테스트 명세(step 11)가 어긋난다.** 명세는 raw 1~5 판단 층 점수를 재라고 하는데, 골라 둔 조건 4건 중 3건이 사실 층으로 간다. nexon-game은 판단 층 홀드아웃 항목이 0개라 완주 결과가 생겨도 skip된다. 임계를 낮추거나 척도를 섞어 통과시키지 않았다 — 척도가 다른 두 수를 비교하면 엔진이 아무것도 변별하지 못해도 통과한다(R4 심사).",
+        "**커버리지를 올리지 않았다.** 새 케이스는 tests/CLAUDE.md 표에 이미 있는 것 4개뿐이고, 케이스마다 「왜 이걸 골랐는가」를 파일 docstring에 적었다. tests/CLAUDE.md에 케이스→파일 지도만 추가했다.",
+        "**임계를 실측으로 되맞추지 않았다.** 직군 교차 15점 · 장황함 10점 · 홀드아웃 계수 2.0은 임의값 그대로 두고 실측만 여기 적었다. 판정선을 판정 대상의 실행 결과에서 뽑으면 그 테스트는 아무것도 반증하지 못한다."
+      ]
     },
     {
       "step": 12,

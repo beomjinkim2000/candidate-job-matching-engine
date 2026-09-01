@@ -23,6 +23,27 @@
 
 **직군 교차가 가장 값지다** — 일반화 주장을 반증 가능한 형태로 만든다.
 
+### 케이스가 사는 파일 (step 11에서 정리)
+
+**위 표가 정본이고 아래는 찾아가는 길이다.** 케이스를 옮기면 이 표도 같이 고친다.
+
+| 케이스 | 파일 | 기본 실행 |
+|---|---|---|
+| 직군 교차 | `test_generalization.py` | ✅ (판단 층은 상수 스텁) |
+| evidence span 유효성 | `test_model.py` (G2 5건) · `test_scorer.py` | ✅ |
+| 스코어러 경계 | `test_scorer.py` | ✅ |
+| 유형 분리 | `test_types_separate.py` | ✅ (판단 층은 겹침 스텁) |
+| 홀드아웃 조건 | `test_holdout.py` | ⚠️ 저장된 완주 결과가 있어야 잰다. 없으면 skip |
+| 게이트 정확성 | `test_scorer.py` | ✅ |
+| 장황함 불변성 | `test_verbosity.py` | ❌ `@live` |
+| 순서 불변성 | `test_judge.py` | ❌ `@live` |
+| 반복 안정성 | `test_judge.py` | ❌ `@live`. 실측 σ는 `index.json` step 6 |
+
+`test_generalization.py`·`test_types_separate.py`·`test_verbosity.py`가 쓰는 픽스처 공고와
+이력서는 `tests/fixtures/cross-job/`에 있다 (설계 의도는 그 폴더의 `픽스처-설명.md`).
+심사위원 스텁 둘(`ConstantJudge`·`OverlapJudge`)은 `tests/conftest.py`에 있고,
+**둘 다 네트워크를 쓰지 않는다.**
+
 ### 1차와 2차를 나눈 이유 — 순환
 
 **우리가 정답도 만들고 채점도 한다.** `requirements.json`으로 이력서를 설계하고,
