@@ -201,7 +201,26 @@
     {
       "step": 8,
       "name": "entrypoint-api",
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-09-01T12:08:41+0900",
+      "completed_at": "2026-09-01T12:28:34+09:00",
+      "summary": "python run.py — 키를 getpass로 받아 .env(0600)에 쓰고 127.0.0.1:8000에 서버를 띄운 뒤 브라우저를 연다. 진입점 3파일 — run.py · api/cli.py(score 서브커맨드) · api/server.py(POST /score·/prepare·/approve, GET /runs/{id}·/image/{id}·/) + 둘이 공유하는 api/service.py. 채점을 일으키는 엔드포인트는 POST /score 하나. tests/test_api.py 15케이스 통과.",
+      "notes": [
+        "CLI와 HTTP가 **같은 함수**를 지난다 — api/service.py의 prepare_posting()·score_proposal(). 로직을 양쪽에 복제하면 두 경로의 결과가 갈렸을 때 어느 쪽이 맞는지 알 수 없다. test_api.py가 두 소스에 score_proposal이 있고 server 쪽 호출이 정확히 1회인 것을 검사한다.",
+        "**step 8이 파일을 하나 더 만들었다 — api/service.py.** step 명세는 run.py·cli.py·server.py 셋을 지정했지만, 이력서 로딩·클라이언트 생성·prepare→score 순서를 두 진입점에 각각 쓰면 같은 명세의 「로직을 복제하지 마라」를 어긴다. 기능을 늘린 파일이 아니라 **복제를 막는 이음매**다.",
+        "**--skip-approval을 CLI에 추가했다.** step 8의 인자 목록에는 없지만 src/CLAUDE.md가 이름까지 정해 둔 스위치이고, 승인 화면은 브라우저에만 있어서 이게 없으면 CLI로는 채점을 끝까지 못 한다. 주면 결과와 화면 상단에 「미승인」이 붙는다.",
+        "**--no-judge는 판단 항목을 빼고 루브릭을 다시 짓는다** (service.without_judgment). 빼기만 하면 만점이 100 밑으로 내려가 「0~100점」이 거짓말이 되고, 0점으로 채우면 「판단 안 함」과 「1점(경험 없음)」이 같아진다. 다시 지으면 남은 층이 100점을 나눠 갖는다. 실측: kt-b2c에서 판단 8개를 빼고 사실 3개가 100점을 나눠 가졌다.",
+        "**--no-judge를 HTTP로 열지 않았다.** 응답 계약이 RunResult 하나라 65점이 빠진 결과가 아무 표시 없이 화면에 간다. RunResult에 degraded_mode 필드가 없는 지금 상태에서 열면 화면이 거짓말을 한다.",
+        "POST /approve는 승인·뒤집기·삭제 뒤 **같은 식으로 배점을 다시 돌린다.** 뒤집기는 kind를, 삭제는 항목 수를 바꾸므로 안 돌리면 총합이 100이 아니게 된다. criterion_id는 그대로 둔다 — 다시 번호를 매기면 화면이 방금 누른 줄을 못 찾는다. 삭제된 항목은 그래프에 **가중치 0으로 남긴다**: 지우면 contradicts Link가 허공을 가리키고 「사람이 뺐다」는 기록도 사라진다.",
+        "승인 상태(RubricProposal)는 **메모리에만** 산다. 디스크에 남기면 다음 실행이 남의 승인을 물려받는다 — 승인은 「지금 이 사람이 이 화면에서 확인했다」는 행위다.",
+        "G7(revision 불일치)은 서버가 저장해 둔 제안의 posting_revision과 대조한다. 사람인 키가 없어 그 값이 None인 지금은 「null을 보내면 통과, 아무 문자열이나 보내면 409」다 — 검사가 도는 것은 맞지만 **대조 대상이 API가 아니라 우리 기록**이라는 사실을 지우지 않는다.",
+        "모듈 수준에 app 객체를 두지 않았다. create_app()이 .env을 읽고 OpenAI 클라이언트를 만들므로 import만으로 키를 읽게 된다 — 테스트가 그렇다. uvicorn으로 띄우려면 `uvicorn matching.api.server:create_app --factory`.",
+        "밖으로 나가는 모든 메시지가 _safe()를 지난다 (redact + 설정에 든 키 치환 + 토큰 모양 정규식). 예상 못 한 예외까지 500으로 걸러 내보내는 핸들러를 뒀다 — 사람인 인증이 쿼리 파라미터라 httpx 예외에 URL이 통째로 실린다. test_api.py가 키가 박힌 예외를 던지는 가짜 심사위원으로 검사한다.",
+        "config.py의 주석에서 키 접두사 문자열을 뺐다. step 8 검증 절차가 `grep \"<접두사>\" src/`로 키가 코드에 박혔는지 훑는데, 설명에 적혀 있으면 그 검사가 주석에 걸려 아무 말도 못 한다. step 3의 header_role.py에서 같은 일이 있었다.",
+        "--position은 provenance.json의 target_position만 갈아 끼운다 (파서가 대상 직무를 거기서만 읽는다). write_provenance()를 부르면 step 3이 채운 ocr_engine·ocr_sha256이 None으로 되돌아가 「어느 OCR 결과에서 나온 조건인가」의 증거가 사라진다.",
+        "GET /image/{id}는 이미지가 없으면 404 + 「이미지 없음 — 좌표 표시 불가」를 준다. 이미지는 커밋되지 않으므로 clone 직후에는 없는 것이 정상이고, 조용한 빈 칸을 주면 bbox를 저장한 의미가 사라진다.",
+        "GET /은 static/index.html이 있으면 그것을, 없으면 「화면은 step 9」 안내를 준다. step 9가 그 파일을 놓는다 — 여기서 만들지 않았다."
+      ]
     },
     {
       "step": 9,
