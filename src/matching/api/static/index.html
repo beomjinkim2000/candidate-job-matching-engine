@@ -200,6 +200,22 @@ table.t tr:last-child td{border-bottom:0}
 .rationale{font-size:12.5px;color:var(--text2);background:var(--sunken);border-radius:10px;padding:10px 12px;margin-top:8px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
 .minibar{height:8px;border-radius:4px;background:var(--sunken);overflow:hidden;min-width:70px}
 .minibar i{display:block;height:100%;background:var(--brand)}
+/* 서랍 — 「보는 것」은 화면이 아니라 여기 들어간다. 머리말이 안에 든 것을 숫자로 예고한다 */
+details.drawer{border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-bottom:14px;overflow:hidden}
+details.drawer>summary{list-style:none;cursor:pointer;padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;font-size:13.5px;font-weight:700}
+details.drawer>summary::-webkit-details-marker{display:none}
+details.drawer>summary:hover{background:var(--sunken)}
+details.drawer>summary .tri{color:var(--text3);font-size:11px;transition:transform .15s}
+details.drawer[open]>summary .tri{transform:rotate(90deg);display:inline-block}
+details.drawer>summary .hint{font-weight:500;font-size:11.5px;color:var(--text2);font-family:var(--mono)}
+details.drawer[open]>summary{border-bottom:1px solid var(--line)}
+.drawerbody{padding:16px}
+/* 랭킹 아코디언 — 여러 명이 동시에 열린다. 비교가 이 화면의 목적이다 */
+.rankwrap{border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:7px}
+.rankwrap:hover{border-color:var(--brand)}
+.rankwrap .rank{border:0;margin:0;background:transparent}
+.rankwrap .rank.open{border-bottom:1px solid var(--line);border-radius:0}
+.acc{padding:0 14px 14px}
 </style>
 </head>
 <body>
@@ -236,7 +252,10 @@ table.t tr:last-child td{border-bottom:0}
 const PARAMS = new URLSearchParams(location.search);
 const USE_MOCK = PARAMS.get("mock") === "1";
 const BASE = "";                    // 같은 오리진
-const LS_KEY = "ase.saved";         // {posting_id, run_id} — 새로고침 시 GET /runs/{id} 로 복원 (재채점 금지)
+/* {posting_id, run_id} — 새로고침 시 GET /runs/{id} 로 복원 (재채점 금지).
+   **목업과 실서버의 자리를 나눈다** — 목업에서 만든 run_id가 실서버 화면의 복원에
+   섞이면 실서버가 404를 주고, 그 404가 화면 탓처럼 보인다. */
+const LS_KEY = USE_MOCK ? "ase.saved.mock" : "ase.saved";
 
 /* 사용자에게 반드시 보여야 하는 문구 — 이 화면의 위치를 밝힌다 */
 const INSPECT_LINE = "점검용 화면 — 실제 운영에서는 이 단계를 눈으로 훑지 않는다";
@@ -258,10 +277,15 @@ const S = {
   step: 1, visited: new Set([1]),
   postings: null, posting: null,        // 선택된 공고 (PostingSummary)
   proposal: null, trace: null, imgUrl: null,
-  run: null, cand: null,                // RunResult, 선택 지원자
-  resumes: {},                          // {candidate_id: {text, masked_spans, masked_fields, ok}}
+  run: null,                            // RunResult
+  resumes: {},                          // {candidate_id: {text, masked, masked_fields, ok}}
   roleOff: new Set(),
   focusLine: null,
+  traceMiss: null,
+  drawerOpen: false,                    // ②의 「이미지에서 어떻게 읽었나」 서랍
+  openCands: new Set(),                 // ③에서 펼쳐 둔 지원자 (여러 명 동시에 열린다)
+  scoring: false,
+  pickLine: null,                       // 서랍의 줄 목록이 등록하는 선택 함수
 };
 
 /* ============================ API ============================ */
@@ -684,13 +708,17 @@ function opsNote(){
     h("div",{style:"margin-top:6px"},h("b",{},"실제 운영에서는 매 단계를 눈으로 훑지 않는다.")," 파이프라인이 실제로 멈춰 서는 자리는 ",h("b",{},"승인 게이트 한 곳"),"이고, 확인은 하네스가 정한 그 지점에서 이뤄진다. 나머지 단계는 점검용이며 결과를 바꾸지 않는다."),
     h("div",{class:"flow"},"prepare → 사람 승인 → score"));
 }
-const STEPS=["공고 선택","파싱 확인","조건 승인","채점 진행","랭킹","상세"];
+/* **결정하는 것만 화면이고, 보는 것은 서랍이다.**
+   평가자가 실제로 내리는 결정은 둘뿐이다 — 어느 공고를 볼까 / 이 조건으로 채점할까.
+   파싱 확인은 ②의 서랍으로, 채점 진행은 ②의 진행 표시로, 지원자 상세는 ③의 아코디언으로
+   격을 내렸다. **아무것도 지우지 않았다.** */
+const STEPS=["공고 고르기","조건 확인·승인","랭킹"];
 function renderStepper(){
   const nav=$("#stepper"); nav.textContent="";
   STEPS.forEach((name,i)=>{
     const n=i+1, ok=S.visited.has(n);
-    const b=h("button",{class:"step"+(n===S.step?" current":"")+(ok?" visited":"")+(n===3?" gatestep":""),
-      title:(n===3?"승인 게이트 — 파이프라인이 실제로 멈추는 유일한 자리":undefined),
+    const b=h("button",{class:"step"+(n===S.step?" current":"")+(ok?" visited":"")+(n===2?" gatestep":""),
+      title:(n===2?"승인 게이트 — 파이프라인이 실제로 멈추는 유일한 자리":undefined),
       onclick:()=>{ if(S.visited.has(n)&&canEnter(n)) go(n); }},
       h("span",{class:"n"}, n===S.step?String(n):(ok&&n<S.step?"✓":String(n))), name);
     if(!ok) b.disabled=true;
@@ -698,16 +726,15 @@ function renderStepper(){
   });
 }
 function canEnter(n){
-  if (n===2 && !S.trace) return false;
-  if (n===3 && !S.proposal) return false;
-  if (n>=5 && !S.run) return false;
-  if (n===6 && !S.cand) return false;
+  /* ②는 초안이 없어도 들어갈 수 있다 — 그 화면이 「다시 만들기」 버튼을 준다.
+     막아 두면 저장된 결과를 불러온 뒤 승인 화면으로 갈 길이 아예 없어진다. */
+  if (n===3 && !S.run) return false;
   return true;
 }
 function go(n){ S.step=n; S.visited.add(n); render(); }
 function render(){
   renderStepper(); view.textContent="";
-  try{ [v1,v2,v3,v4,v5,v6][S.step-1](); }catch(e){ console.error(e); renderError(e); }
+  try{ [v1,v2,v3][S.step-1](); }catch(e){ console.error(e); renderError(e); }
 }
 function renderError(e){
   view.textContent="";
@@ -716,7 +743,7 @@ function renderError(e){
     404:"경로 또는 자원을 찾을 수 없습니다. 서버에 그 엔드포인트가 있는지 확인하세요.",
     422:"검산 위반 — 근거 없는 점수를 내보내지 않습니다. 결과 전체를 표시하지 않습니다. 아래 위반 목록을 확인하세요.",
     503:"공고 원본에 접근할 수 없습니다.",429:"호출 예산을 초과했습니다. 잠시 후 다시 시도하세요.",
-    409:"승인이 없거나 낡았습니다 — 조건을 (다시) 승인해야 채점이 시작됩니다. ③ 조건 승인으로 돌아가세요."};
+    409:"승인이 없거나 낡았습니다 — 조건을 (다시) 승인해야 채점이 시작됩니다. 「조건 확인·승인」 화면으로 돌아가세요."};
   view.append(h("div",{class:"errpane"},
     h("h2",{}, st?`오류 ${st}`:"오류"),
     h("div",{}, MSG[st]||e.message||"알 수 없는 오류"),
@@ -726,7 +753,7 @@ function renderError(e){
       h("button",{class:"btn",onclick:()=>{ try{localStorage.removeItem(LS_KEY);}catch(_){} location.href=location.pathname; }},"처음부터"))));
 }
 
-/* ==================== 이미지 뷰어 (②③⑥ 공용) ====================
+/* ==================== 이미지 뷰어 (②의 서랍·조건 목록, ③의 아코디언 공용) ====================
    **스케일 기준은 `img.naturalWidth`가 아니라 데이터의 `img_w`·`img_h`다.**
    좌표는 파싱 당시 본 이미지 기준이라, 지금 띄운 이미지가 그때 그 파일이라는 보장이 없다. */
 function makeViewer({height="620px", onBoxClick}={}){
@@ -809,8 +836,7 @@ function makeViewer({height="620px", onBoxClick}={}){
   return {root:wrapEl, mount, select, focusBBox, setRoleVisible, layout};
 }
 const viewers={};
-
-/* ============================ ① 공고 선택 ============================ */
+/* ============================ ① 공고 고르기 ============================ */
 async function v1(){
   const card=h("div",{class:"card",style:"max-width:760px"},
     h("h2",{},"공고를 고르세요"),
@@ -853,7 +879,7 @@ async function v1(){
       const raw=await apiOptional("/trace/"+encodeURIComponent(sel));
       S.trace = normalizeTrace(raw, prop.graph) || traceFromGraph(prop.graph); S.traceMiss=LAST_OPTIONAL_MISS;
       S.imgUrl=imageUrl(sel);
-      S.run=null; S.cand=null; S.resumes={}; S.visited=new Set([1,2,3]); go(2);
+      S.run=null; S.openCands=new Set(); S.resumes={}; S.visited=new Set([1,2]); go(2);
     }catch(e){ renderError(e); }
   }},"조건 확인하기 →");
   btn.disabled=!sel;
@@ -861,53 +887,64 @@ async function v1(){
     h("div",{class:"kv",style:"margin:14px 2px 0"},
       "그 공고의 이력서 ",h("b",{},"전원"),"이 함께 채점됩니다 · ",
       /* step 13(2026-09-01 14:30)이 docs/COST_BUDGET.md §4의 실측치로 바꾼다 */
-      h("span",{title:"설계 추정치입니다. 실제로 몇 번 불렀는지는 채점이 끝난 뒤 결과 화면의 「이 결과」 줄에 실측으로 표시됩니다"},
+      h("span",{title:"설계 추정치입니다. 실제로 몇 번 불렀는지는 채점이 끝난 뒤 랭킹 화면의 「이 결과」 줄에 실측으로 표시됩니다"},
         "예상 호출 ~117회 · 소요 2~4분 "),
       h("span",{class:"chip neutral"},h("span",{class:"dot"}),"설계 추정치"),
-      " (채점은 ④에서 시작)"),
+      " (채점은 다음 화면에서 승인한 뒤 시작)"),
     h("div",{class:"footctas"},btn));
 }
 
-/* ============================ ② 파싱 확인 ============================ */
-function v2(){
+/* ==================== ② 조건 확인·승인 ====================
+   **이 화면이 파이프라인이 실제로 멈추는 자리다.** 파싱 확인은 여기 접힌 서랍으로
+   들어갔고(구경거리는 단계가 아니다), 채점 진행도 화면이 아니라 이 화면의 진행 표시다. */
+
+/* 서랍 머리말 — 「▸ 자세히」로는 아무도 안 연다. 안에 뭐가 있는지 숫자로 예고한다 */
+function drawerHint(){
+  const R=parseReportOf(), T=S.trace;
+  const bits=[];
+  if (T&&T.lines&&T.lines.length) bits.push(`읽은 줄 ${T.lines.length}`);
+  if (R&&R.line_count!=null) bits.push(`채점 대상 ${R.line_count}줄`);
+  if (R&&R.role_counts&&R.role_counts.ambiguous!=null) bits.push(`모호 ${R.role_counts.ambiguous}`);
+  if (T&&T.avg_conf!=null) bits.push(`평균 신뢰도 ${T.avg_conf}`);
+  if (R&&R.llm_calls!=null) bits.push(`LLM ${R.llm_calls}회`);
+  if (R&&R.excluded_blocks) bits.push(`제외 블록 ${R.excluded_blocks.length}`);
+  return bits.length?bits.join(" · "):"응답에 파싱 진단이 없습니다";
+}
+/* 서랍 본문 — 옛 「② 파싱 확인」 화면이 통째로 여기 들어온다. 지운 것 없다. */
+function parseDrawerBody(vw){
   const T=S.trace, R=parseReportOf();
-  view.append(inspectLine());
-  const card=h("div",{class:"card"},
-    h("h2",{},"파싱 확인 — 이미지를 어떻게 읽었나"),
-    h("p",{class:"desc"},"왼쪽 이미지의 네모는 파싱이 읽은 줄입니다. 네모를 누르면 오른쪽 목록의 그 줄로, 줄을 누르면 이미지의 그 위치로 이동합니다."));
-  view.append(card);
-  if (T && T.degraded){
+  const body=h("div",{class:"drawerbody"});
+  body.append(inspectLine());
+  if (!T){
+    body.append(h("div",{class:"banner danger"},h("b",{},"표시할 좌표 없음"),"파싱 결과에 좌표가 없습니다."));
+    return body;
+  }
+  if (T.degraded){
     const miss=S.traceMiss;
-    card.prepend(h("div",{class:"banner warn"},h("b",{},"줄 단위 대조 불가"),
+    body.append(h("div",{class:"banner warn"},h("b",{},"줄 단위 대조 불가"),
       "GET /trace 응답을 받지 못해 OCR 줄 목록이 없습니다. 지금 보이는 네모는 조건의 source_bbox 뿐이며, 신뢰도·판정·LLM에 보낸 문자열은 표시할 수 없습니다."+
       (miss?` (${miss.status}${miss.detail?" — "+miss.detail:""})`:"")+
-      (miss&&miss.status===409?" ① 공고 선택에서 「조건 확인하기」를 먼저 눌러 주세요.":"")));
-  }
-  if (T && !T.degraded && typeof T.cached==="boolean")
-    card.prepend(h("div",{class:"banner info"},
+      (miss&&miss.status===409?" 공고 고르기에서 「조건 확인하기」를 먼저 눌러 주세요.":"")));
+  } else if (typeof T.cached==="boolean"){
+    body.append(h("div",{class:"banner info"},
       h("b",{}, T.cached?"저장된 파싱 결과":"방금 계산함"),
       T.cached
         ? "이 화면은 파일에 저장돼 있던 파싱 결과를 그대로 읽었습니다. 이 화면을 여는 데 LLM 호출은 0회입니다."
         : "이 요청에서 파싱 결과를 새로 만들었습니다. 좌표의 출처는 OCR이며, 이 화면을 여는 데 LLM 호출은 0회입니다."));
-  if (!T){
-    card.append(h("div",{class:"banner danger"},h("b",{},"표시할 좌표 없음"),"파싱 결과에 좌표가 없습니다."));
-    view.append(h("div",{class:"footctas"},h("button",{class:"btn primary",onclick:()=>go(3)},"조건 승인으로 →")));
-    return;
   }
+  body.append(h("p",{class:"desc"},"오른쪽 이미지의 네모는 파싱이 읽은 줄입니다. 네모를 누르면 아래 목록의 그 줄로, 줄을 누르면 이미지의 그 위치로 이동합니다."));
+  /* 판정 범례 + 토글 */
   const legend=h("div",{class:"legend"});
-  const kinds=[...new Set(T.lines.map(roleKey))];
-  for (const k of kinds){
+  for (const k of [...new Set(T.lines.map(roleKey))]){
     const chip=h("button",{class:"lg"+(S.roleOff.has(k)?" off":""),title:"누르면 이 판정의 네모를 숨기거나 다시 보입니다"},
       h("span",{class:"sw",style:`border-color:${ROLE_COLOR[k]};background:color-mix(in srgb,${ROLE_COLOR[k]} 22%,transparent);${k==="continuation"?"border-style:dashed;":""}`}),
       ROLE_KO[k]||k);
     chip.addEventListener("click",()=>{ S.roleOff.has(k)?S.roleOff.delete(k):S.roleOff.add(k); chip.classList.toggle("off"); vw.setRoleVisible(S.roleOff); });
     legend.append(chip);
   }
-  card.append(legend);
-  const listEl=h("div",{class:"linelist",style:"max-height:620px"});
-  const vw = viewers.v2 || (viewers.v2=makeViewer({onBoxClick:(l)=>pick(l.id,"fromImg")}));
-  card.append(h("div",{class:"grid2"},h("div",{},vw.root),h("div",{},listEl)));
-  vw.mount(T,S.imgUrl); vw.setRoleVisible(S.roleOff);
+  body.append(legend);
+  const listEl=h("div",{class:"linelist",style:"max-height:420px"});
+  body.append(listEl);
   listEl.append(h("div",{class:"ll llh"},h("span",{},"줄 id"),h("span",{},"y"),h("span",{},"x0"),h("span",{},"신뢰도"),h("span",{},"판정"),h("span",{},"읽은 글자")));
   const rowEls=new Map();
   for (const l of T.lines){
@@ -929,6 +966,7 @@ function v2(){
     vw.select([id], src!=="fromImg");
     if(src!=="fromList"){ const el=rowEls.get(id); if(el) listEl.scrollTo({top:Math.max(0,el.offsetTop-listEl.clientHeight*0.4),behavior:"smooth"}); }
   }
+  S.pickLine=pick;
   if (S.focusLine && rowEls.has(S.focusLine)) pick(S.focusLine,"restore");
   /* 파싱 진단 */
   const diag=h("div",{class:"diag"});
@@ -947,39 +985,33 @@ function v2(){
     if (R.emphasis_available===false)
       diag.append(h("div",{},"시각 강조 신호: 입력 없음 — 판정 사다리 5단계(시각 강조)는 이 경로에서 발동하지 않습니다"));
   }
-  card.append(diag);
+  body.append(diag);
   /* LLM에 보낸 것 */
-  const llm=h("div",{class:"card",style:"margin-top:16px"},
-    h("h2",{},"LLM이 본 것 — 이게 전부입니다"),
-    h("p",{class:"desc"},"이 시스템은 공고 이미지를 LLM에 보내지 않습니다. 아래 문자열(섹션 제목)만 보냈고, 오른쪽이 돌아온 판정입니다."));
+  body.append(h("div",{class:"sect"},"LLM이 본 것 — 이게 전부입니다. 이 시스템은 공고 이미지를 LLM에 보내지 않습니다"));
   const roles=T.header_roles||null;
   const sent=(T.sent_to_llm&&T.sent_to_llm.headers)||(roles?Object.keys(roles):null);
   if (!sent||!sent.length){
-    llm.append(h("div",{class:"banner info"},h("b",{},"표시할 수 없음"),
+    body.append(h("div",{class:"banner info"},h("b",{},"표시할 수 없음"),
       "응답에 sent_to_llm · header_roles가 없습니다. LLM에 보낸 문자열을 화면이 지어내지 않습니다."));
   } else {
     const KO={requirement:"지원자격(필수 후보)",preferred:"우대 조건",duty:"담당업무(조건 아님)",context:"맥락(조건 아님)",excluded:"채점 제외"};
-    llm.append(h("div",{class:"tscroll"},h("table",{class:"t"},
+    body.append(h("div",{class:"tscroll",style:"max-height:300px;overflow:auto"},h("table",{class:"t"},
       h("tr",{},h("th",{},"보낸 문자열"),h("th",{},"돌아온 판정"),h("th",{},"뜻")),
       ...sent.map(hd=>{ const role=(roles&&roles[hd])||null;
         return h("tr",{},h("td",{class:"mono"},hd),h("td",{class:"mono"},role||"—"),h("td",{},role?(KO[role]||role):"응답 없음")); }))));
     const ambSent=(T.sent_to_llm&&T.sent_to_llm.ambiguous)||[];
     if (ambSent.length)
-      llm.append(h("div",{class:"kv",style:"margin-top:10px"},h("b",{},"함께 보낸 모호 줄: "),
+      body.append(h("div",{class:"kv",style:"margin-top:10px"},h("b",{},"함께 보낸 모호 줄: "),
         ambSent.map(a=>h("span",{class:"mono",style:"display:inline-block;background:var(--sunken);border-radius:6px;padding:1px 7px;margin:2px 4px 0 0"},a))));
   }
-  view.append(llm);
-  /* 섹션별 채점 여부 — 무엇을 읽고 무엇을 버렸나 */
+  /* 섹션별 채점 여부 — `scored`는 「조건 섹션인가」이고, role==="duty"인 섹션도
+     rubric/build.py가 judgment 층 루브릭 항목을 만든다. 세 갈래로 나눈다. */
   if (T.blocks && T.blocks.length){
-    /* `scored`는 「조건 섹션인가」이고, `role==="duty"`인 섹션도 루브릭 항목을 만든다
-       (`rubric/build.py` — 담당업무는 judgment 층으로 들어간다). 그래서 담당업무를
-       「채점에서 제외」로 그리면 화면이 거짓말을 한다. 세 갈래로 나눈다. */
     const kindOf=b=>b.scored?"cond":(b.role==="duty"?"duty":"out");
     const g={cond:[],duty:[],out:[]};
     for (const b of T.blocks) g[kindOf(b)].push(b);
-    const bc=h("div",{class:"card",style:"margin-top:16px"},
-      h("h2",{},`섹션 ${T.blocks.length}개 중 조건 섹션 ${g.cond.length}개 · 담당업무 ${g.duty.length}개`),
-      h("p",{class:"desc"},"버린 섹션도 지우지 않고 보여줍니다 — 무엇을 읽고 무엇을 버렸는지가 이 화면의 요점입니다."));
+    body.append(h("div",{class:"sect"},
+      `섹션 ${T.blocks.length}개 중 조건 섹션 ${g.cond.length}개 · 담당업무 ${g.duty.length}개 — 버린 섹션도 지우지 않고 보여줍니다`));
     const CHIP={cond:["ok","조건 섹션 — 채점 대상"],duty:["info","담당업무 — 관련성 판단의 자"],out:["neutral","채점에서 제외"]};
     const draw=(b,k)=>{
       const box=h("div",{class:"crit",style:(k==="out"?"opacity:.42;background:var(--sunken);border-style:dashed":"")},
@@ -992,54 +1024,74 @@ function v2(){
           b.items.map(t=>"· "+String(t).replace(/\n/g," ")).join("\n")));
       return box;
     };
-    for (const b of g.cond) bc.append(draw(b,"cond"));
+    for (const b of g.cond) body.append(draw(b,"cond"));
     if (g.duty.length){
-      bc.append(h("div",{class:"sect"},
+      body.append(h("div",{class:"sect"},
         `담당업무 섹션 ${g.duty.length}개 — 지원자의 자격은 아니지만 루브릭 항목이 만들어집니다(판단 층). 「채점에서 제외」가 아닙니다`));
-      for (const b of g.duty) bc.append(draw(b,"duty"));
+      for (const b of g.duty) body.append(draw(b,"duty"));
     }
     if (g.out.length){
-      bc.append(h("div",{class:"sect"},`채점에서 제외한 섹션 ${g.out.length}개 — 전형절차·문의처처럼 지원자의 자격이 아닌 것들입니다`));
-      for (const b of g.out) bc.append(draw(b,"out"));
+      const sub=h("details",{class:"drawer",style:"margin-top:10px"});
+      sub.append(h("summary",{},h("span",{class:"tri"},"▸"),`채점에서 제외한 섹션 ${g.out.length}개`,
+        h("span",{class:"hint"},"(전형절차·문의처처럼 지원자의 자격이 아닌 것들 — 지우지 않고 접어 둡니다)")));
+      const sb=h("div",{class:"drawerbody"});
+      for (const b of g.out) sb.append(draw(b,"out"));
+      sub.append(sb); body.append(sub);
     }
-    view.append(bc);
   }
-  view.append(h("div",{class:"footctas"},h("button",{class:"btn primary",onclick:()=>go(3)},"조건 승인으로 →")));
+  return body;
 }
 
-/* ============================ ③ 조건 승인 ============================
-   **여기에는 「점검용」 문구를 붙이지 않는다.** 이 화면은 점검용이 아니라
-   파이프라인이 실제로 멈추는 유일한 자리다. */
-function v3(){
+function v2(){
   const P=S.proposal;
   if (!P){
-    view.append(h("div",{class:"card"},h("h2",{},"조건 승인"),
+    view.append(h("div",{class:"card"},h("h2",{},"조건 확인·승인"),
       h("p",{class:"desc"},"승인할 루브릭 초안이 이 화면에 없습니다. 저장된 결과를 불러온 경우 초안은 서버 메모리에만 있으므로 다시 만들어야 합니다."),
       h("button",{class:"btn primary",onclick:async(e)=>{ e.target.disabled=true; e.target.textContent="POST /prepare 호출 중…";
         try{ const pid=(S.posting&&S.posting.posting_id)||(S.run&&S.run.posting_id);
           const prop=await api("/prepare",{body:{posting_id:pid}}); S.proposal=prop;
           const raw=await apiOptional("/trace/"+encodeURIComponent(pid));
-          S.trace=normalizeTrace(raw,prop.graph)||traceFromGraph(prop.graph); S.traceMiss=LAST_OPTIONAL_MISS; S.imgUrl=imageUrl(pid);
-          S.visited.add(2); render(); }catch(err){ renderError(err); } }},"조건 초안 다시 만들기 (POST /prepare)")));
+          S.trace=normalizeTrace(raw,prop.graph)||traceFromGraph(prop.graph); S.traceMiss=LAST_OPTIONAL_MISS;
+          S.imgUrl=imageUrl(pid); render(); }catch(err){ renderError(err); } }},"조건 초안 다시 만들기 (POST /prepare)")));
     return;
   }
   const {idx, conds, duties} = splitCriteria(P);
   const live=conds.filter(c=>!c._deleted);
   const approvedCount=P.criteria.filter(c=>!c._deleted&&c.review_status==="human_validated").length;
-  view.append(h("div",{class:"gatenote"},
-    h("div",{},h("b",{},"여기서 승인해야 채점이 시작된다.")," 파이프라인은 이 지점에서 실제로 멈춘다 — ",
-      h("span",{class:"mono"},"prepare"),"가 만든 것은 전부 AI 초안이고, ",h("span",{class:"mono"},"score"),"는 승인 없이는 409로 거부한다."),
+
+  const leftCol=h("div",{});
+  const vw = viewers.main || (viewers.main=makeViewer({height:"620px", onBoxClick:(l)=>{ if(S.pickLine) S.pickLine(l.id,"fromImg"); }}));
+  view.append(h("div",{class:"grid2b"},leftCol,
+    h("div",{style:"position:sticky;top:12px;align-self:start"},
+      h("div",{class:"kv",style:"margin-bottom:6px"},"공고 이미지 — 조건이나 줄을 누르면 그 위치가 표시됩니다"),vw.root)));
+
+  /* 승인 게이트가 먼저다 — 이 화면에서 내리는 결정이 그것이기 때문이다.
+     서랍(점검용)은 그 아래 한 줄로 접혀 있고, 톤을 확실히 다르게 둔다. */
+  leftCol.append(h("div",{class:"gatenote"},
+    h("div",{},h("b",{},"승인 게이트 — 파이프라인이 실제로 멈추는 유일한 자리."),
+      " 여기서 승인해야 채점이 시작된다. ",h("span",{class:"mono"},"prepare"),"가 만든 것은 전부 AI 초안이고, ",
+      h("span",{class:"mono"},"score"),"는 승인 없이는 409로 거부한다."),
     h("div",{style:"margin-top:5px"},"사람이 할 수 있는 것은 ",h("b",{},"승인 · 필수↔우대 뒤집기 · 삭제")," 셋뿐이다. 가중치는 설계상 바꿀 수 없다 — 직군 무관 일반화를 지키기 위해서다.")));
+
+  /* 파싱 확인 = 접힌 서랍. 「▸ 자세히」로는 아무도 안 연다 — 안에 뭐가 있는지 숫자로 예고한다 */
+  const drawer=h("details",{class:"drawer"});
+  if (S.drawerOpen) drawer.setAttribute("open","");
+  drawer.append(h("summary",{},
+    h("span",{class:"tri"},"▸"), "이미지에서 어떻게 읽었나",
+    h("span",{class:"hint"},"("+drawerHint()+")")));
+  drawer.addEventListener("toggle",()=>{ S.drawerOpen=drawer.open; if(drawer.open) vw.layout(); });
+  drawer.append(parseDrawerBody(vw));
+  leftCol.append(drawer);
+
   const card=h("div",{class:"card"},
     h("h2",{},`공고에서 뽑은 조건 ${live.length}개`),
     h("p",{class:"desc"},`승인된 항목 ${approvedCount} / 전체 ${P.criteria.length}. 조건 문구를 누르면 오른쪽 공고 이미지에서 그 위치에 네모가 쳐집니다.`),
     h("div",{class:"kv",style:"margin-bottom:12px"},"근거 등급: ",egBadge("E2")," 공고에 명시됨 · ",egBadge("E1")," 공고 구조에서 추론함 · ",egBadge("E0")," 근거가 약함"));
+  leftCol.append(card);
   const listCol=h("div",{});
-  const vw = viewers.v3 || (viewers.v3=makeViewer({height:"560px"}));
-  card.append(h("div",{class:"grid2b"},listCol,h("div",{style:"position:sticky;top:12px;align-self:start"},
-    h("div",{class:"kv",style:"margin-bottom:6px"},"공고 이미지 — 조건을 누르면 위치가 표시됩니다"),vw.root)));
-  view.append(card);
+  card.append(listCol);
   vw.mount(S.trace,S.imgUrl);
+
   const reqOf=c=>idx.get(c.requirement_id)||null;
   function critRow(c){
     const r=reqOf(c);
@@ -1100,6 +1152,8 @@ function v3(){
       "담당업무에서 나온 항목 — 지원자의 자격이 아니라 「입사 후 할 일」입니다. 게이트·사실 채점에는 들어가지 않고, 판단 층에서 「이 경험이 이 일과 맞는가」의 자로만 쓰입니다. 필수↔우대 뒤집기는 할 수 없습니다."));
     for (const c of duties) listCol.append(critRow(c));
   }
+  /* 채점 진행 — 별도 화면이 아니라 이 자리에 뜬다 */
+  const runSlot=h("div",{});
   const ctaLabel=()=>{
     const drafts=P.criteria.filter(c=>!c._deleted&&c.review_status!=="human_validated").length;
     return drafts?`남은 초안 ${drafts}개 일괄 승인하고 채점 →`:"승인 완료 — 채점 시작 →";
@@ -1114,50 +1168,49 @@ function v3(){
         for (const u of res.criteria){ const c=P.criteria.find(x=>x.id===u.criterion_id); if(c){ c.review_status=u.review_status; c._deleted=u.deleted; } }
         P.approved_at=res.approved_at;
       }
-      go(4); startScore();
+      startScore(runSlot);
     }catch(e){ cta.disabled=false; renderError(e); }
   }},ctaLabel());
-  view.append(h("div",{class:"footctas"},cta));
+  const ctaRow=h("div",{class:"footctas"},
+    (S.run?h("button",{class:"btn",onclick:()=>go(3)},"저장된 랭킹 보기 →"):null), cta);
+  leftCol.append(ctaRow, runSlot);
+  if (S.scoring) startScore(runSlot);   /* 진행 중에 화면을 다시 그린 경우 */
 }
 
-/* ============================ ④ 채점 진행 ============================ */
+/* 채점 진행 — 화면이 아니라 ②의 진행 표시. STAGES 목록은 그대로 쓴다 */
 const STAGES=["게이트","사실 채점","판단 채점","검산","집계·랭킹"];
 let stageTimer=null;
-function v4(){
-  const done=!!S.run;
-  view.append(inspectLine());
-  const card=h("div",{class:"card",style:"max-width:620px"},
-    h("h2",{},done?"채점 완료":"채점 진행 중"),
-    h("p",{class:"desc"},done?"결과는 저장되어 있습니다 — 새로고침해도 다시 채점하지 않고 GET /runs/{run_id} 로 읽습니다."
-      :"POST /score 는 2~4분 걸립니다. 아래 단계 표시는 서버에서 받은 진행률이 아니라 순서 안내입니다."));
+function startScore(slot){
+  if (S.scoring && slot.childElementCount) return;
+  S.scoring=true;
+  slot.textContent="";
+  const card=h("div",{class:"card",style:"margin-top:14px;max-width:620px"},
+    h("h2",{},"채점 진행 중"),
+    h("p",{class:"desc"},"POST /score 는 2~4분 걸립니다. 아래 단계 표시는 서버에서 받은 진행률이 아니라 순서 안내입니다."));
   const ul=h("ul",{class:"stages"});
-  STAGES.forEach((s,i)=>ul.append(h("li",{class:done?"done":"", "data-i":i},h("span",{class:"ic"},done?"✓":""),s)));
-  card.append(ul);
-  if (done) card.append(h("div",{class:"footctas"},h("button",{class:"btn primary",onclick:()=>go(5)},"랭킹 보기 →")));
-  view.append(card);
-}
-function startScore(){
-  render();
+  STAGES.forEach((s,i)=>ul.append(h("li",{"data-i":i},h("span",{class:"ic"},""),s)));
+  card.append(inspectLine(), ul);
+  slot.append(card);
+  card.scrollIntoView({behavior:"smooth",block:"nearest"});
   let i=0;
   const tick=()=>{
-    const lis=view.querySelectorAll(".stages li");
-    if(!lis.length) return;
-    lis.forEach((li,j)=>{ li.className=j<i?"done":(j===i?"doing":""); li.querySelector(".ic").textContent=j<i?"✓":""; });
+    ul.querySelectorAll("li").forEach((li,j)=>{ li.className=j<i?"done":(j===i?"doing":""); li.querySelector(".ic").textContent=j<i?"✓":""; });
   };
   tick();
+  clearInterval(stageTimer);
   stageTimer=setInterval(()=>{ if(i<STAGES.length-1){i++;tick();} },1400);
   /* resume_ids를 보내지 않는다 — 그 공고 디렉터리의 이력서 전원이 대상이다.
      화면이 목록을 박아 두면 공고마다 다른 지원자 id에서 조용히 어긋난다. */
   api("/score",{body:{posting_id:S.proposal.posting_id, options:{}}})
     .then(run=>{
-      clearInterval(stageTimer); S.run=run; S.cand=null;
+      clearInterval(stageTimer); S.scoring=false; S.run=run; S.openCands=new Set(); S.resumes={};
       try{ localStorage.setItem(LS_KEY,JSON.stringify({posting_id:run.posting_id,run_id:run.run_id})); }catch(e){}
-      S.visited.add(5); go(5);
+      go(3);
     })
-    .catch(e=>{ clearInterval(stageTimer); renderError(e); });
+    .catch(e=>{ clearInterval(stageTimer); S.scoring=false; renderError(e); });
 }
 
-/* ============================ ⑤ 랭킹 ============================ */
+/* ============================ ③ 랭킹 ============================ */
 function axisSums(c){
   const out={fact:0,judgment:0,gate:0}, max={fact:0,judgment:0,gate:0};
   for (const a of (c.breakdown||[])){
@@ -1166,12 +1219,12 @@ function axisSums(c){
   }
   return {f:+out.fact.toFixed(1), j:+out.judgment.toFixed(1), fm:+max.fact.toFixed(1), jm:+max.judgment.toFixed(1)};
 }
-function v5(){
+function v3(){
   const R=S.run;
   const card=h("div",{class:"card"},h("h2",{},"랭킹"),
-    h("p",{class:"desc"},"총점만 보지 마세요 — 오른쪽의 사실/판단 축별 분해가 항상 함께 표시됩니다. 지원자를 누르면 근거 사슬 상세로 갑니다."));
+    h("p",{class:"desc"},"총점만 보지 마세요 — 오른쪽의 사실/판단 축별 분해가 항상 함께 표시됩니다. 지원자를 누르면 그 자리에서 근거 사슬이 펼쳐집니다. 여러 명을 동시에 펼쳐 비교할 수 있습니다."));
   if (R.unapproved) card.prepend(h("div",{class:"banner warn"},h("b",{},"미승인"),
-    "사람 승인 없이 채점된 결과입니다. ③에서 조건을 승인한 뒤 다시 채점하세요."));
+    "사람 승인 없이 채점된 결과입니다. 조건 확인·승인 화면에서 조건을 승인한 뒤 다시 채점하세요."));
   if (isDemo(R.source_kind)) card.prepend(h("div",{class:"banner info"},demoChip(R.source_kind),
     `source_kind=${R.source_kind} — 실서비스(client_feed) 결과가 아닙니다.`));
   if (R.revision_checked===false) card.prepend(h("div",{class:"banner info"},h("b",{},"공고 수정 여부 미검사"),
@@ -1183,45 +1236,59 @@ function v5(){
     h("div",{},"승인: ",
       R.approved_at?[h("span",{class:"mono"},String(R.approved_at).replace("T"," ").slice(0,19)),
         " · ",(R.approved_by||"승인자 미기록")]:h("span",{class:"miss"},"없음"))));
+
   const passed=R.ranked.filter(c=>c.rank!=null);
   const gated=R.ranked.filter(c=>c.rank==null);
-  for (const c of passed){
+  const rowFor=(c,gate)=>{
     const ax=axisSums(c);
-    card.append(h("div",{class:"rank",onclick:()=>{S.cand=c;go(6);}},
-      h("span",{class:"rk"},c.rank+"위"),
-      h("span",{class:"cid"},c.candidate_id),
-      h("span",{class:"tot"},Number(c.total).toFixed(1)),
-      h("div",{class:"bar",title:`총점 ${Number(c.total).toFixed(1)} / 100`},
-        h("span",{class:"f",style:`width:${Math.max(0,Math.min(100,ax.f))}%`,title:`사실 ${ax.f}`}),
-        h("span",{class:"j",style:`width:${Math.max(0,Math.min(100,ax.j))}%`,title:`판단 ${ax.j}`})),
-      h("span",{class:"axes"},`사실 ${ax.f}/${ax.fm} · 판단 ${ax.j}/${ax.jm}`)));
-  }
+    const wrap=h("div",{class:"rankwrap"});
+    const acc=h("div",{class:"acc",hidden:true});
+    const head=gate
+      ? h("div",{class:"rank",style:"opacity:.85"},
+          h("span",{class:"rk"},"랭킹 제외"),
+          h("span",{class:"cid"},c.candidate_id),
+          h("span",{class:"tot",style:"color:var(--text3)"},Number(c.total).toFixed(1)),
+          h("div",{},h("span",{class:"chip danger"},h("span",{class:"dot"}),"게이트 탈락")),
+          h("span",{class:"axes",style:"color:var(--danger)"},
+            (c.gate&&c.gate.reasons&&c.gate.reasons.length)?c.gate.reasons.join(" · "):"사유 기록 없음"))
+      : h("div",{class:"rank"},
+          h("span",{class:"rk"},c.rank+"위"),
+          h("span",{class:"cid"},c.candidate_id),
+          h("span",{class:"tot"},Number(c.total).toFixed(1)),
+          h("div",{class:"bar",title:`총점 ${Number(c.total).toFixed(1)} / 100`},
+            h("span",{class:"f",style:`width:${Math.max(0,Math.min(100,ax.f))}%`,title:`사실 ${ax.f}`}),
+            h("span",{class:"j",style:`width:${Math.max(0,Math.min(100,ax.j))}%`,title:`판단 ${ax.j}`})),
+          h("span",{class:"axes"},`사실 ${ax.f}/${ax.fm} · 판단 ${ax.j}/${ax.jm}`));
+    head.addEventListener("click",()=>{
+      const open=acc.hidden;
+      acc.hidden=!open; head.classList.toggle("open",open);
+      if (open){
+        S.openCands.add(c.candidate_id);
+        if (!acc.childElementCount) acc.append(candidateDetail(c));
+      } else S.openCands.delete(c.candidate_id);
+    });
+    wrap.append(head,acc);
+    if (S.openCands.has(c.candidate_id)){ acc.hidden=false; head.classList.add("open"); acc.append(candidateDetail(c)); }
+    return wrap;
+  };
+  for (const c of passed) card.append(rowFor(c,false));
   card.append(h("div",{class:"sect"},"게이트 탈락 — 랭킹에서 분리되지만 채점은 끝까지 했습니다. 사유와 함께 표시합니다"));
   if (!gated.length) card.append(h("div",{class:"kv"},"게이트 탈락자 없음"));
-  for (const c of gated){
-    const ax=axisSums(c);
-    card.append(h("div",{class:"rank",style:"opacity:.8",onclick:()=>{S.cand=c;go(6);}},
-      h("span",{class:"rk"},"랭킹 제외"),
-      h("span",{class:"cid"},c.candidate_id),
-      h("span",{class:"tot",style:"color:var(--text3)"},Number(c.total).toFixed(1)),
-      h("div",{},h("span",{class:"chip danger"},h("span",{class:"dot"}),"게이트 탈락")),
-      h("span",{class:"axes",style:"color:var(--danger)"},
-        (c.gate&&c.gate.reasons&&c.gate.reasons.length)?c.gate.reasons.join(" · "):"사유 기록 없음")));
-  }
+  for (const c of gated) card.append(rowFor(c,true));
   card.append(h("div",{class:"kv",style:"margin-top:10px"},
     "막대: 진한 초록=사실 축, 연한 초록=판단 축 (weighted 합, 0~100 기준). 사실은 이력서에서 확인한 사실(원점수 0~1), 판단은 서술 품질 평가(원점수 1~5)로 척도가 달라 weighted/만점 비율로만 그립니다."));
   view.append(card);
   const R2=parseReportOf();
   if (R2) view.append(h("div",{class:"card",style:"margin-top:16px"},
     h("h2",{},"이 결과의 조건은 어떤 파싱에서 나왔나"),
-    h("p",{class:"desc"},"임계값이 공고 1건 실측에서 나온 값이라, 다른 공고에서 빗나갔을 때 이 숫자를 보면 압니다."),
+    h("p",{class:"desc"},"임계값이 공고 1건 실측에서 나온 값이라, 다른 공고에서 빗나갔을 때 이 숫자를 보면 압니다. 줄 단위 대조는 「조건 확인·승인」의 파싱 서랍에 있습니다."),
     h("div",{class:"diag",style:"margin:0"},
       `파싱 경로 ${R2.parse_mode||"없음"} · OCR 엔진 ${R2.ocr_engine||"없음"} · 줄 ${R2.line_count!=null?R2.line_count:"없음"}개 · LLM 호출 ${R2.llm_calls!=null?R2.llm_calls:"없음"}회`,
       h("div",{},`판정 내역: `+(R2.role_counts?Object.entries(R2.role_counts).map(([k,v])=>`${ROLE_KO[k]||k} ${v}`).join(" · "):"없음")),
       h("div",{},`제외 블록: ${(R2.excluded_blocks&&R2.excluded_blocks.length)?R2.excluded_blocks.join(", "):"없음"}`))));
 }
 
-/* ============================ ⑥ 상세 ============================ */
+/* ==================== 지원자 상세 — ③ 랭킹 행의 아코디언 ==================== */
 async function loadResume(cid){
   if (S.resumes[cid]) return S.resumes[cid];
   const pid=(S.run&&S.run.posting_id)||(S.posting&&S.posting.posting_id)||"";
@@ -1269,31 +1336,29 @@ function maskingDetail(rec){
       " · 문자 ", h("span",{class:"mono"},`${m.start}–${m.end}`)));
   return box;
 }
-function v6(){
-  const C=S.cand, R=S.run;
+function candidateDetail(C){
   const G=activeGraph();
   const eidx=evidenceIndex(G);
   const cidx=new Map((((G&&G.criteria)||[])).map(c=>[c.id,c]));
   const ridx=reqIndex(G&&G.requirements);
-  const head=h("div",{class:"card",style:"margin-bottom:16px"},
-    h("h2",{},`지원자 ${C.candidate_id} — 근거 사슬`),
-    h("p",{class:"desc"},"점수 → 이력서 인용 → 루브릭 항목 → 공고 조건 → 공고 이미지 좌표. 항목 행을 펼치고 「인용 보기」를 누르면 (a) 이력서 원문 구간이 하이라이트되고 (b) 공고 이미지에서 그 조건의 위치에 네모가 쳐집니다."));
-  const maskBanner=h("div",{class:"banner info",style:"margin:0"},h("b",{},"마스킹"),"이력서를 불러오는 중…");
-  head.append(maskBanner);
-  if (C.gate && !C.gate.passed) head.append(h("div",{class:"banner danger",style:"margin-top:10px"},
+  const root=h("div",{});
+  const maskBanner=h("div",{class:"banner info",style:"margin:0 0 10px"},h("b",{},"마스킹"),"이력서를 불러오는 중…");
+  const maskSlot=h("div",{});
+  root.append(maskBanner, maskSlot);
+  if (C.gate && !C.gate.passed) root.append(h("div",{class:"banner danger"},
     h("b",{},"게이트 탈락"),
     ((C.gate.reasons&&C.gate.reasons.length)?C.gate.reasons.join(" · "):"사유 기록 없음")+
     " — 랭킹에서는 분리되지만 항목별 채점은 끝까지 했습니다. 게이트가 틀렸을 때 되돌릴 근거를 남기기 위해서입니다."));
-  view.append(head);
 
-  const resumePane=h("div",{class:"resume",style:"max-height:340px"},"이력서 원문을 불러오는 중…");
-  const vw=viewers.v6||(viewers.v6=makeViewer({height:"320px"}));
+  const resumePane=h("div",{class:"resume",style:"max-height:300px"},"이력서 원문을 불러오는 중…");
+  /* 근거 사슬의 마지막 마디(공고 좌표)를 여기서도 본다. ②의 서랍 뷰어와 같은 factory다 */
+  const vw=makeViewer({height:"300px"});
   let resumeRec=null;
   function renderResume(hotSpan){
     resumePane.textContent="";
     if(!resumeRec||!resumeRec.ok||resumeRec.text==null){
       resumePane.append(h("div",{class:"kv"},
-        "이력서 원문을 받지 못했습니다 (GET /resume 없음 또는 404) — 원문 하이라이트를 할 수 없습니다. 아래 항목별 「인용 보기」의 인용 문구는 결과에 저장된 조각이라 그대로 읽을 수 있습니다."));
+        "이력서 원문을 받지 못했습니다 (GET /resume 없음 또는 404) — 원문 하이라이트를 할 수 없습니다. 아래 「인용」 버튼의 인용 문구는 결과에 저장된 조각이라 그대로 읽을 수 있습니다."));
       return;
     }
     const text=resumeRec.text;
@@ -1310,20 +1375,23 @@ function v6(){
     }
     resumePane.append(text.slice(pos));
   }
+  const bboxWarn=h("div",{});
+  function warnNoBBox(){ if(bboxWarn.childElementCount) return;
+    bboxWarn.append(h("div",{class:"banner warn"},h("b",{},"공고 좌표 없음"),"이 항목의 조건을 그래프에서 찾지 못해 이미지에 네모를 그릴 수 없습니다.")); }
   function onQuote(evd, critId){
     renderResume(evd.span);
     const crit=cidx.get(critId);
     const req=crit?ridx.get(crit.requirement_id):null;
-    if (req&&req.source_bbox) vw.focusBBox(req.source_bbox);
-    else warnNoBBox();
+    if (req&&req.source_bbox){
+      vw.focusBBox(req.source_bbox);
+      /* ②의 서랍 뷰어에도 같은 자리를 표시해 둔다 — 화면을 옮겨도 연결이 끊기지 않는다 */
+      if (viewers.main) { try{ viewers.main.focusBBox(req.source_bbox,false); }catch(e){} }
+      S.drawerOpen=true;
+    } else warnNoBBox();
   }
-  const bboxWarn=h("div",{});
-  function warnNoBBox(){ if(bboxWarn.childElementCount) return;
-    bboxWarn.append(h("div",{class:"banner warn"},h("b",{},"공고 좌표 없음"),"이 항목의 조건을 그래프에서 찾지 못해 이미지에 네모를 그릴 수 없습니다.")); }
 
   /* 점수 표 */
-  const tblCard=h("div",{class:"card"},h("h2",{},"항목별 점수"),
-    h("p",{class:"desc"},"원점수의 척도가 층마다 다릅니다 — 사실은 0~1, 판단은 1~5, 게이트는 통과/탈락. 막대는 weighted/만점 비율입니다. 행을 누르면 근거 문단과 인용이 펼쳐집니다."));
+  const tblCard=h("div",{},h("div",{class:"sect"},"항목별 점수 — 원점수의 척도가 층마다 다릅니다(사실 0~1 · 판단 1~5 · 게이트 통과/탈락). 막대는 weighted/만점 비율입니다. 행을 누르면 근거 문단과 인용이 펼쳐집니다"));
   const tb=h("table",{class:"t"},
     h("tr",{},h("th",{},"항목"),h("th",{},"층"),h("th",{},"원점수"),h("th",{},"가중 점수"),h("th",{},"만점"),h("th",{style:"width:110px"},"비율"),h("th",{},"근거")));
   for (const a of (C.breakdown||[])){
@@ -1355,24 +1423,23 @@ function v6(){
   if (!(C.breakdown||[]).length) tb.append(h("tr",{},h("td",{colspan:"7",class:"kv"},"항목별 점수가 없습니다")));
   tblCard.append(h("div",{class:"tscroll"},tb));
   const right=h("div",{},
-    h("div",{class:"card",style:"margin-bottom:16px"},h("h2",{},"이력서 원문 (마스킹 적용됨)"),resumePane),
-    h("div",{class:"card"},h("h2",{},"공고 이미지 — 조건 위치"),
-      h("p",{class:"desc"},"인용을 누르면 그 점수의 근거가 된 공고 조건 위치에 네모가 쳐집니다."),bboxWarn,vw.root));
-  view.append(h("div",{class:"grid2b"},tblCard,right));
-  vw.mount(S.trace,S.imgUrl);
-  const maskSlot=h("div",{});
-  head.append(maskSlot);
+    h("div",{class:"sect"},"이력서 원문 (마스킹 적용됨) — 인용을 누르면 그 구간이 하이라이트됩니다"),resumePane,
+    h("div",{class:"sect"},"공고 이미지 — 인용을 누르면 그 점수의 근거가 된 조건 위치에 네모가 쳐집니다"),bboxWarn,vw.root);
+  root.append(h("div",{class:"grid2b"},tblCard,right));
+  /* 뷰어는 DOM에 붙은 뒤 layout이 돌아야 한다 */
+  setTimeout(()=>vw.mount(S.trace,S.imgUrl),0);
   loadResume(C.candidate_id).then(rec=>{
     resumeRec=rec;
     maskBanner.textContent=""; maskBanner.append(h("b",{},"마스킹"), maskingSummary(rec));
     const det=maskingDetail(rec);
     if (det){
-      const toggle=h("button",{class:"btn sm",style:"margin-top:8px",onclick:()=>{det.hidden=!det.hidden;}},"가린 자리 목록");
+      const toggle=h("button",{class:"btn sm",style:"margin-bottom:10px",onclick:()=>{det.hidden=!det.hidden;}},"가린 자리 목록");
       det.hidden=true; maskSlot.append(toggle,det);
     }
     renderResume(null);
   }).catch(e=>{ console.error(e); resumeRec={ok:false}; maskBanner.textContent="";
     maskBanner.append(h("b",{},"마스킹"), maskingSummary(null)); renderResume(null); });
+  return root;
 }
 
 /* ============================ 부팅 ============================ */
@@ -1380,7 +1447,7 @@ async function boot(){
   if (USE_MOCK){ $("#mockbar").hidden=false; initMock(); }
   /* 새로고침 복원 — **다시 채점하지 않는다.** `POST /prepare`도 부르지 않는다:
      그건 OCR과 LLM 헤더 분류를 다시 돌리는 일이라 새로고침에 비용이 붙는다.
-     ⑤·⑥에 필요한 조건·루브릭·근거는 `RunResult.graph`에 전부 들어 있다. */
+     랭킹·상세에 필요한 조건·루브릭·근거는 `RunResult.graph`에 전부 들어 있다. */
   let saved=null; try{ saved=JSON.parse(localStorage.getItem(LS_KEY)||"null"); }catch(e){}
   if (saved&&saved.run_id){
     try{
@@ -1390,7 +1457,7 @@ async function boot(){
       const raw=await apiOptional("/trace/"+encodeURIComponent(run.posting_id));
       S.trace=normalizeTrace(raw,run.graph)||traceFromGraph(run.graph); S.traceMiss=LAST_OPTIONAL_MISS;
       S.imgUrl=imageUrl(run.posting_id);
-      S.visited=new Set([1,2,3,4,5]); S.step=5;
+      S.visited=new Set([1,2,3]); S.step=3;
     }catch(e){ try{localStorage.removeItem(LS_KEY);}catch(_){} }
   }
   render();
