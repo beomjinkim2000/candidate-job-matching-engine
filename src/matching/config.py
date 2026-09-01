@@ -92,7 +92,12 @@ class Settings:
     # --- 모델·단가 (docs/COST_BUDGET.md) ---
     # 모델명을 다른 파일에 박지 않는다. 바꿀 자리는 여기와 .env 둘뿐이다.
     header_model: str = "gpt-4o-mini"  # 헤더 역할 분류. 문자열 4~8개를 5종으로 가른다
-    judge_model: str = "gpt-4o"  # 심사위원 채점. 여기서 아끼면 채점이 무너진다
+    # 심사위원 채점. 여기서 아끼면 채점이 무너진다.
+    # **별칭(`gpt-4o`)이 아니라 버전을 고정한 스냅샷을 쓴다** — 별칭은 가리키는 대상이
+    # 조용히 바뀌므로 「어제 결과와 오늘 결과가 왜 다른가」에 답할 수 없고, 그러면
+    # `JudgeCall.model`이 재현 조건이 아니라 장식이 된다 (step 6). 이 스냅샷이
+    # 구조화 출력(`strict: True` json_schema)을 받는 최초 버전이기도 하다.
+    judge_model: str = "gpt-4o-2024-08-06"
     # 단가는 기본값을 0으로 둔다. **공식 가격표가 바뀌므로 코드에 숫자를 박지 않는다**
     # (COST_BUDGET.md §2). .env에 넣기 전까지 USD 환산은 0이고, 그 사실이 결과에 드러나야 한다.
     price_in_per_1m: float = 0.0  # 입력 100만 토큰당 USD
@@ -102,6 +107,9 @@ class Settings:
     # --- 심사위원 재현 (step 6) ---
     judge_seed: int | None = None  # 지원되면 고정, 안 되면 None
     judge_repeat_n: int = 11  # **인용된 실측.** docs/RUBRIC_DESIGN.md:109 — 95% 안정에 11회
+    # 순서 편향 점검(`judge/bias.py`). **기본은 꺼둔다** — 켜면 채점 호출이 2배가 되고
+    # 예산이 $5다 (docs/COST_BUDGET.md §5). 끈 상태가 기본이라는 사실이 결과에 드러나야 한다.
+    judge_order_check: bool = False
 
     # --- 대장·소거 (step 12) ---
     unaddressed_tolerance: float = 0.15  # **임의값**
@@ -164,12 +172,13 @@ def load_settings(path: str | None = None) -> Settings:
         continuation_max_indent=_env_int("MATCHING_CONTINUATION_MAX_INDENT", 60),
         ambiguous_fallback_ratio=_env_float("MATCHING_AMBIGUOUS_FALLBACK_RATIO", 0.5),
         header_model=_env("MATCHING_HEADER_MODEL", "gpt-4o-mini") or "gpt-4o-mini",
-        judge_model=_env("MATCHING_JUDGE_MODEL", "gpt-4o") or "gpt-4o",
+        judge_model=_env("MATCHING_JUDGE_MODEL", Settings.judge_model) or Settings.judge_model,
         price_in_per_1m=_env_float("MATCHING_PRICE_IN_PER_1M", 0.0),
         price_out_per_1m=_env_float("MATCHING_PRICE_OUT_PER_1M", 0.0),
         max_total_calls=_env_int("MATCHING_MAX_TOTAL_CALLS", 200),
         judge_seed=_env_opt_int("MATCHING_JUDGE_SEED"),
         judge_repeat_n=_env_int("MATCHING_JUDGE_REPEAT_N", 11),
+        judge_order_check=_env_bool("MATCHING_JUDGE_ORDER_CHECK", False),
         unaddressed_tolerance=_env_float("MATCHING_UNADDRESSED_TOLERANCE", 0.15),
         ledger_degraded_ratio=_env_float("MATCHING_LEDGER_DEGRADED_RATIO", 0.5),
         ablation_sample_size=_env_int("MATCHING_ABLATION_SAMPLE_SIZE", 3),
