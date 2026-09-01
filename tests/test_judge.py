@@ -14,6 +14,9 @@
 | 가린 자리를 인용하면 버린다 | 마스킹. 원문에서 다시 자르면 가린 값이 근거 문단으로 되살아난다 |
 | `JudgeCall`에 temperature 0·설정의 모델명 | 「같은 조건에서 쟀다」의 유일한 증거 |
 | 상한을 넘으면 예외 | **조용히 심사위원을 줄이면** 그 결과가 어떤 설계로 나왔는지 안 남는다 |
+| **누적 상한이 새 프로세스에서도 산다** | 2026-09-01 사고. 난간이 프로세스마다 리셋됐다 |
+| **이번 실행분과 누적분이 갈린다** | 「이 결과: n회」에 지난 실행 비용이 얹히면 거짓말이다 |
+| 기록 파일이 깨져도 안 죽는다 | 상태 파일 하나 때문에 채점 전체가 멈추면 안 된다 |
 | 사실 층 항목은 거부 | 「세는 것은 코드가, 판단하는 것은 심사위원이」 |
 
 실물 호출이 필요한 **반복 안정성(N=11, σ≤0.5)**과 **순서 불변성**은 `@pytest.mark.live`로
@@ -42,6 +45,7 @@ from matching.judge import (
     judge_criterion,
     keep_quotes,
     order_check,
+    panel,
     prompt_sha256,
 )
 from matching.model import BBox, Criterion, EvidenceGraph, Requirement, Resume, Span, check
@@ -116,6 +120,25 @@ def _settings(**overrides) -> Settings:
     base = {"judge_model": "fixed-model-2026-08-31", "max_total_calls": 200}
     base.update(overrides)
     return Settings(**base)
+
+
+@pytest.fixture(autouse=True)
+def _usage_file_is_not_the_real_one(request, tmp_path, monkeypatch):
+    """단위 테스트가 **실물 `data/.judge_usage.json`을 읽지 않게** 한다.
+
+    `judge_criterion`은 예산을 안 주면 `CallBudget(settings)`를 만들고, 그건 기본
+    경로(`data/.judge_usage.json`)를 본다. `CallBudget`이 시작할 때 그 파일을 읽게
+    되면서(2026-09-01 예산 사고 수정) **단위 테스트의 초록·빨강이 개발 기계에 쌓인
+    누적 호출수에 달리게 됐다** — 실제로 누적 645회에서 12개가 한꺼번에 빨개졌다.
+    테스트가 잡아야 할 것은 판정 로직이지 그 기계의 지갑 상태가 아니다.
+
+    **`live` 표시가 붙은 테스트는 건드리지 않는다.** 그것들은 실물 API를 부르므로
+    쓴 만큼이 진짜 파일에 남아야 한다 — 여기서 tmp로 돌리면 실제로 나간 돈이
+    기록되지 않고, 그게 이번 사고의 원인과 정확히 같은 종류의 실수가 된다.
+    """
+    if "live" in request.keywords:
+        return
+    monkeypatch.setattr(panel, "default_data_dir", lambda: tmp_path)
 
 
 # --- 가짜 심사위원 ---------------------------------------------------------
@@ -364,9 +387,7 @@ def test_JudgeCall에_temperature_0과_설정의_모델명이_실린다():
     """
     settings = _settings(judge_model="fixed-model-2026-08-31", judge_seed=7)
     budget = CallBudget(settings, path=None)
-    client, completions = fake_client(
-        _reply(3, [_quote(F_RUN)]), _reply(3, [_quote(F_RESULT)])
-    )
+    client, completions = fake_client(_reply(3, [_quote(F_RUN)]), _reply(3, [_quote(F_RESULT)]))
     criterion = _criterion()
     judge_criterion(
         criterion,
@@ -395,9 +416,7 @@ def test_JudgeCall에_temperature_0과_설정의_모델명이_실린다():
 def test_모델명이_코드가_아니라_설정에서_온다():
     """`.env`에서 바꾼 값이 그대로 호출에 실린다. 코드에 박으면 버전을 못 고정한다."""
     settings = _settings(judge_model="다른-모델-이름")
-    client, completions = fake_client(
-        _reply(3, [_quote(F_RUN)]), _reply(3, [_quote(F_RESULT)])
-    )
+    client, completions = fake_client(_reply(3, [_quote(F_RUN)]), _reply(3, [_quote(F_RESULT)]))
     _judge(client, settings=settings)
     assert completions.calls[0]["model"] == "다른-모델-이름"
 
@@ -451,9 +470,7 @@ def test_상한을_넘으면_조용히_줄이지_않고_예외를_던진다():
     """
     settings = _settings(max_total_calls=1)
     budget = CallBudget(settings, path=None)
-    client, completions = fake_client(
-        _reply(3, [_quote(F_RUN)]), _reply(3, [_quote(F_RESULT)])
-    )
+    client, completions = fake_client(_reply(3, [_quote(F_RUN)]), _reply(3, [_quote(F_RESULT)]))
     criterion = _criterion()
     with pytest.raises(BudgetExceeded):
         judge_criterion(
@@ -489,6 +506,108 @@ def test_예산이_호출수와_토큰과_USD를_누적한다(tmp_path):
     saved = json.loads((tmp_path / "usage.json").read_text(encoding="utf-8"))
     assert saved["calls"] == 2
     assert saved["in_tokens"] == 2_000_000
+
+
+def test_누적이_상한을_넘으면_새_프로세스에서도_즉시_막힌다(tmp_path):
+    """**2026-09-01 사고의 재발 방지선이다.**
+
+    `CallBudget`이 기록 파일을 안 읽어서 상한이 「그 프로세스가 이번에 쓴 양」만 봤다.
+    하네스가 재시도하며 프로세스를 새로 띄울 때마다 난간이 리셋됐고, 세 시간 만에
+    496회가 더 나가 누적 645회 · 약 $5.95가 됐다(예산 $5).
+
+    그래서 여기서 재는 것은 **「방금 뜬 프로세스가 남의 사용량을 물려받는가」**다.
+    그리고 요청을 **보내기 전에** 막혀야 한다 — `spend()`에서 걸리면 응답을 이미 받은
+    뒤라 그 호출은 과금된다.
+    """
+    usage = tmp_path / "usage.json"
+    usage.write_text(
+        json.dumps({"calls": 645, "in_tokens": 1_468_917, "out_tokens": 184_544, "usd": 5.952}),
+        encoding="utf-8",
+    )
+    settings = _settings(max_total_calls=600)
+
+    budget = CallBudget(settings, path=usage)  # ← 프로세스가 방금 뜬 상태와 같다
+    assert budget.calls == 0  # 이번 실행은 아직 한 번도 안 썼는데
+    assert budget.remaining() == 0  # 남은 것이 없다. 이게 고친 지점이다
+
+    client, completions = fake_client(_reply(3, [_quote(F_RUN)]), _reply(3, [_quote(F_RESULT)]))
+    criterion = _criterion()
+    with pytest.raises(BudgetExceeded) as caught:
+        judge_criterion(
+            criterion,
+            CANDIDATE,
+            RESUME_TEXT,
+            _graph_with(criterion),
+            settings,
+            client,
+            budget=budget,
+        )
+
+    assert not completions.calls  # **요청을 보내지 않았다** — 돈이 한 푼도 안 나갔다
+    message = str(caught.value)
+    # 「600을 넘겼다」만 뜨면 다음 사람이 그걸 회차 상한으로 읽는다. 셋 다 있어야 한다.
+    assert "645" in message and "600" in message and "이번 실행 0회" in message
+
+
+def test_report가_이번_실행분과_누적분을_구분한다(tmp_path):
+    """화면의 「이 결과: n회 호출」은 **이번 실행**이다. 누적을 거기 담으면 한 번 채점한
+    결과에 지난 실행의 비용이 얹혀 화면이 거짓말을 한다. 상한은 반대로 누적으로 잰다.
+    """
+    usage = tmp_path / "usage.json"
+    usage.write_text(
+        json.dumps({"calls": 10, "in_tokens": 1_000_000, "out_tokens": 0, "usd": 2.5}),
+        encoding="utf-8",
+    )
+    budget = CallBudget(_settings(price_in_per_1m=2.5, price_out_per_1m=10.0), path=usage)
+    budget.spend(1_000_000, 0)
+
+    report = budget.report()
+    assert report.calls == 1 and report.usd == pytest.approx(2.5)  # 이번 실행
+    assert report.total_calls == 11 and report.total_usd == pytest.approx(5.0)  # 누적
+    assert report.limit == 200
+
+    budget.save()
+    assert json.loads(usage.read_text(encoding="utf-8"))["calls"] == 11
+
+
+def test_기록_파일이_없거나_깨져도_죽지_않는다(tmp_path):
+    """상태 파일 하나가 깨졌다는 이유로 채점 전체가 멈추면 안 된다.
+
+    다만 **음수는 안 받는다** — 받으면 파일을 고치는 것만으로 상한을 우회할 수 있고,
+    그건 난간이 아니라 문이다.
+    """
+    settings = _settings()
+    absent = CallBudget(settings, path=tmp_path / "없는파일.json")
+    assert absent.prior_calls == 0 and absent.remaining() == settings.max_total_calls
+
+    for name, body in (
+        ("broken.json", "{이건 JSON이 아니다"),
+        ("list.json", "[1, 2, 3]"),
+        ("negative.json", json.dumps({"calls": -10_000})),
+        ("wrong_type.json", json.dumps({"calls": "645"})),
+    ):
+        path = tmp_path / name
+        path.write_text(body, encoding="utf-8")
+        assert CallBudget(settings, path=path).prior_calls == 0, name
+
+
+def test_path가_None이면_읽지도_쓰지도_않는다(tmp_path):
+    """「인자를 안 줬다」와 「`None`을 줬다」는 다르다.
+
+    둘을 같게 두면 단위 테스트가 실물 `data/.judge_usage.json`을 읽어 **개발 기계에
+    쌓인 누적 호출수에 따라 초록·빨강이 갈린다.** 실제로 그렇게 돼 있었다.
+    """
+    other = tmp_path / "남의기록.json"
+    other.write_text(json.dumps({"calls": 999}), encoding="utf-8")
+
+    quiet = CallBudget(_settings(), path=None)
+    assert quiet.path is None and quiet.prior_calls == 0
+    quiet.spend(10, 10)
+    quiet.save()
+
+    # 남의 파일도, 기본 경로도 건드리지 않았다 (기본 경로는 위 fixture가 tmp_path다).
+    assert json.loads(other.read_text(encoding="utf-8"))["calls"] == 999
+    assert not (tmp_path / panel.USAGE_FILENAME).exists()
 
 
 # --- 순서 편향 -------------------------------------------------------------
@@ -594,9 +713,9 @@ def _live_cells():
     ):
         kind = getattr(graph.get(criterion.requirement_id), "kind", "unknown")
         heaviest_of_kind.setdefault(kind, criterion)
-    picked_criteria = sorted(
-        heaviest_of_kind.values(), key=lambda c: (-c.weight, c.id)
-    )[:LIVE_CRITERIA]
+    picked_criteria = sorted(heaviest_of_kind.values(), key=lambda c: (-c.weight, c.id))[
+        :LIVE_CRITERIA
+    ]
 
     # **상위 2명으로 재면 안 된다.** 처음엔 그렇게 했고 네 셀이 전부 [1,1,…] 아니면
     # [5,5,…]로 나와 σ=0이었다. 상위권은 판단 항목에서 척도의 **양 끝**에 붙는다 —

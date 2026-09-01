@@ -84,43 +84,156 @@ class BudgetExceeded(JudgeError):
 
 
 class UsageReport(BaseModel):
-    """이 실행이 쓴 것. `RunResult.cost`에 실려 **화면에 「n회 / $x」로 표시된다.**"""
+    """비용 한 벌. **앞의 여섯은 「이번 실행」, 뒤의 셋은 「누적」이다.**
+
+    `RunResult.cost`에 실려 화면에 「이 결과: n회 호출 · $x · 모델 <이름>」으로 나간다.
+    화면이 말하는 「이 결과」는 **이번 실행**이므로 `calls`·`usd`의 뜻을 바꾸지 않았다 —
+    누적을 거기 담으면 한 번 채점한 결과에 지난 실행의 비용이 얹혀 화면이 거짓말을 한다.
+    누적은 아래 세 필드로 따로 준다 (2026-09-01 예산 사고 이후 추가, 기본값 있음 —
+    이전에 저장된 `result.json`도 그대로 읽힌다).
+    """
 
     model_config = ConfigDict(extra="forbid")
 
-    calls: int
-    in_tokens: int
-    out_tokens: int
-    usd: float
+    calls: int  # 이번 실행
+    in_tokens: int  # 이번 실행
+    out_tokens: int  # 이번 실행
+    usd: float  # 이번 실행
     # 단가가 설정에 없으면 USD 환산이 0이다. **그 사실이 결과에 드러나야 한다** —
     # 안 그러면 「$0」이 「공짜였다」로 읽힌다.
     priced: bool
+    # 화면의 「이 결과: n회 호출 · $x · 모델 <이름>」 마지막 칸 (`step9.md` 8번).
+    # 호출수와 금액만으로는 **같은 값이 어느 모델에서 나온 것인지** 알 수 없다 —
+    # 모델을 바꾸면 단가도 판정도 달라지는데 결과 JSON에는 흔적이 안 남는다.
+    # 값은 `settings.judge_model`에서 온다. 코드에 박지 않는다 (§2).
+    model: str = ""
+    # --- 여기부터 누적. 상한이 걸리는 기준이 이쪽이다 ---
+    total_calls: int = 0  # 이전 실행들 + 이번 실행
+    total_usd: float = 0.0
+    limit: int = 0  # `settings.max_total_calls`
+
+
+def _read_usage(path: Path | None) -> dict[str, float]:
+    """기록 파일을 읽는다. **없거나 깨졌으면 0이다 — 예외를 던지지 않는다.**
+
+    여기서 던지면 상태 파일 하나가 깨졌다는 이유로 채점 전체가 죽는다. 0으로 읽는 쪽의
+    대가는 「난간이 한 번 리셋된다」인데, 그건 파일이 실제로 깨졌을 때뿐이고 그 경우엔
+    애초에 누적을 알 방법이 없다. 대신 **음수·불리언 같은 값은 안 받는다** — 그런 값이
+    들어오면 상한을 우회하는 통로가 된다.
+    """
+    empty = {"calls": 0.0, "in_tokens": 0.0, "out_tokens": 0.0, "usd": 0.0}
+    if path is None or not path.exists():
+        return empty
+    try:
+        loaded = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return empty
+    if not isinstance(loaded, dict):
+        return empty
+
+    usage = dict(empty)
+    for key in usage:
+        value = loaded.get(key)
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        if value >= 0:
+            usage[key] = float(value)
+    return usage
+
+
+class _Unset:
+    """「인자를 안 줬다」와 「`None`을 줬다」를 가르는 표식. 두 뜻이 다르다."""
+
+
+_UNSET = _Unset()
 
 
 class CallBudget:
-    """호출수·토큰·환산 USD 누적. 상한은 `settings.max_total_calls`에서 온다.
+    """호출수·토큰·환산 USD **누적**. 상한은 `settings.max_total_calls`에서 온다.
 
-    완주 1회 예상은 ≈117회이고 기본 상한은 200회다 (`docs/COST_BUDGET.md` §1).
-    **상한에 닿으면 예외를 던진다** — 심사위원을 조용히 1명으로 줄이면 그 결과가 어떤
-    설계로 나온 것인지 아무 데도 안 남는다.
+    ## 2026-09-01 사고 — 난간이 세 번 리셋됐다
+
+    이 클래스는 처음부터 「누적」이라고 적혀 있었지만 **`__init__`이 기록 파일을 읽지
+    않았다.** `save()`만 누적하고 `spend()`의 상한 검사는 **그 프로세스가 이번에 쓴
+    양**만 봤다. 그래서 하네스가 step 9를 재시도하며 새 프로세스를 띄울 때마다
+    **각자 600회 한도를 새로 받았고**, 세 시간 만에 496회가 더 나가 누적 645회 ·
+    약 $5.95가 됐다. 과제 예산은 $5다.
+
+    **문서와 동작이 어긋나면 문서가 아니라 동작이 사고를 낸다.** 그래서 지금은
+    `__init__`이 파일을 읽어 `prior_*`에 담고, 상한은 **누적 기준**으로 검사한다.
+    난간은 프로세스가 아니라 **파일**에 붙어 있어야 한다 — 프로세스는 몇 개든 뜬다.
+
+    ## 「이번 실행」과 「누적」을 섞지 않는다
+
+    - `calls`·`in_tokens`·`out_tokens`·`usd()` — **이번 실행분.** 화면의 「이 결과:
+      n회 호출」이 이 값이다. 여기에 누적을 담으면 한 번 채점한 결과에 지난 실행의
+      비용이 얹혀 화면이 거짓말을 한다
+    - `prior_*` · `total_calls()` · `total_usd()` — **누적분.** 상한은 이쪽으로 잰다
+
+    ## `path=None`은 「기록하지 않는다」이다
+
+    인자를 **안 주면** 기본 경로(`data/.judge_usage.json`)를 쓰고, **`None`을 주면**
+    읽지도 쓰지도 않는다. 둘을 같게 두면 단위 테스트가 **실물 사용량 파일을 읽어**
+    개발 기계의 상태에 따라 초록·빨강이 갈린다. 실제로 그렇게 돼 있었다.
+
+    완주 1회 예상은 ≈117회다 (`docs/COST_BUDGET.md` §1). **상한에 닿으면 예외를
+    던진다** — 심사위원을 조용히 1명으로 줄이면 그 결과가 어떤 설계로 나온 것인지
+    아무 데도 안 남는다.
     """
 
-    def __init__(self, settings: Settings, path: Path | str | None = None) -> None:
+    def __init__(self, settings: Settings, path: Path | str | None | _Unset = _UNSET) -> None:
         self.limit = settings.max_total_calls
+        self.model = settings.judge_model
         self.price_in_per_1m = settings.price_in_per_1m
         self.price_out_per_1m = settings.price_out_per_1m
-        self.path = Path(path) if path is not None else default_data_dir() / USAGE_FILENAME
+        if isinstance(path, _Unset):
+            self.path: Path | None = default_data_dir() / USAGE_FILENAME
+        elif path is None:
+            self.path = None  # 기록하지 않는다 (테스트·일회성 측정)
+        else:
+            self.path = Path(path)
+
+        # **여기서 파일을 읽는 것이 이 클래스의 전부다.** 안 읽으면 상한이 프로세스마다
+        # 리셋된다 (위 사고).
+        prior = _read_usage(self.path)
+        self.prior_calls = int(prior["calls"])
+        self.prior_in_tokens = int(prior["in_tokens"])
+        self.prior_out_tokens = int(prior["out_tokens"])
+        self.prior_usd = prior["usd"]
+
         self.calls = 0
         self.in_tokens = 0
         self.out_tokens = 0
         self.records: list[JudgeCall] = []
 
+    def total_calls(self) -> int:
+        """이전 실행들 + 이번 실행. **상한이 걸리는 기준이다.**"""
+        return self.prior_calls + self.calls
+
+    def total_usd(self) -> float:
+        return self.prior_usd + self.usd()
+
     def remaining(self) -> int:
-        """남은 호출 수. 요청을 **보내기 전에** 본다."""
-        return max(0, self.limit - self.calls)
+        """남은 호출 수. 요청을 **보내기 전에** 본다. 누적 기준이다."""
+        return max(0, self.limit - self.total_calls())
+
+    def over_limit_message(self) -> str:
+        """상한 초과 문구. **이번 실행분과 누적분을 함께 적는다.**
+
+        「600을 넘겼다」만 뜨면 다음 사람이 그걸 **회차 상한**으로 읽고, 프로세스를
+        새로 띄우면 되는 줄 안다 — 그게 이번 사고에서 실제로 일어난 일이다.
+        경로 전체가 아니라 **파일 이름만** 적는다: 이 문구는 HTTP 429 본문으로 나가고,
+        절대 경로에는 사용자 계정 이름이 들어 있다.
+        """
+        return (
+            f"호출 상한 {self.limit}회 — 누적 {self.total_calls()}회 "
+            f"(이전 실행들 {self.prior_calls}회 + 이번 실행 {self.calls}회). "
+            f"누적은 {USAGE_FILENAME}에 남는다. **프로세스를 새로 띄워도 리셋되지 않는다.** "
+            "정말 더 써야 하면 settings.max_total_calls를 사람이 올린다"
+        )
 
     def spend(self, in_tokens: int, out_tokens: int, call: JudgeCall | None = None) -> None:
-        """호출 1건을 기록한다. 상한을 넘겼으면 예외를 던진다.
+        """호출 1건을 기록한다. **누적이** 상한을 넘겼으면 예외를 던진다.
 
         기록을 먼저 하고 예외를 던진다 — 「몰래 줄이지 않는다」의 반대편은
         **「몰래 지우지 않는다」**다. 넘긴 그 호출도 사용량에 남는다.
@@ -130,14 +243,11 @@ class CallBudget:
         self.out_tokens += max(0, out_tokens)
         if call is not None:
             self.records.append(call)
-        if self.calls > self.limit:
-            raise BudgetExceeded(
-                f"호출 상한 {self.limit}회를 넘겼다 (지금 {self.calls}회). "
-                "settings.max_total_calls로 조절한다"
-            )
+        if self.total_calls() > self.limit:
+            raise BudgetExceeded(self.over_limit_message())
 
     def usd(self) -> float:
-        """설정의 단가로 환산한 값. **단가를 코드에 박지 않는다** (§2)."""
+        """**이번 실행**을 설정의 단가로 환산한 값. 단가를 코드에 박지 않는다 (§2)."""
         return (
             self.in_tokens * self.price_in_per_1m + self.out_tokens * self.price_out_per_1m
         ) / 1_000_000
@@ -149,26 +259,27 @@ class CallBudget:
             out_tokens=self.out_tokens,
             usd=self.usd(),
             priced=bool(self.price_in_per_1m or self.price_out_per_1m),
+            model=self.model,
+            total_calls=self.total_calls(),
+            total_usd=self.total_usd(),
+            limit=self.limit,
         )
 
     def save(self) -> None:
-        """`data/.judge_usage.json`에 **누적**한다. 로컬 상태라 커밋되지 않는다."""
-        previous = {"calls": 0, "in_tokens": 0, "out_tokens": 0, "usd": 0.0}
-        if self.path.exists():
-            try:
-                loaded = json.loads(self.path.read_text(encoding="utf-8"))
-            except json.JSONDecodeError:
-                loaded = {}
-            if isinstance(loaded, dict):
-                for key in previous:
-                    value = loaded.get(key)
-                    if isinstance(value, (int, float)):
-                        previous[key] = value
+        """`data/.judge_usage.json`에 **누적**한다. 로컬 상태라 커밋되지 않는다.
 
+        `__init__`이 읽어 둔 `prior_*`를 쓰지 않고 **저장 시점에 파일을 다시 읽는다.**
+        그 사이에 다른 프로세스가 쓴 양을 덮어쓰지 않기 위해서다 — 이번 사고가 정확히
+        「여러 프로세스가 동시에 돈다」는 상황이었다.
+        """
+        if self.path is None:
+            return  # 기록하지 않기로 하고 만든 예산이다
+
+        previous = _read_usage(self.path)
         body = {
-            "calls": previous["calls"] + self.calls,
-            "in_tokens": previous["in_tokens"] + self.in_tokens,
-            "out_tokens": previous["out_tokens"] + self.out_tokens,
+            "calls": int(previous["calls"]) + self.calls,
+            "in_tokens": int(previous["in_tokens"]) + self.in_tokens,
+            "out_tokens": int(previous["out_tokens"]) + self.out_tokens,
             "usd": previous["usd"] + self.usd(),
         }
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -232,9 +343,9 @@ def _ask(
     아무도 못 내면 `judge_criterion`이 예외를 던진다.
     """
     if budget.remaining() <= 0:
-        raise BudgetExceeded(
-            f"호출 상한 {budget.limit}회를 이미 다 썼다 — 요청을 보내지 않는다"
-        )
+        # **여기서 막으면 돈이 한 푼도 안 나간다.** 누적이 이미 상한이면 요청 자체를
+        # 보내지 않는다 — `spend()`의 검사는 응답을 받은 뒤라 그때는 이미 과금됐다.
+        raise BudgetExceeded(f"이미 다 썼다 — 요청을 보내지 않는다. {budget.over_limit_message()}")
 
     kwargs: dict = {
         "model": settings.judge_model,
@@ -347,8 +458,7 @@ def judge_criterion(
 
     threshold = settings.judge_disagreement_threshold
     third_called = (
-        len(verdicts) == 2
-        and abs(verdicts[0].output.score - verdicts[1].output.score) >= threshold
+        len(verdicts) == 2 and abs(verdicts[0].output.score - verdicts[1].output.score) >= threshold
     )
     if third_called:
         output = _ask(client, settings, messages, digest, active_budget)
