@@ -971,14 +971,20 @@ function v2(){
   view.append(llm);
   /* 섹션별 채점 여부 — 무엇을 읽고 무엇을 버렸나 */
   if (T.blocks && T.blocks.length){
-    const scored=T.blocks.filter(b=>b.scored), dropped=T.blocks.filter(b=>!b.scored);
+    /* `scored`는 「조건 섹션인가」이고, `role==="duty"`인 섹션도 루브릭 항목을 만든다
+       (`rubric/build.py` — 담당업무는 judgment 층으로 들어간다). 그래서 담당업무를
+       「채점에서 제외」로 그리면 화면이 거짓말을 한다. 세 갈래로 나눈다. */
+    const kindOf=b=>b.scored?"cond":(b.role==="duty"?"duty":"out");
+    const g={cond:[],duty:[],out:[]};
+    for (const b of T.blocks) g[kindOf(b)].push(b);
     const bc=h("div",{class:"card",style:"margin-top:16px"},
-      h("h2",{},`섹션 ${T.blocks.length}개 중 ${scored.length}개만 채점에 들어갔습니다`),
+      h("h2",{},`섹션 ${T.blocks.length}개 중 조건 섹션 ${g.cond.length}개 · 담당업무 ${g.duty.length}개`),
       h("p",{class:"desc"},"버린 섹션도 지우지 않고 보여줍니다 — 무엇을 읽고 무엇을 버렸는지가 이 화면의 요점입니다."));
-    const draw=(b,alive)=>{
-      const box=h("div",{class:"crit",style:alive?"":"opacity:.42;background:var(--sunken);border-style:dashed"},
+    const CHIP={cond:["ok","조건 섹션 — 채점 대상"],duty:["info","담당업무 — 관련성 판단의 자"],out:["neutral","채점에서 제외"]};
+    const draw=(b,k)=>{
+      const box=h("div",{class:"crit",style:(k==="out"?"opacity:.42;background:var(--sunken);border-style:dashed":"")},
         h("div",{class:"head"},
-          h("span",{class:"chip "+(alive?"ok":"neutral")},h("span",{class:"dot"}),alive?"채점 대상":"채점에서 제외"),
+          h("span",{class:"chip "+CHIP[k][0]},h("span",{class:"dot"}),CHIP[k][1]),
           h("div",{class:"rtext",style:"cursor:default"},b.header||"(제목 없는 블록)"),
           h("span",{class:"mono",style:"font-size:11px;color:var(--text3)"},b.role||"판정 없음")));
       if (b.items&&b.items.length)
@@ -986,10 +992,15 @@ function v2(){
           b.items.map(t=>"· "+String(t).replace(/\n/g," ")).join("\n")));
       return box;
     };
-    for (const b of scored) bc.append(draw(b,true));
-    if (dropped.length){
-      bc.append(h("div",{class:"sect"},`채점에서 제외한 섹션 ${dropped.length}개 — 복리후생·전형절차처럼 지원자의 자격이 아닌 것들입니다`));
-      for (const b of dropped) bc.append(draw(b,false));
+    for (const b of g.cond) bc.append(draw(b,"cond"));
+    if (g.duty.length){
+      bc.append(h("div",{class:"sect"},
+        `담당업무 섹션 ${g.duty.length}개 — 지원자의 자격은 아니지만 루브릭 항목이 만들어집니다(판단 층). 「채점에서 제외」가 아닙니다`));
+      for (const b of g.duty) bc.append(draw(b,"duty"));
+    }
+    if (g.out.length){
+      bc.append(h("div",{class:"sect"},`채점에서 제외한 섹션 ${g.out.length}개 — 전형절차·문의처처럼 지원자의 자격이 아닌 것들입니다`));
+      for (const b of g.out) bc.append(draw(b,"out"));
     }
     view.append(bc);
   }
