@@ -10,6 +10,9 @@ requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2",
     "fastapi",
+    # multipart/form-data 파서. FastAPI가 파일 업로드(`POST /postings`)에서만 쓰는데,
+    # 없으면 앱을 만드는 순간(라우트 등록 시점)에 죽는다 — 선택 그룹으로 뺄 수 없다.
+    "python-multipart",
     "uvicorn",
     "openai",
     "httpx",

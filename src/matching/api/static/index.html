@@ -210,6 +210,29 @@ details.drawer[open]>summary{border-bottom:1px solid var(--line)}
 .rankwrap .rank{border:0;margin:0;background:transparent}
 .rankwrap .rank.open{border-bottom:1px solid var(--line);border-radius:0}
 .acc{padding:0 14px 14px}
+/* 업로드 화면 — 입력 폼 · 드롭존. 새로 만든 것은 여기 아래뿐이고 위는 손대지 않았다 */
+.field{margin-bottom:14px}
+.field>label{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px}
+.hint{font-size:11.5px;color:var(--text3);margin-top:4px;line-height:1.6}
+.tin{width:100%;border:1px solid var(--lineStrong);background:var(--surface);color:var(--text);
+  border-radius:10px;padding:8px 11px;font-size:13px;font-family:var(--font)}
+.tin:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:var(--brand)}
+input.tin.mono{font-family:var(--mono)}
+textarea.tin{min-height:150px;line-height:1.7;resize:vertical;font-family:var(--mono);font-size:12px}
+.drop{border:2px dashed var(--lineStrong);border-radius:14px;background:var(--sunken);padding:22px 18px;
+  text-align:center;cursor:pointer}
+.drop:hover,.drop.over{border-color:var(--brand);background:var(--brandSoft)}
+.drop .big{font-size:13.5px;font-weight:700}
+.filerow{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding:7px 11px;border:1px solid var(--line);
+  border-radius:10px;margin-top:6px;font-size:12px}
+.filerow .nm{font-family:var(--mono);word-break:break-all;flex:1 1 180px}
+.filerow.bad{border-color:var(--danger);background:var(--danger100)}
+.estbox{border:2px solid var(--brand);background:var(--brandSoft);border-radius:12px;padding:12px 15px;
+  margin-top:12px;font-size:12.5px;color:var(--text);line-height:1.7}
+.estbox .big{font-size:17px;font-weight:800;color:var(--brandStrong);font-variant-numeric:tabular-nums}
+.rescard{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:var(--surface)}
+.rescard .top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.rescard .top .grow{flex:1 1 150px}
 </style>
 </head>
 <body>
@@ -279,6 +302,7 @@ const S = {
   openCands: new Set(),                 // ③에서 펼쳐 둔 지원자 (여러 명 동시에 열린다)
   scoring: false,
   pickLine: null,                       // 서랍의 줄 목록이 등록하는 선택 함수
+  up: null,                             // 업로드 흐름 상태. null이면 ①은 평소대로 목록이다
 };
 
 /* ============================ API ============================ */
@@ -717,7 +741,9 @@ function canEnter(n){
   if (n===3 && !S.run) return false;
   return true;
 }
-function go(n){ S.step=n; S.visited.add(n); render(); }
+/* 업로드 흐름은 ①의 곁가지다. 단계 칩을 누르면 **그 흐름에서 빠져나온다** —
+   안 지우면 「공고 고르기」를 눌러도 업로드 화면이 그대로 남아 갇힌 것처럼 보인다. */
+function go(n){ S.up=null; S.step=n; S.visited.add(n); render(); }
 function render(){
   renderStepper(); view.textContent="";
   try{ [v1,v2,v3][S.step-1](); }catch(e){ console.error(e); renderError(e); }
@@ -727,6 +753,10 @@ function renderError(e){
   const st=e instanceof ApiError?e.status:null;
   const MSG={400:"요청이 거부됐습니다. 아래 사유를 확인하세요.",
     404:"경로 또는 자원을 찾을 수 없습니다. 서버에 그 엔드포인트가 있는지 확인하세요.",
+    /* 405는 「경로는 있는데 그 방식은 안 받는다」다. `POST /postings`가 아직 없는 서버에서
+       `GET /postings`만 있으면 FastAPI가 정확히 이 값을 준다 — 없는 API를 부른 것이지
+       화면이 깨진 것이 아니라는 말을 여기서 해 준다. */
+    405:"서버가 그 경로에서 이 요청 방식을 받지 않습니다 — 업로드 엔드포인트가 아직 없을 수 있습니다.",
     422:"검산 위반 — 근거 없는 점수를 내보내지 않습니다. 결과 전체를 표시하지 않습니다. 아래 위반 목록을 확인하세요.",
     503:"공고 원본에 접근할 수 없습니다.",429:"호출 예산을 초과했습니다. 잠시 후 다시 시도하세요.",
     409:"승인이 없거나 낡았습니다 — 조건을 (다시) 승인해야 채점이 시작됩니다. 「조건 확인·승인」 화면으로 돌아가세요."};
@@ -822,10 +852,21 @@ function makeViewer({height="620px", onBoxClick}={}){
   return {root:wrapEl, mount, select, focusBBox, setRoleVisible, layout};
 }
 const viewers={};
-/* ============================ ① 공고 고르기 ============================ */
-async function v1(){
+/* ============================ ① 공고 고르기 ============================
+
+   업로드 흐름(새 공고 올리기 → 이력서 넣기)은 ①에서 갈라지는 **곁가지**다.
+   단계 칩을 넷으로 늘리지 않은 이유: 칩은 「사람이 내리는 결정」을 세는 자리인데
+   업로드는 결정이 아니라 입력이고, 늘리면 **이미 있는 공고를 고르는 사람에게도**
+   영영 안 지나가는 빈 칸이 하나 생긴다. */
+function v1(){ return S.up ? (S.up.screen==="resumes" ? vUploadResumes() : vUploadPosting()) : v1List(); }
+async function v1List(){
+  const newBtn=h("button",{class:"btn",style:"margin-left:auto",
+    title:"자기 공고 이미지를 올려서 이 엔진을 그대로 돌려봅니다",
+    onclick:()=>{ S.up=newUpload(); render(); }},"+ 새 공고 올리기");
   const card=h("div",{class:"card",style:"max-width:760px"},
-    h("h2",{},"공고를 고르세요"));
+    h("div",{style:"display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:6px"},
+      h("h2",{style:"margin:0"},"공고를 고르세요"), newBtn),
+    h("p",{class:"desc"},"목록은 data/postings/ 를 훑어 만듭니다. 자기 공고로 돌려보려면 「새 공고 올리기」로 이미지를 올리세요."));
   view.append(card);
   if(!S.postings){
     card.append(h("div",{class:"kv"},"공고 목록을 불러오는 중… (GET /postings)"));
@@ -833,7 +874,11 @@ async function v1(){
     return render();
   }
   if(!S.postings.length){
-    card.append(h("div",{class:"banner warn"},h("b",{},"공고 없음"),"data/postings/ 아래에 공고 디렉터리가 없습니다."));
+    /* 갓 클론한 레포가 정확히 이 상태다 — 공고 이미지는 커밋되지 않는다.
+       여기서 길을 안 주면 첫 화면이 막다른 골목이 된다. */
+    card.append(h("div",{class:"banner warn"},h("b",{},"공고 없음"),"data/postings/ 아래에 공고 디렉터리가 없습니다."),
+      h("div",{class:"footctas"},
+        h("button",{class:"btn primary",onclick:()=>{ S.up=newUpload(); render(); }},"공고 이미지 올리기 →")));
     return;
   }
   let sel=S.posting?S.posting.posting_id:null;
@@ -870,11 +915,527 @@ async function v1(){
   btn.disabled=!sel;
   card.append(list,
     h("div",{class:"kv",style:"margin:14px 2px 0"},
-      /* step 13(2026-09-01 14:30)이 docs/COST_BUDGET.md §4의 실측치로 바꾼다 */
-      h("span",{title:"설계 추정치입니다. 실측은 채점이 끝난 뒤 랭킹 화면의 「이 결과」 줄에 나옵니다"},
-        "이력서 전원 · 예상 호출 ~117회 · 2~4분 "),
-      h("span",{class:"chip neutral"},h("span",{class:"dot"}),"설계 추정치")),
+      /* 2026-09-01 20:30 실측으로 갱신 — kt-b2c 135회 · 9분 (항목 11 × 6명 × 2 + 이견 3).
+         공고마다 항목 수가 달라 호출도 달라진다. 넥슨(항목 14+)은 200회를 넘는다. */
+      h("span",{title:"kt-b2c 실측입니다. 항목 수가 다른 공고는 이보다 늘어납니다. 이번 실측은 채점 후 랭킹 화면의 「이 결과」 줄에 나옵니다"},
+        "이력서 전원 · 호출 135회 · 약 9분 "),
+      h("span",{class:"chip neutral"},h("span",{class:"dot"}),"kt-b2c 실측")),
     h("div",{class:"footctas"},btn));
+}
+
+/* ==================== 새 공고 올리기 · 이력서 넣기 (①의 곁가지) ====================
+
+   **왜 있나.** 지금까지 새 공고를 넣는 길은 `data/postings/` 밑에 파일을 손으로 복사하는
+   것뿐이었다. 그건 「돌려봤다」가 아니다. 파이프라인은 이미 이미지에서 시작하므로
+   넣는 길만 뚫으면 된다.
+
+   **이 화면이 지키는 것 하나 — 예상 시간을 먼저 말한다.** 새 이미지는 OCR이 실제로
+   돈다. 실측 4920px에 376초다. 아무 표시 없이 6분을 멈춰 있으면 사람은 고장 난 줄
+   안다. 그래서 (1) 올리기 **전에** 예상 시간을 말하고, (2) 도는 동안 경과 시간을 초
+   단위로 보여주고, (3) 예상을 넘기면 **넘겼다고 적는다.**
+
+   `startScore()`가 본보기다. 그쪽은 손대지 않았다 — 오늘 20:30에 고쳐 도는 코드이고,
+   같이 쓰겠다고 끌어다 고치면 얻는 것 없이 그 화면이 깨질 위험만 진다. */
+
+/* run.py의 `OCR_SECONDS_PER_PIXEL`·`OCR_SECONDS_FLOOR`를 **여기 다시 적었다.**
+   서버가 이 값을 알려주는 경로가 없고(설정 엔드포인트가 없다) 이 파일은 빌드 도구 없이
+   그대로 서빙된다. 어긋나면 틀리는 것은 **예상 시간 한 줄뿐**이고 화면은 그 줄을
+   「추정」이라고 적는다 — 그래서 중복을 감수했다. 서버 상수를 고치면 여기도 고친다. */
+const OCR_SECONDS_PER_PIXEL = 0.084;
+const OCR_SECONDS_FLOOR = 60;
+const OCR_SECONDS_UNKNOWN = OCR_SECONDS_FLOOR * 5;   // 세로 픽셀을 모를 때 (run.py와 같다)
+const LIVE = !USE_MOCK;                              // 샘플 모드에서는 실제로 올리지 않는다
+
+/* **확장자가 아니라 파일 앞부분으로 판정한다.** 확장자를 믿으면 `.png`로 이름만 바꾼
+   아무 파일이 들어온다. 서버도 같은 검사를 하며 **판정 권한은 서버에 있다** —
+   여기 검사는 6분짜리 왕복을 하기 전에 알려주는 예의일 뿐이다. */
+const MAGIC=[{kind:"PNG",bytes:[0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A]},{kind:"JPEG",bytes:[0xFF,0xD8,0xFF]}];
+async function sniffKind(file){
+  try{
+    const head=new Uint8Array(await file.slice(0,8).arrayBuffer());
+    for (const m of MAGIC) if (m.bytes.every((b,i)=>head[i]===b)) return m.kind;
+  }catch(e){ return null; }
+  return null;
+}
+/* 세로 픽셀을 재는 유일한 목적은 **예상 시간**이다. 그림을 서버에 묻지 않고 브라우저가
+   직접 재는 이유: 아직 올리지도 않은 파일이라 물을 곳이 없고, 사람은 **올리기 전에**
+   얼마나 걸리는지 알아야 시작할지 말지를 정한다. */
+function imageSize(file){
+  return new Promise(res=>{
+    const url=URL.createObjectURL(file), im=new Image();
+    im.onload=()=>{ res({w:im.naturalWidth,h:im.naturalHeight}); URL.revokeObjectURL(url); };
+    im.onerror=()=>{ res(null); URL.revokeObjectURL(url); };
+    im.src=url;
+  });
+}
+function fmtSecs(s){ const m=Math.floor(s/60), r=Math.round(s%60); return m?`${m}분 ${r}초`:`${r}초`; }
+function fmtBytes(n){ return n>=1048576?(n/1048576).toFixed(1)+"MB":Math.max(1,Math.round(n/1024))+"KB"; }
+/* `_safe_id()`(api/server.py)와 **같은 규칙**이다. 서버가 최종 판정을 하고, 여기서는
+   400을 받기 전에 화면에서 먼저 말해 준다. 규칙을 늘리지 않는다 — 늘리면 서버가
+   받아 주는 값을 화면이 거부하게 된다. */
+function badId(v){
+  const s=(v||"").trim();
+  if (!s) return "비어 있습니다";
+  if (s==="."||s==="..") return "`.` · `..` 는 쓸 수 없습니다";
+  if (s.includes("/")||s.includes("\\")) return "`/` · `\\` 는 쓸 수 없습니다";
+  return null;
+}
+function newUpload(){
+  return {screen:"posting", posting_id:"", position:"", files:[], pixelHeight:null,
+    estSeconds:null, summary:null, resumes:[newResumeRow(1)], savedIds:[], preparing:false};
+}
+function newResumeRow(n){ return {candidate_id:"A-"+String(n).padStart(2,"0"), text:"", intended:""}; }
+
+/* multipart는 기존 `api()`로 못 보낸다 — 그쪽은 JSON 전용이고, FormData에 직접
+   Content-Type을 붙이면 경계 문자열이 빠져 서버가 못 읽는다. 브라우저가 붙이게 둔다. */
+async function apiForm(path, formData){
+  const r=await fetch(BASE+path,{method:"POST",body:formData});
+  if (!r.ok){ let b=null; try{ b=await r.json(); }catch(e){} throw new ApiError(r.status,b); }
+  return r.json();
+}
+
+/* 실패를 어디에 적을 것인가.
+   `renderError()`는 화면을 통째로 갈아 끼우고 **문구가 채점 흐름 기준**이다 — 409는
+   「승인이 낡았다」, 422는 「검산 위반」이라고 적혀 있다. 업로드에서 그 둘은 각각
+   「식별자 중복」과 「보낸 값 문제」라서, 그대로 태우면 **화면이 거짓말을 한다.**
+   그래서 이 다섯만 폼 위에 적고(입력을 잃지 않는다) 나머지는 기존 경로로 보낸다.
+   404·405는 일부러 넘긴다 — 「이 서버엔 그 API가 없다」는 renderError의 문구가 맞다. */
+const INLINE_STATUS=new Set([400,409,413,415,422]);
+function uploadFail(slot, e, retry){
+  if (!(e instanceof ApiError) || !INLINE_STATUS.has(e.status)) return renderError(e);
+  const detail=e.body&&(e.body.detail!=null?e.body.detail:e.body.message);
+  const KNOWN={
+    400:"보낸 값이 규칙에 맞지 않습니다.",
+    409:"같은 식별자의 공고가 이미 있습니다. 덮어쓰지 않습니다 — 기존 조건의 좌표는 그때 그 그림 위에서만 뜻이 있어서, 그림만 갈아 끼우면 좌표가 조용히 거짓말을 합니다. 다른 식별자를 쓰세요.",
+    413:"파일이 서버 상한을 넘었습니다.",
+    415:"받지 않는 형식입니다 — PNG · JPEG만 받습니다.",
+    422:"보낸 값을 서버가 처리하지 못했습니다."};
+  slot.textContent="";
+  slot.append(h("div",{class:"banner danger"},h("b",{},"오류 "+e.status),
+    (KNOWN[e.status]||"요청이 거부됐습니다.")+(detail?" — "+(typeof detail==="string"?detail:JSON.stringify(detail)):"")));
+  /* **오류 본문의 `failed`를 반드시 편다.** `POST /resumes`는 하나라도 실패하면 아무것도
+     저장하지 않고, detail에 「사유는 failed에 전부 담았다」고 적은 채 목록을 본문에 싣는다.
+     여기서 안 펴면 화면이 있는 사유를 가리켜 놓고 안 보여주는 꼴이 된다 — 그러면 사용자는
+     여섯 통 중 어느 것이 왜 막혔는지 모른 채 전부 다시 손봐야 한다. */
+  const failed=(e.body&&Array.isArray(e.body.failed))?e.body.failed:[];
+  if (failed.length){
+    const box=h("div",{class:"diag",style:"margin:-4px 0 12px"});
+    box.append(h("div",{},`막힌 통 ${failed.length}건 — 한 통도 저장되지 않았습니다. 아래를 고쳐 그대로 다시 보내면 됩니다.`));
+    for (const f of failed)
+      box.append(h("div",{},h("span",{class:"mono"},String((f&&(f.candidate_id||f.id))||"?")),
+        " · ",String((f&&(f.reason||f.detail||f.error))||"사유 없음")));
+    slot.append(box);
+  }
+  if (retry) slot.append(h("div",{style:"margin:-4px 0 12px"},h("button",{class:"btn",onclick:retry},"다시 시도")));
+  try{ slot.scrollIntoView({behavior:"smooth",block:"nearest"}); }catch(_){}
+}
+
+/* -------------------- 업로드 1/2 — 공고 이미지 -------------------- */
+function vUploadPosting(){
+  const U=S.up;
+  const errSlot=h("div",{});
+  const card=h("div",{class:"card",style:"max-width:780px"});
+  view.append(card);
+  card.append(
+    h("div",{style:"display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;margin-bottom:6px"},
+      h("h2",{style:"margin:0"},"새 공고 올리기"), h("span",{class:"hsub"},"1 / 2")),
+    h("p",{class:"desc"},"공고 이미지를 올리면 그 그림에서 글자와 좌표를 읽어 조건을 뽑습니다. 공고 글을 붙여넣는 칸은 없습니다 — 이 엔진의 입력은 이미지뿐이고, 뽑은 조건마다 그림 위 좌표가 남습니다."),
+    h("div",{class:"banner info"},h("b",{},"앞으로 올 순서"),
+      "① 공고 이미지(지금) → ② 이력서 넣기 → ③ 조건 확인·승인 → ④ 랭킹"),
+    errSlot);
+  if (!LIVE) card.append(h("div",{class:"banner warn"},h("b",{},"샘플 모드"),
+    "화면만 볼 수 있습니다. 실제로 올리려면 주소에서 ?mock=1 을 빼세요 — 글자 읽기(OCR)는 서버에서만 돕니다."));
+
+  /* 공고 식별자 */
+  const idIn=h("input",{class:"tin mono",placeholder:"예: my-posting-01"});
+  idIn.value=U.posting_id;
+  const idHint=h("div",{class:"hint"},"");
+  card.append(h("div",{class:"field"},
+    h("label",{},"공고 식별자 (필수)"), idIn, idHint,
+    h("div",{class:"hint"},"data/postings/<식별자>/ 로 저장됩니다. 이미 있는 식별자는 거부합니다 — 덮어쓰지 않습니다.")));
+
+  /* 대상 직무 — 직무 이름을 코드에 박지 않는다. 런타임 인자다 */
+  const posIn=h("input",{class:"tin",placeholder:"비워 두면 공고 전체가 대상"});
+  posIn.value=U.position;
+  posIn.addEventListener("input",()=>{ U.position=posIn.value; });
+  card.append(h("div",{class:"field"},
+    h("label",{},"채점 대상 직무 (선택)"), posIn,
+    h("div",{class:"hint"},"한 공고에 직무가 여럿일 때, 그림에 적힌 직무 이름을 그대로 적습니다. 그 이름이 있는 줄부터 다음 직무 줄까지를 채점 구간으로 잡습니다. 비워 두면 공고 전체를 봅니다.")));
+
+  /* 파일 */
+  const fileIn=h("input",{type:"file",accept:"image/png,image/jpeg",multiple:"multiple",style:"display:none"});
+  const drop=h("div",{class:"drop"},
+    h("div",{class:"big"},"이미지를 여기 끌어다 놓거나, 눌러서 고르세요"),
+    h("div",{class:"hint"},"PNG · JPEG. 여러 장이면 고른 순서대로 저장됩니다. 형식은 확장자가 아니라 파일 앞부분으로 판정합니다."));
+  drop.addEventListener("click",()=>fileIn.click());
+  ["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over");}));
+  ["dragleave","dragend"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over");}));
+  drop.addEventListener("drop",e=>{ e.preventDefault(); drop.classList.remove("over");
+    addFiles(e.dataTransfer&&e.dataTransfer.files); });
+  fileIn.addEventListener("change",()=>{ addFiles(fileIn.files); fileIn.value=""; });
+  const listSlot=h("div",{});
+  const estSlot=h("div",{});
+  card.append(h("div",{class:"field"},h("label",{},"공고 이미지 (필수)"),drop,fileIn,listSlot,estSlot));
+
+  const submit=h("button",{class:"btn primary"});
+  const cancel=h("button",{class:"btn",onclick:()=>go(1)},"취소");
+  /* 흐려진 버튼이 「무엇이 빠졌나」를 말하는 자리. `errSlot`(서버가 거절한 이유)과
+     분리한다 — 하나는 **아직 못 보낸 것**이고 하나는 **보냈다 거절당한 것**이라,
+     같은 자리에 쓰면 사용자가 「보내긴 했나」를 구분할 수 없다. */
+  const blockSlot=h("div",{class:"hint",style:"margin:0 2px 8px;color:var(--text2)"},"");
+  card.append(blockSlot,h("div",{class:"footctas"},cancel,submit));
+
+  async function addFiles(fileList){
+    const picked=Array.from(fileList||[]);
+    if (!picked.length) return;
+    for (const f of picked){
+      const [kind,size]=await Promise.all([sniffKind(f), imageSize(f)]);
+      U.files.push({file:f, kind, w:size?size.w:null, h:size?size.h:null});
+    }
+    refresh();
+  }
+  function refresh(){
+    listSlot.textContent=""; estSlot.textContent="";
+    U.files.forEach((rec,i)=>{
+      const ok=!!rec.kind;
+      listSlot.append(h("div",{class:"filerow"+(ok?"":" bad")},
+        h("span",{class:"nm"},rec.file.name),
+        h("span",{class:"mono"},fmtBytes(rec.file.size)),
+        h("span",{class:"mono"},(rec.w&&rec.h)?`${rec.w}x${rec.h}px`:"크기 못 읽음"),
+        ok?h("span",{class:"chip ok"},h("span",{class:"dot"}),rec.kind)
+          :h("span",{class:"chip danger",title:"파일 앞부분이 PNG · JPEG가 아닙니다"},h("span",{class:"dot"}),"받지 않는 형식"),
+        h("button",{class:"btn sm danger",onclick:()=>{ U.files.splice(i,1); refresh(); }},"빼기")));
+    });
+    /* 예상 시간 — **이 상자가 이 화면의 핵심이다.** */
+    const heights=U.files.map(r=>r.h).filter(v=>v>0);
+    U.pixelHeight = heights.length ? heights.reduce((a,b)=>a+b,0) : null;
+    U.estSeconds = U.pixelHeight!=null
+      ? Math.max(OCR_SECONDS_FLOOR, Math.round(U.pixelHeight*OCR_SECONDS_PER_PIXEL)) : null;
+    if (U.files.length){
+      const bytes=U.files.reduce((a,r)=>a+r.file.size,0);
+      estSlot.append(h("div",{class:"estbox"},
+        h("div",{},"글자를 읽는 데 ",
+          h("span",{class:"big"}, U.estSeconds!=null?("약 "+fmtSecs(U.estSeconds)):("약 "+fmtSecs(OCR_SECONDS_UNKNOWN))),
+          " 걸립니다"),
+        h("div",{class:"hint",style:"color:var(--text2)"},
+          U.pixelHeight!=null
+            ? `세로 ${U.pixelHeight.toLocaleString()}px × ${OCR_SECONDS_PER_PIXEL}초/px. 실측 둘(4920px→376초 · 2533px→232초)로 잡은 눈금이라 정확한 예측이 아닙니다 — 자리를 뜨지 않고 기다릴지 판단하라고 적는 값입니다.`
+            : `이미지 크기를 읽지 못해 기본값으로 잡았습니다.`),
+        h("div",{class:"hint",style:"color:var(--text2)"},
+          /* 상한값을 화면에 박지 않는다 — 서버 상수와 어긋나면 화면이 받아 주는 것을
+             서버가 거부하거나 그 반대가 된다. 「누가 검사하는가」만 말한다. */
+          `파일 ${U.files.length}개 · 합계 ${fmtBytes(bytes)}. 장 수 · 장당 · 합계 상한은 서버가 검사합니다.`),
+        h("div",{class:"hint",style:"color:var(--text2)"},
+          "읽는 일은 서버에서 돕니다. 도는 동안 경과 시간을 화면에 보여 줍니다.")));
+    }
+    const idErr=badId(U.posting_id);
+    const badFile=U.files.some(r=>!r.kind);
+    submit.disabled = !LIVE ? false : (!!idErr || !U.files.length || badFile);
+    submit.textContent = LIVE ? "올리고 이력서 넣기 →" : "샘플 모드 — 저장하지 않고 다음 화면 보기 →";
+
+    /* **흐려진 버튼은 이유를 말해야 한다.**
+       `.btn:disabled`가 opacity를 낮추긴 하지만, 그건 「못 누른다」만 말하고
+       「무엇이 빠졌나」는 말하지 않는다. 처음 온 사람은 칸 둘과 상자 하나를 번갈아
+       보며 무엇이 모자란지 스스로 찾아내야 한다.
+       빠진 것을 **전부** 적는다 — 하나씩 알려 주면 고치고 다시 막히기를 반복한다. */
+    const missing=[];
+    if (LIVE){
+      if (!U.posting_id.trim()) missing.push("공고 식별자");
+      else if (idErr) missing.push("쓸 수 있는 공고 식별자");
+      if (!U.files.length) missing.push("공고 이미지");
+      else if (badFile) missing.push("PNG · JPEG 형식의 이미지 — 받지 않는 형식이 섞여 있습니다");
+    }
+    blockSlot.textContent = missing.length
+      ? ("아직 못 누릅니다 — 필요한 것: " + missing.join(" · ")) : "";
+    submit.title = blockSlot.textContent;
+  }
+  idIn.addEventListener("input",()=>{
+    U.posting_id=idIn.value;
+    const err=badId(U.posting_id);
+    idHint.textContent = err ? ("공고 식별자로 쓸 수 없습니다 — "+err) : "";
+    idHint.style.color = err ? "var(--danger)" : "";
+    refresh();
+  });
+  submit.addEventListener("click",async()=>{
+    errSlot.textContent="";
+    if (!LIVE){ U.screen="resumes"; return render(); }   /* 샘플 모드는 아무것도 저장하지 않는다 */
+    const pid=U.posting_id.trim();
+    submit.disabled=true; submit.textContent="올리는 중… (POST /postings)";
+    const fd=new FormData();
+    fd.append("posting_id", pid);
+    if (U.position.trim()) fd.append("position", U.position.trim());
+    for (const rec of U.files) fd.append("files", rec.file, rec.file.name);
+    try{
+      U.summary=await apiForm("/postings", fd);
+      U.posting_id=pid;
+      S.postings=null;            /* 목록을 다시 받게 한다 — 방금 만든 공고가 들어 있어야 한다 */
+      U.screen="resumes"; render();
+    }catch(e){ refresh(); uploadFail(errSlot, e, null); }
+  });
+  refresh();
+}
+
+/* 빈 칸 앞에서 「무엇을 어떤 형태로 넣나」를 모르는 것이 이 화면의 가장 큰 벽이다.
+   그래서 안내를 둔다. **안내일 뿐이고 검사하지 않는다** — 엔진은 이력서를 `text` 하나에
+   담긴 통짜 글로 읽고 섹션을 파싱하지 않는다. 심사위원이 본문을 읽어 문자 오프셋으로
+   인용할 뿐이다. 여기서 양식을 강제하면 다른 서식의 이력서가 거부되어 직군 무관
+   일반화가 깨진다 — 목업 12명조차 섹션 이름이 서로 다르다.
+
+   그래서 예시를 **둘** 놓는다. 하나만 놓으면 「이 형식이어야 한다」로 읽힌다. */
+const RESUME_SECTIONS=["인적사항","학력","경력","보유 기술","경험 · 활동 · 교육",
+  "자격 · 어학 · 수상","포트폴리오 · 기타문서","경력기술서","자기소개서","취업 우대사항 (병역 · 보훈 등)"];
+const RESUME_SHAPES=[
+  "인적사항 · 학력사항 · 경력 및 대외활동 · 자격 및 어학 · 자기소개서",
+  "기본 정보 · 학력 · 보유 기술 · 프로젝트 · 협업 경험 · 자기소개",
+];
+function resumeHelp(){
+  const box=h("details",{class:"drawer"});
+  box.append(h("summary",{},h("span",{class:"tri"},"▸"),"어떤 형태로 넣나",
+    h("span",{class:"hint",style:"margin:0"},"(양식은 검사하지 않습니다 — 그대로 붙여넣으면 됩니다)")));
+  const body=h("div",{class:"drawerbody"});
+  body.append(h("div",{class:"kv"},
+    "이 엔진은 이력서를 ",h("b",{},"글 한 덩어리"),"로 읽습니다. 칸을 나눠 읽지 않고, 심사위원이 본문을 읽어 원문 그대로 인용합니다. 그래서 ",
+    h("b",{},"어떤 양식이든 그대로 붙여넣으면 됩니다."),
+    " 아래는 강제가 아니라 흔히 쓰는 칸입니다 — 없는 칸이 있어도, 이름이 달라도 그대로 받습니다."));
+  const chips=h("div",{class:"legend",style:"margin:10px 0 0"});
+  for (const s of RESUME_SECTIONS) chips.append(h("span",{class:"chip neutral"},h("span",{class:"dot"}),s));
+  body.append(chips);
+  body.append(h("div",{class:"sect"},"실제로 이렇게들 씁니다 — 둘 다 그대로 채점됩니다"));
+  for (const shape of RESUME_SHAPES)
+    body.append(h("div",{class:"diag",style:"margin:0 0 6px"},shape));
+  body.append(h("div",{class:"kv",style:"margin-top:10px"},
+    h("b",{},"미리 지우지 마세요. "),
+    "이름 · 나이 · 성별처럼 가려야 하는 항목을 손으로 지우면 인용 위치가 어긋납니다. 그대로 두면 채점 직전에 엔진이 가립니다."));
+  box.append(body);
+  return box;
+}
+
+/* -------------------- 업로드 2/2 — 이력서 -------------------- */
+function vUploadResumes(){
+  const U=S.up;
+  const pid=U.posting_id.trim();
+  const errSlot=h("div",{});
+  const runSlot=h("div",{});
+  const card=h("div",{class:"card",style:"max-width:860px"});
+  view.append(card, runSlot);
+  card.append(
+    h("div",{style:"display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;margin-bottom:6px"},
+      h("h2",{style:"margin:0"},"이력서 넣기"), h("span",{class:"hsub"},"2 / 2 · 공고 "),
+      h("span",{class:"mono",style:"font-size:12px"},pid||"(식별자 없음)")),
+    h("p",{class:"desc"},"이력서는 글로 붙여넣습니다. 여러 명을 한 번에 올립니다 — 한 명씩 여러 번 올리지 않습니다."),
+    h("div",{class:"banner info"},h("b",{},"가리는 시점"),
+      "저장은 원문 그대로 합니다. 이름·나이·성별·출신지·학교명 같은 항목은 채점 직전에 가립니다 — 저장할 때 미리 가리면 두 번 가려져 인용 위치가 어긋나고, 그러면 근거 사슬이 거짓말을 합니다."),
+    resumeHelp(),
+    errSlot);
+  if (!LIVE) card.append(h("div",{class:"banner warn"},h("b",{},"샘플 모드"),
+    "화면만 볼 수 있습니다. 저장도 글자 읽기도 실서버에서만 됩니다."));
+
+  const list=h("div",{});
+  card.append(list);
+  function drawRows(){
+    list.textContent="";
+    U.resumes.forEach((row,i)=>{
+      const idIn=h("input",{class:"tin mono",placeholder:"지원자 식별자"}); idIn.value=row.candidate_id;
+      idIn.addEventListener("input",()=>{ row.candidate_id=idIn.value; });
+      const sel=h("select",{class:"tin",title:"목업 데이터셋을 설계할 때 쓰는 표시입니다. 채점에는 쓰이지 않습니다"},
+        h("option",{value:""},"설계 의도 — 표시 안 함"),
+        h("option",{value:"perfect"},"완벽 매칭으로 설계"),
+        h("option",{value:"partial"},"부분 매칭으로 설계"),
+        h("option",{value:"mismatch"},"미스매칭으로 설계"));
+      sel.value=row.intended||"";
+      sel.addEventListener("change",()=>{ row.intended=sel.value; });
+      /* placeholder에도 예시를 적는다 — 서랍을 안 펴는 사람이 대부분이고, 빈 칸은
+         「무엇을 넣으라는 건지」를 스스로 말하지 못한다. 예시는 한 줄로 줄인다. */
+      const ta=h("textarea",{class:"tin",
+        placeholder:"이력서 전문을 그대로 붙여넣으세요 — 양식은 검사하지 않습니다.\n"+
+          "예) 인적사항 · 학력 · 경력 · 보유 기술 · 자격/어학 · 자기소개서 …\n"+
+          "칸 이름이 다르거나 일부가 없어도 그대로 받습니다."});
+      ta.value=row.text;
+      const cnt=h("span",{class:"hint"},"");
+      const upd=()=>{ cnt.textContent=`${ta.value.length.toLocaleString()}자`; };
+      ta.addEventListener("input",()=>{ row.text=ta.value; upd(); });
+      upd();
+      list.append(h("div",{class:"rescard"},
+        h("div",{class:"top"},
+          h("span",{class:"chip neutral"},h("span",{class:"dot"}),String(i+1)),
+          h("span",{class:"grow"},idIn), h("span",{class:"grow"},sel),
+          h("button",{class:"btn sm danger",onclick:()=>{
+            U.resumes.splice(i,1);
+            if (!U.resumes.length) U.resumes.push(newResumeRow(1));
+            drawRows(); }},"빼기")),
+        ta, h("div",{style:"margin-top:4px"},cnt)));
+    });
+  }
+  drawRows();
+  card.append(h("div",{style:"margin:2px 0 4px"},
+    h("button",{class:"btn",onclick:()=>{ U.resumes.push(newResumeRow(U.resumes.length+1)); drawRows(); }},
+      "+ 지원자 추가")));
+
+  const save=h("button",{class:"btn primary"});
+  const skip=h("button",{class:"btn",title:"채점은 못 하지만 공고에서 어떤 조건이 나왔는지는 볼 수 있습니다"},
+    "이력서 없이 조건만 만들기");
+  card.append(h("div",{class:"footctas"},
+    h("button",{class:"btn",onclick:()=>{ U.screen="posting"; render(); }},"← 공고 이미지로"),
+    skip, save));
+  const label=()=>{
+    const n=U.resumes.filter(r=>r.text.trim()).length;
+    return LIVE ? (n?`이력서 ${n}명 저장하고 조건 만들기 →`:"이력서를 붙여넣으세요")
+                : "샘플 모드 — 저장·읽기는 실서버에서만";
+  };
+  const syncSave=()=>{ save.textContent=label(); save.disabled=!LIVE||!U.resumes.some(r=>r.text.trim()); };
+  list.addEventListener("input",syncSave);   /* 이벤트가 올라온다 — 칸마다 붙이지 않는다 */
+  syncSave();
+  skip.disabled=!LIVE;
+
+  /* 읽기가 시작되면 두 버튼을 다 잠근다. `startPrepare()`가 중복 호출을 막긴 하지만,
+     눌리는 것처럼 보이는 버튼은 「눌렀는데 아무 일도 안 일어난다」로 읽힌다. */
+  const lock=(msg)=>{ save.disabled=true; skip.disabled=true; save.textContent=msg; };
+  skip.addEventListener("click",()=>{ errSlot.textContent=""; lock("이력서 없이 공고만 읽는 중"); startPrepare(runSlot); });
+  save.addEventListener("click",async()=>{
+    errSlot.textContent="";
+    const rows=U.resumes.filter(r=>r.text.trim()||r.candidate_id.trim());
+    const bad=[];
+    const seen=new Set();
+    if (!rows.length) bad.push("이력서가 한 통도 없습니다");
+    for (const r of rows){
+      const id=r.candidate_id.trim();
+      const err=badId(id);
+      if (err) bad.push(`${id||"(빈 칸)"} — 지원자 식별자로 쓸 수 없습니다 (${err})`);
+      else if (seen.has(id)) bad.push(`${id} — 같은 식별자가 두 번 있습니다`);
+      else seen.add(id);
+      if (!r.text.trim()) bad.push(`${id||"(빈 칸)"} — 본문이 비었습니다`);
+    }
+    if (bad.length){
+      errSlot.append(h("div",{class:"banner danger"},h("b",{},"보내기 전 확인"),bad.join(" · ")));
+      return;
+    }
+    save.disabled=true; save.textContent="저장하는 중… (POST /resumes)";
+    const payload={posting_id:pid, resumes:rows.map(r=>{
+      const o={candidate_id:r.candidate_id.trim(), text:r.text};
+      if (r.intended) o.intended_type=r.intended;
+      return o;
+    })};
+    try{
+      const res=await api("/resumes",{body:payload});
+      /* **응답 필드 이름이 계약에 없다.** 「저장된 id 목록 + 실패 목록」이라고만 적혀
+         있어서 서버가 무엇을 쓸지 모른다. 몇 가지를 받아 보고, 못 알아보면 응답을
+         그대로 화면에 적는다 — 조용히 성공으로 넘기지 않는다. */
+      const saved=pickList(res,["saved","saved_ids","stored","candidate_ids","resumes"]);
+      const failed=pickList(res,["failed","failures","errors","rejected"]);
+      U.savedIds=saved.map(x=>typeof x==="string"?x:(x&&(x.candidate_id||x.id))||"?");
+      if (failed.length){
+        save.disabled=false; save.textContent=label();
+        errSlot.append(h("div",{class:"banner danger"},h("b",{},`저장 실패 ${failed.length}건`),
+          failed.map(f=>typeof f==="string"?f:`${(f&&(f.candidate_id||f.id))||"?"} — ${(f&&(f.reason||f.detail||f.error))||"사유 없음"}`).join(" · ")));
+        if (U.savedIds.length)
+          errSlot.append(h("div",{class:"banner info"},h("b",{},`저장됨 ${U.savedIds.length}건`),U.savedIds.join(", ")));
+        return;
+      }
+      if (!saved.length)
+        errSlot.append(h("div",{class:"banner warn"},h("b",{},"응답을 못 알아봤습니다"),
+          "서버가 2xx를 줬지만 저장 목록의 모양을 모릅니다: "+JSON.stringify(res).slice(0,300)));
+      else
+        errSlot.append(h("div",{class:"banner info"},h("b",{},`저장됨 ${U.savedIds.length}건`),U.savedIds.join(", ")));
+      lock(`이력서 ${U.savedIds.length||rows.length}명 저장됨 — 공고를 읽는 중`);
+      startPrepare(runSlot);
+    }catch(e){
+      save.disabled=false; save.textContent=label();
+      uploadFail(errSlot, e, null);
+    }
+  });
+}
+function pickList(obj, keys){
+  for (const k of keys){ const v=obj&&obj[k]; if (Array.isArray(v)) return v; }
+  return [];
+}
+
+/* -------------------- 공고 읽기 진행 표시 (POST /prepare) --------------------
+
+   `startScore()`와 같은 원칙이다. 서버가 진행률을 안 주므로 **아는 척하지 않는다.**
+   다른 점 하나 — 여기는 예상 시간을 **픽셀에서 계산**할 수 있다. 그래서 남은 시간을
+   말할 수 있고, 예상을 넘기면 **넘겼다고 적는다.** 마지막 칸에 도착해 놓고 입을 다물면
+   사람은 「멈췄다」로 읽는다. 오늘 채점 화면에서 실제로 그렇게 읽혔다. */
+let prepTimer=null;
+function startPrepare(slot){
+  const U=S.up;
+  if (!U || U.preparing) return;
+  U.preparing=true;
+  const pid=U.posting_id.trim();
+  const known=U.estSeconds!=null;
+  const ocrSecs=known?U.estSeconds:OCR_SECONDS_UNKNOWN;
+  /* OCR 뒤 네 단계는 **어림이다.** 코드 계산 둘과 글자만 보내는 LLM 호출 둘이라
+     합쳐서 십수 초인데, 이 넷은 실측한 적이 없다. 화면에도 그렇게 적는다. */
+  const stages=[
+    {name:"이미지에서 글자·좌표 읽기 (OCR)", secs:ocrSecs},
+    {name:"줄을 섹션·항목으로 나누기 (코드)", secs:0.5},
+    {name:"섹션 제목 역할 분류 (LLM 1회 · 글자만 보냄)", secs:6},
+    {name:"조건 갈래 분류 (LLM 1회 · 글자만 보냄)", secs:8},
+    {name:"조건에서 루브릭 초안 만들기 (코드)", secs:0.5},
+  ];
+  const total=stages.reduce((a,s)=>a+s.secs,0);
+  slot.textContent="";
+  const card=h("div",{class:"card",style:"margin-top:14px;max-width:660px"},
+    h("h2",{},"공고를 읽는 중"),
+    h("div",{class:"kv",style:"margin:2px 2px 0"},
+      "서버는 진행률을 보내지 않는다 — 아래 단계는 ",h("b",{},"경과 시간으로 찍은 추정"),
+      "이다. 확실한 값은 경과 시간뿐."));
+  const ul=h("ul",{class:"stages"});
+  stages.forEach((s,i)=>ul.append(h("li",{"data-i":i,
+    title:i===0?"시간의 대부분이 여기다. 세로 픽셀에 비례한다":"코드 계산과 글자만 보내는 LLM 호출이다. 이 넷의 시간은 실측이 아니라 어림이다"},
+    h("span",{class:"ic"},""), s.name)));
+  const foot=h("div",{class:"kv",style:"margin:12px 2px 0"});
+  card.append(ul, foot,
+    h("div",{class:"hint",style:"margin-top:10px"},
+      known ? `예상 ${fmtSecs(ocrSecs)} — 세로 ${U.pixelHeight.toLocaleString()}px × ${OCR_SECONDS_PER_PIXEL}초/px로 찍었다. 빗나갈 수 있다.`
+            : `세로 픽셀을 몰라 기본값 ${fmtSecs(ocrSecs)}으로 잡았다.`),
+    h("div",{class:"hint"},"이미 읽어 둔 공고면 저장된 결과를 써서 훨씬 빨리 끝난다. 끝나면 「조건 확인·승인」 화면으로 넘어간다."),
+    h("div",{class:"hint"},"창을 닫으면 결과 화면을 못 받는다. 서버가 읽어 둔 것은 남으므로 다시 시도하면 처음보다 빠르다."));
+  slot.append(card);
+  card.scrollIntoView({behavior:"smooth",block:"nearest"});
+
+  const t0=Date.now();
+  let finished=false;
+  const tick=()=>{
+    const el=(Date.now()-t0)/1000;
+    let cur=stages.length, acc=0;
+    if (!finished) for (let j=0;j<stages.length;j++){
+      if (el < acc+stages[j].secs){ cur=j; break; }
+      acc+=stages[j].secs;
+    }
+    ul.querySelectorAll("li").forEach((li,j)=>{
+      li.className=j<cur?"done":(j===cur?"doing":"");
+      li.querySelector(".ic").textContent=j<cur?"✓":"";
+    });
+    const mm=Math.floor(el/60), ss=String(Math.floor(el%60)).padStart(2,"0");
+    if (finished){ foot.textContent=`완료 · ${mm}분 ${ss}초 걸렸다 (예상 ${fmtSecs(total)})`; return; }
+    foot.textContent = el>total
+      ? `${mm}분 ${ss}초 경과 · 예상 ${fmtSecs(total)}를 넘겼다 — 서버는 아직 응답하지 않았다. 예상은 픽셀 수로 찍은 값이라 빗나간다.`
+      : `${mm}분 ${ss}초 경과 · 남은 예상 ${fmtSecs(Math.max(0,total-el))} (전체 ${fmtSecs(total)})`;
+  };
+  tick();
+  clearInterval(prepTimer);
+  prepTimer=setInterval(tick,1000);
+  const settle=()=>{ finished=true; tick(); clearInterval(prepTimer); U.preparing=false; };
+
+  const options=U.position.trim()?{position:U.position.trim()}:{};
+  api("/prepare",{body:{posting_id:pid, options}})
+    .then(async prop=>{
+      settle();
+      S.proposal=prop;
+      const raw=await apiOptional("/trace/"+encodeURIComponent(pid));
+      S.trace=normalizeTrace(raw,prop.graph)||traceFromGraph(prop.graph); S.traceMiss=LAST_OPTIONAL_MISS;
+      S.imgUrl=imageUrl(pid);
+      S.run=null; S.openCands=new Set(); S.resumes={}; S.postings=null;
+      /* 응답이 `PostingSummary`면 그대로 쓰고, 아니면 우리가 아는 값으로 최소한만 채운다.
+         **`source_kind`를 화면이 지어내지 않는다** — 모르면 서버가 준 값이 없다는 뜻이고,
+         그때는 `/postings`를 다시 받아 채워진다. */
+      S.posting=(U.summary&&U.summary.posting_id)?U.summary
+        :{posting_id:pid, source_kind:"local", target_position:(U.position.trim()||null),
+          image_count:U.files.length, api_verified:false};
+      S.visited=new Set([1,2]);
+      go(2);
+    })
+    .catch(e=>{ settle(); uploadFail(slot, e, ()=>startPrepare(slot)); });
 }
 
 /* ==================== ② 조건 확인·승인 ====================
@@ -1153,36 +1714,85 @@ function v2(){
   if (S.scoring) startScore(runSlot);   /* 진행 중에 화면을 다시 그린 경우 */
 }
 
-/* 채점 진행 — 화면이 아니라 ②의 진행 표시. STAGES 목록은 그대로 쓴다 */
-const STAGES=["게이트","사실 채점","판단 채점","검산","집계·랭킹"];
+/* 채점 진행 — **서버는 진행률을 보내지 않는다.**
+   `POST /score` 는 요청 하나로 끝까지 돌고 결과를 한 번에 돌려준다. 중간 상태를 흘리는
+   경로가 없다. 그래서 이 화면이 할 수 있는 정직한 일은 **아는 것만 보여주는 것**이다.
+
+   ## 왜 고쳤나 (2026-09-01 20:30)
+
+   옛 코드는 `setInterval(…, 1400)`으로 1.4초마다 칸을 넘겼다. 5.6초면 마지막 칸
+   「집계·랭킹」에 도착하고 거기서 9분을 멈춰 있었다. 사용자가 **「거의 다 됐는데
+   멈췄다」**고 읽었고, 실제로는 **막 시작한 참**이었다.
+
+   틀린 건 타이머 값이 아니라 **칸마다 같은 시간을 준 것**이다. 실측하면 시간의 99%가
+   판단 채점 하나에 있다 — 나머지 넷을 합쳐도 1초가 안 된다.
+
+   ## 실측 (kt-b2c-20260901-202146)
+
+   채점 항목 11개 × 지원자 6명 × 심사위원 2명 = 132회, 이견 조정 3회가 붙어 **135회 ·
+   약 9분**. 그래서 `secs`는 균등이 아니라 이 비율이다.
+
+   추정을 지우지는 않았다 — 지우면 화면이 9분간 아무 말도 안 한다. 대신 **추정이라고
+   적고**, 정확히 아는 값(경과 시간)을 같이 낸다. */
+const STAGES=[
+  {name:"게이트",    secs:0.2},
+  {name:"사실 채점", secs:0.2},
+  {name:"판단 채점", secs:540},   /* ← 여기가 사실상 전부다 */
+  {name:"검산",      secs:0.1},
+  {name:"집계·랭킹", secs:0.1},
+];
+const STAGE_HINT="판단 채점만 LLM을 부른다. 나머지 넷은 코드 계산이라 합쳐서 1초가 안 걸린다.";
 let stageTimer=null;
 function startScore(slot){
   if (S.scoring && slot.childElementCount) return;
   S.scoring=true;
   slot.textContent="";
+  const n=(S.proposal&&S.proposal.criteria||[]).length;
   const card=h("div",{class:"card",style:"margin-top:14px;max-width:620px"},
-    h("h2",{title:"서버에서 받은 진행률이 아니라 순서 안내다. POST /score 는 2~4분 걸린다"},"채점 진행 중"));
+    h("h2",{},"채점 진행 중"),
+    h("div",{class:"kv",style:"margin:2px 2px 0"},
+      "서버는 진행률을 보내지 않는다 — 아래 단계는 ",
+      h("b",{},"경과 시간으로 찍은 추정"),
+      "이다. 확실한 값은 경과 시간뿐."));
   const ul=h("ul",{class:"stages"});
-  STAGES.forEach((s,i)=>ul.append(h("li",{"data-i":i},h("span",{class:"ic"},""),s)));
-  card.append(ul);
+  STAGES.forEach((s,i)=>ul.append(h("li",{"data-i":i,title:i===2?STAGE_HINT:""},h("span",{class:"ic"},""),s.name)));
+  const foot=h("div",{class:"kv",style:"margin:12px 2px 0"});
+  card.append(ul,foot);
   slot.append(card);
   card.scrollIntoView({behavior:"smooth",block:"nearest"});
-  let i=0;
+
+  const t0=Date.now();
+  let finished=false;
   const tick=()=>{
-    ul.querySelectorAll("li").forEach((li,j)=>{ li.className=j<i?"done":(j===i?"doing":""); li.querySelector(".ic").textContent=j<i?"✓":""; });
+    const el=(Date.now()-t0)/1000;
+    /* 경과 시간이 어느 구간에 들어가는가. 끝나면 전부 ✓ */
+    let cur=STAGES.length, acc=0;
+    if (!finished) for (let j=0;j<STAGES.length;j++){
+      if (el < acc+STAGES[j].secs){ cur=j; break; }
+      acc+=STAGES[j].secs;
+    }
+    ul.querySelectorAll("li").forEach((li,j)=>{
+      li.className=j<cur?"done":(j===cur?"doing":"");
+      li.querySelector(".ic").textContent=j<cur?"✓":"";
+    });
+    const mm=Math.floor(el/60), ss=String(Math.floor(el%60)).padStart(2,"0");
+    foot.textContent = finished
+      ? `완료 · ${mm}분 ${ss}초 걸렸다`
+      : `${mm}분 ${ss}초 경과 · 심사위원 호출 ${n?`항목 ${n}개 × 지원자 × 2명`:"다수"} · 실측 기준 8~10분`;
   };
   tick();
   clearInterval(stageTimer);
-  stageTimer=setInterval(()=>{ if(i<STAGES.length-1){i++;tick();} },1400);
+  stageTimer=setInterval(tick,1000);
+  const settle=()=>{ finished=true; tick(); clearInterval(stageTimer); };
   /* resume_ids를 보내지 않는다 — 그 공고 디렉터리의 이력서 전원이 대상이다.
      화면이 목록을 박아 두면 공고마다 다른 지원자 id에서 조용히 어긋난다. */
   api("/score",{body:{posting_id:S.proposal.posting_id, options:{}}})
     .then(run=>{
-      clearInterval(stageTimer); S.scoring=false; S.run=run; S.openCands=new Set(); S.resumes={};
+      settle(); S.scoring=false; S.run=run; S.openCands=new Set(); S.resumes={};
       try{ localStorage.setItem(LS_KEY,JSON.stringify({posting_id:run.posting_id,run_id:run.run_id})); }catch(e){}
       go(3);
     })
-    .catch(e=>{ clearInterval(stageTimer); S.scoring=false; renderError(e); });
+    .catch(e=>{ settle(); S.scoring=false; renderError(e); });
 }
 
 /* ============================ ③ 랭킹 ============================ */

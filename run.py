@@ -137,6 +137,8 @@ OCR_SECONDS_FLOOR = 60
 # **「무엇이 없으면 못 뜬다」**를 판정하는 데만 쓴다.
 RUNTIME_MODULES = {
     "fastapi": "fastapi",
+    # 없으면 서버가 뜨다가 죽는다 — 파일 업로드 라우트를 등록하는 시점이다.
+    "multipart": "python-multipart",
     "uvicorn": "uvicorn",
     "pydantic": "pydantic",
     "openai": "openai",
