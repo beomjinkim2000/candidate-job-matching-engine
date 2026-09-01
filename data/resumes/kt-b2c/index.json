@@ -1,0 +1,60 @@
+{
+  "posting_id": "kt-b2c",
+  "target_position": "B2C마케팅&세일즈",
+  "count": 6,
+  "type_counts": {
+    "perfect": 2,
+    "partial": 3,
+    "mismatch": 1
+  },
+  "design_summary": "완벽 2명은 필수를 모두 충족하되 충족 방식을 깊이(한 채널을 오래)와 넓이(여러 채널을 짧게)로 갈랐다. 부분 3명의 필수 미충족 조합은 서로 겹치지 않는다 — 학력+입사 시점 / 병역 / 입사 시점. 미스 1명은 다른 직군이며 자격 판정 단계에서 걸러진다.",
+  "independence": "requirements.json에서 각 조건의 text와 kind만 읽고 설계했다. weight·criterion_id·anchors·evidence_grade·ladder_step은 읽지 않았고, rubric.json은 이 시점에 존재하지 않는다(step 4가 뒤에 만든다). 이 파일의 id는 홀드아웃으로 뺀 조건을 가리키기 위해서만 읽었다 — 이력서 설계에는 쓰이지 않았다.",
+  "holdout_requirement_ids": [
+    "R-01",
+    "R-02"
+  ],
+  "length_control": {
+    "min_chars": 1312,
+    "max_chars": 1449,
+    "ratio": 1.104,
+    "note": "여섯 명의 분량을 같은 범위로 맞췄다. 길이 선호 편향을 걷어내려고 현실성을 내준 선택이며, 현실의 이력서는 분량이 제각각이다."
+  },
+  "candidates": [
+    {
+      "candidate_id": "A-01",
+      "intended_type": "perfect",
+      "chars": 1437,
+      "one_line": "기졸업·오프라인 유통 채널을 14개월+6개월로 깊게. 온라인은 얕다"
+    },
+    {
+      "candidate_id": "A-02",
+      "intended_type": "perfect",
+      "chars": 1449,
+      "one_line": "졸업예정·도매/소매/온라인과 신규 경로를 넓게 짧게. 깊이는 얕다"
+    },
+    {
+      "candidate_id": "A-03",
+      "intended_type": "partial",
+      "chars": 1317,
+      "one_line": "졸업이 늦어 입사 시점도 늦다. 온라인 판매만, 매장·상권은 없다"
+    },
+    {
+      "candidate_id": "A-04",
+      "intended_type": "partial",
+      "chars": 1322,
+      "one_line": "병역 미필. 매장 운영 보조와 상권 조사는 강하고 기획은 없다"
+    },
+    {
+      "candidate_id": "A-05",
+      "intended_type": "partial",
+      "chars": 1312,
+      "one_line": "해외 파견 일정으로 입사 시점만 어긋난다. 업무 정합은 중간"
+    },
+    {
+      "candidate_id": "A-06",
+      "intended_type": "mismatch",
+      "chars": 1321,
+      "one_line": "다른 직군. 자격 판정 단계에서 걸러지는 입력"
+    }
+  ]
+}
