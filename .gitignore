@@ -82,3 +82,17 @@ phases/**/*-output.json
 scripts/
 # OCR 엔진 비교 실험 — 결론만 docs/OCR_EVIDENCE.md에 옮겼다
 spike/
+
+# --- main에는 실행에 필요한 것만 둔다 (2026-09-03 결정) ---
+# 위 2026-09-02 결정(phases/·Plans.md·CLAUDE.md를 싣는다)을 되돌린 것이다.
+# 문서가 코드보다 많아, 레포를 열었을 때 무엇이 실제로 도는 것인지 보이지 않았다.
+#
+# **지운 것이 아니라 옮긴 것이다.** 전부 `docs-and-phases` 브랜치에 그대로 있고,
+# main의 히스토리에도 남아 있다. `git checkout docs-and-phases`로 볼 수 있다.
+#
+# src/CLAUDE.md·tests/CLAUDE.md는 아키텍처 근거라 그대로 둔다. 그래서 `/`를 붙여
+# 최상위만 막는다 — `CLAUDE.md`라고만 쓰면 하위 디렉터리 것까지 같이 막힌다.
+/docs/
+/phases/
+/Plans.md
+/CLAUDE.md
