@@ -233,6 +233,106 @@ textarea.tin{min-height:150px;line-height:1.7;resize:vertical;font-family:var(--
 .rescard{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:var(--surface)}
 .rescard .top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
 .rescard .top .grow{flex:1 1 150px}
+
+/* ==== 재스킨 (Claude Design 「매칭 스코어링 화면 v2」) ====
+   토큰은 위 :root 그대로 쓴다 — 색을 새로 만들지 않는다. 아래는 배치와 부품이다. */
+.wrap{max-width:1200px}
+/* 상단바 — 제목·맥락 한 줄과 단계 전환이 한 자리에 있다 */
+.topbar{background:var(--surface);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.topbar-in h1{font-size:19px;font-weight:700;letter-spacing:-.3px;margin:0}
+.tb-title{display:flex;flex-direction:column;gap:2px;min-width:0}
+.tb-sub{font-size:11.5px;font-weight:600;color:var(--text3)}
+.tb-sub .demo{color:var(--warning)}
+/* 단계 전환 — 알약 세그먼트. 눌러서 오간다 (방문한 단계만) */
+.seg{margin-left:auto;display:flex;background:var(--sunken);border-radius:12px;padding:3px;gap:2px}
+.seg button{border:none;border-radius:9px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text2)}
+.seg button.current{background:var(--surface);color:var(--text);font-weight:700;box-shadow:0 1px 3px rgba(18,22,26,.10)}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+/* ① 공고 고르기 — 좁은 가운데 단 */
+.pick{max-width:680px;margin:0 auto}
+.pick .hd{display:flex;align-items:baseline;gap:10px;margin:8px 0 4px}
+.pick .hd h2{font-size:16px;font-weight:700;letter-spacing:-.3px;margin:0}
+.pick .desc{font-size:13.5px;color:var(--text2);margin:0 0 16px;line-height:1.6}
+.pick .radio{border-radius:14px;padding:16px 18px;margin-bottom:10px}
+.pick .radio.sel{border-width:1.5px}
+.pick .foot{display:flex;align-items:center;gap:10px;margin-top:18px;flex-wrap:wrap}
+.pick .foot .note{font-size:12px;color:var(--text3)}
+/* ② 승인 게이트 바 — 결정과 실행 버튼이 화면 맨 위 한 상자에 있다 */
+.gatebar{border:1px solid var(--brand200);background:var(--brandSoft);border-radius:14px;padding:14px 18px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px}
+.gatebar .tx{min-width:0;flex:1 1 320px}
+.gatebar .t{font-size:15px;font-weight:700;color:var(--textOnTint)}
+.gatebar .d{font-size:12.5px;color:var(--textOnTint);margin-top:2px;opacity:.9}
+/* ② 조건 묶음 머리 (필수/우대/담당업무) */
+.ghead{display:flex;align-items:baseline;gap:8px;margin:6px 0 8px}
+.ghead .nm{font-size:14px;font-weight:700}
+.ghead .ct{font-size:12px;font-weight:600;color:var(--text3)}
+.ghead .hint2{font-size:11.5px;color:var(--text3);margin-left:auto}
+/* ② 조건 카드 — 본문은 읽는 글꼴, 원문 그대로는 서랍 안에 모노로 */
+.crit{padding:0;overflow:hidden}
+.crit .head{padding:12px 14px;gap:12px}
+.crit .body{flex:1;min-width:0}
+.crit .rtext{font-family:var(--font);font-size:13.5px;line-height:1.6;word-break:keep-all;overflow-wrap:anywhere;flex:none;width:auto}
+.crit .subline{font-size:11.5px;color:var(--text3);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.crit .subline b{color:var(--text2)}
+.crit .more{border-top:1px solid var(--line);background:var(--bg);padding:12px 14px;margin:0;font-size:12.5px;color:var(--text2);line-height:1.7}
+.btn.approve{border-color:var(--brand200);background:var(--brandSoft);color:var(--textOnTint);font-weight:700}
+.btn.approve:hover{background:var(--brand100)}
+.btn.ghost{border:none;background:none;color:var(--text3);padding:4px 2px}
+.btn.ghost:hover{background:none;color:var(--text)}
+.ivcap{font-size:12px;font-weight:600;color:var(--text3);margin-bottom:6px}
+/* ③ 랭킹 머리줄 */
+.rankhd{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;margin:4px 0 16px}
+.rankhd h2{font-size:16px;font-weight:700;letter-spacing:-.3px;margin:0}
+.rankhd .meta{font-size:12px;color:var(--text3)}
+/* ③ 매칭 유형 묶음 — 완벽(≥80) · 부분(≥50) · 미스(<50)는 실측 간격에서 온 눈금이다 */
+.tierhead{display:flex;align-items:center;gap:8px;margin:18px 0 8px}
+.tierhead .tdot{width:8px;height:8px;border-radius:4px;flex:none}
+.tierhead .nm{font-size:13.5px;font-weight:700}
+.tierhead .ct{font-size:12px;font-weight:600;color:var(--text3)}
+.tierhead .ln{flex:1;height:1px;background:var(--line)}
+/* ③ 지원자 카드 */
+.rc{border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-bottom:8px;overflow:hidden}
+.rc:hover{border-color:var(--brand200)}
+.rchead{display:flex;align-items:center;gap:14px;padding:13px 16px;cursor:pointer}
+.rcnum{flex:none;width:34px;height:34px;border-radius:999px;display:grid;place-items:center;font-size:15px;font-weight:700;background:var(--brand100);color:var(--textOnTint)}
+.rcnum.top{background:var(--brand);color:var(--onBrand)}
+.rcnum.out{background:var(--danger100);color:var(--danger);font-size:10px}
+.rcmain{flex:1;min-width:0}
+.rcline{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.rcid{font-size:15px;font-weight:700;font-family:var(--mono)}
+.rcmeta{font-size:11.5px;color:var(--text3)}
+.pbar{height:6px;border-radius:3px;background:var(--sunken);overflow:hidden;margin-top:8px}
+.pbar i{display:block;height:100%;border-radius:3px}
+.rctot{text-align:right;flex:none}
+.rctot b{font-size:21px;font-weight:700;font-variant-numeric:tabular-nums}
+.rctot span{font-size:11.5px;color:var(--text3)}
+.rcchev{color:var(--text3);font-size:12px;flex:none}
+.rcbody{border-top:1px solid var(--line);padding:16px;background:var(--bg)}
+/* ③ 항목별 점수 줄 + 심사위원 카드 */
+.srow{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:10px;cursor:pointer}
+.srow:hover{background:var(--sunken)}
+.srow .lb{font-size:13px;font-weight:600;line-height:1.45;word-break:keep-all;overflow-wrap:anywhere}
+.srow .sb{font-size:11px;color:var(--text3);margin-top:1px}
+.dots{display:flex;gap:3px;flex:none}
+.dots i{width:9px;height:9px;border-radius:5px;background:var(--line)}
+.dots i.on{background:var(--brand)}
+.wnum{flex:none;width:86px;text-align:right;font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+.wnum span{color:var(--text3)}
+.jcard{margin:2px 10px 12px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.jline{font-size:11.5px;font-weight:600;color:var(--text3);margin-bottom:10px}
+.qcol{display:flex;flex-direction:column;gap:8px}
+.qbtn{display:flex;gap:10px;align-items:flex-start;width:100%;border:none;border-left:3px solid var(--brand);background:var(--brandSoft);border-radius:0 10px 10px 0;padding:10px 12px;cursor:pointer;text-align:left;font-family:var(--font)}
+.qbtn:hover{background:var(--brand100)}
+.qbtn .qn{flex:none;width:18px;height:18px;border-radius:999px;background:var(--brand200);color:var(--textOnTint);display:grid;place-items:center;font-size:10.5px;font-weight:700;margin-top:1px}
+.qbtn .qbody{min-width:0}
+.qbtn .qt{display:block;font-size:12.5px;color:var(--text);line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.qbtn .qc{display:block;font-size:11px;color:var(--text3);margin-top:4px}
+.jrat{font-size:12.5px;color:var(--text2);line-height:1.7;white-space:pre-wrap;word-break:break-word;margin-top:10px}
+.jfoot{font-size:11px;color:var(--text3);margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.resume{background:var(--surface);border:1px solid var(--line)}
+.masknote{font-size:11.5px;color:var(--text3);margin-bottom:8px}
+.runfoot{font-size:11.5px;color:var(--text3);margin-top:18px;line-height:1.7}
 </style>
 </head>
 <body>
@@ -240,11 +340,16 @@ textarea.tin{min-height:150px;line-height:1.7;resize:vertical;font-family:var(--
   <span>⚠ 샘플 데이터 — 실제 채점 결과가 아닙니다</span>
   <span class="x">?mock=1 — 주소에서 빼면 실서버에 붙습니다</span>
 </div>
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="tb-title">
+      <h1>지원자–공고 매칭 스코어링</h1>
+      <div class="tb-sub" id="opsline">실제 운영에서 사람이 확인하는 자리는 조건 승인 한 곳이다</div>
+    </div>
+    <nav class="seg" id="stepper" aria-label="단계"></nav>
+  </div>
+</div>
 <div class="wrap">
-  <header class="app">
-    <h1>지원자–공고 매칭 스코어링</h1>
-    <span class="hsub" id="opsline">실제 운영에서 사람이 확인하는 자리는 조건 승인 한 곳이다</span>
-  </header>
   <!-- 배지 뜻은 툴팁으로만 둔다. 펼쳐 두지 않고 접어 둔다 -->
   <details class="drawer legendfold">
     <summary><span class="tri">▸</span>배지 뜻</summary>
@@ -256,7 +361,6 @@ textarea.tin{min-height:150px;line-height:1.7;resize:vertical;font-family:var(--
       <span class="chip warn" title="AI 초안 — 아직 사람이 승인하지 않은 조건"><span class="dot"></span>AI 초안</span>
     </div>
   </details>
-  <nav class="stepper" id="stepper" aria-label="단계"></nav>
   <main id="view"></main>
 </div>
 
@@ -722,18 +826,28 @@ function inspectLine(){ return h("div",{class:"inspect"}, h("b",{},"점검용"),
    평가자가 실제로 내리는 결정은 둘뿐이다 — 어느 공고를 볼까 / 이 조건으로 채점할까.
    파싱 확인은 ②의 서랍으로, 채점 진행은 ②의 진행 표시로, 지원자 상세는 ③의 아코디언으로
    격을 내렸다. **아무것도 지우지 않았다.** */
-const STEPS=["공고 고르기","조건 확인·승인","랭킹"];
+const STEPS=["① 공고 고르기","② 조건 승인","③ 랭킹"];
 function renderStepper(){
   const nav=$("#stepper"); nav.textContent="";
   STEPS.forEach((name,i)=>{
     const n=i+1, ok=S.visited.has(n);
-    const b=h("button",{class:"step"+(n===S.step?" current":"")+(ok?" visited":"")+(n===2?" gatestep":""),
+    const b=h("button",{class:n===S.step?"current":"",
       title:(n===2?"승인 게이트 — 파이프라인이 실제로 멈추는 유일한 자리":undefined),
-      onclick:()=>{ if(S.visited.has(n)&&canEnter(n)) go(n); }},
-      h("span",{class:"n"}, n===S.step?String(n):(ok&&n<S.step?"✓":String(n))), name);
+      onclick:()=>{ if(S.visited.has(n)&&canEnter(n)) go(n); }}, name);
     if(!ok) b.disabled=true;
     nav.append(b);
   });
+  syncTopbar();
+}
+/* 상단바 맥락 줄 — 공고를 고르기 전엔 운영 문구, 고른 뒤엔 「무엇을 보고 있나」 */
+function syncTopbar(){
+  const el=$("#opsline"); if(!el) return;
+  const p=S.posting;
+  if (!p){ el.textContent="실제 운영에서 사람이 확인하는 자리는 조건 승인 한 곳이다"; return; }
+  el.textContent="";
+  el.append(h("span",{class:"mono"},p.posting_id)," · ",postingName(p),
+    " · 이미지 ",String(p.image_count!=null?p.image_count:"?"),"장");
+  if (isDemo(p.source_kind)) el.append(" · ",h("span",{class:"demo",title:`source_kind=${p.source_kind} — 실서비스 경로(client_feed)가 아닙니다`},"데모 데이터"));
 }
 function canEnter(n){
   /* ②는 초안이 없어도 들어갈 수 있다 — 그 화면이 「다시 만들기」 버튼을 준다.
@@ -863,20 +977,19 @@ async function v1List(){
   const newBtn=h("button",{class:"btn",style:"margin-left:auto",
     title:"자기 공고 이미지를 올려서 이 엔진을 그대로 돌려봅니다",
     onclick:()=>{ S.up=newUpload(); render(); }},"+ 새 공고 올리기");
-  const card=h("div",{class:"card",style:"max-width:760px"},
-    h("div",{style:"display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:6px"},
-      h("h2",{style:"margin:0"},"공고를 고르세요"), newBtn),
-    h("p",{class:"desc"},"목록은 data/postings/ 를 훑어 만듭니다. 자기 공고로 돌려보려면 「새 공고 올리기」로 이미지를 올리세요."));
-  view.append(card);
+  const wrap=h("div",{class:"pick"},
+    h("div",{class:"hd"}, h("h2",{},"공고를 고르세요"), newBtn),
+    h("p",{class:"desc"},"data/postings/ 아래의 공고 목록입니다. 자기 공고로 돌려보려면 이미지를 올리세요."));
+  view.append(wrap);
   if(!S.postings){
-    card.append(h("div",{class:"kv"},"공고 목록을 불러오는 중… (GET /postings)"));
+    wrap.append(h("div",{class:"kv"},"공고 목록을 불러오는 중… (GET /postings)"));
     try{ S.postings=await api("/postings"); }catch(e){ return renderError(e); }
     return render();
   }
   if(!S.postings.length){
     /* 갓 클론한 레포가 정확히 이 상태다 — 공고 이미지는 커밋되지 않는다.
        여기서 길을 안 주면 첫 화면이 막다른 골목이 된다. */
-    card.append(h("div",{class:"banner warn"},h("b",{},"공고 없음"),"data/postings/ 아래에 공고 디렉터리가 없습니다."),
+    wrap.append(h("div",{class:"banner warn"},h("b",{},"공고 없음"),"data/postings/ 아래에 공고 디렉터리가 없습니다."),
       h("div",{class:"footctas"},
         h("button",{class:"btn primary",onclick:()=>{ S.up=newUpload(); render(); }},"공고 이미지 올리기 →")));
     return;
@@ -888,11 +1001,11 @@ async function v1List(){
     const row=h("label",{class:"radio"+(sel===p.posting_id?" sel":"")},
       h("input",{type:"radio",name:"pst"}),
       h("div",{style:"flex:1;min-width:0"},
-        h("div",{style:"font-size:14.5px;font-weight:700"},postingName(p)),
-        h("div",{class:"kv",style:"margin-top:2px"},
-          h("span",{class:"mono"},p.posting_id)," · source_kind ",h("span",{class:"mono"},String(p.source_kind)),
-          " · 이미지 ",h("span",{class:"mono"},String(p.image_count)),"장 · ",
-          h("span",{title:"사람인 API로 게시 상태를 대조했는가"}, p.api_verified?"API 대조함":"API 대조 안 함")),
+        h("div",{style:"font-size:15px;font-weight:700"},postingName(p)),
+        h("div",{class:"kv",style:"margin-top:3px"},
+          h("span",{class:"mono"},p.posting_id)," · 이미지 ",h("span",{class:"mono"},String(p.image_count)),"장 · ",
+          h("span",{title:"사람인 API로 게시 상태를 대조했는가 (source_kind="+String(p.source_kind)+")"},
+            p.api_verified?"API 대조함":"API 대조 안 함")),
         noImg?h("div",{class:"kv",style:"margin-top:4px;color:var(--danger)"},"이미지 0장 — 좌표 표시 불가"):null,
       ),
       isDemo(p.source_kind)?demoChip(p.source_kind):null);
@@ -900,7 +1013,7 @@ async function v1List(){
     row.addEventListener("click",()=>{ sel=p.posting_id; list.querySelectorAll(".radio").forEach(r=>r.classList.remove("sel")); row.classList.add("sel"); row.querySelector("input").checked=true; btn.disabled=false; });
     list.append(row);
   }
-  const btn=h("button",{class:"btn primary",onclick:async()=>{
+  const btn=h("button",{class:"btn primary",style:"margin-left:auto",onclick:async()=>{
     btn.disabled=true; btn.textContent="공고를 파싱하는 중… (POST /prepare)";
     S.posting=S.postings.find(p=>p.posting_id===sel);
     try{
@@ -913,14 +1026,14 @@ async function v1List(){
     }catch(e){ renderError(e); }
   }},"조건 확인하기 →");
   btn.disabled=!sel;
-  card.append(list,
-    h("div",{class:"kv",style:"margin:14px 2px 0"},
+  wrap.append(list,
+    h("div",{class:"foot"},
       /* 2026-09-01 20:30 실측으로 갱신 — kt-b2c 135회 · 9분 (항목 11 × 6명 × 2 + 이견 3).
          공고마다 항목 수가 달라 호출도 달라진다. 넥슨(항목 14+)은 200회를 넘는다. */
-      h("span",{title:"kt-b2c 실측입니다. 항목 수가 다른 공고는 이보다 늘어납니다. 이번 실측은 채점 후 랭킹 화면의 「이 결과」 줄에 나옵니다"},
-        "이력서 전원 · 호출 135회 · 약 9분 "),
-      h("span",{class:"chip neutral"},h("span",{class:"dot"}),"kt-b2c 실측")),
-    h("div",{class:"footctas"},btn));
+      h("span",{class:"note",
+        title:"kt-b2c 실측입니다. 항목 수가 다른 공고는 이보다 늘어납니다. 이번 실측은 채점 후 랭킹 화면의 결과 줄에 나옵니다"},
+        "이력서 전원 채점 · 호출 135회 · 약 9분 (kt-b2c 실측)"),
+      btn));
 }
 
 /* ==================== 새 공고 올리기 · 이력서 넣기 (①의 곁가지) ====================
@@ -1595,37 +1708,48 @@ function v2(){
     return;
   }
   const {idx, conds, duties} = splitCriteria(P);
-  const live=conds.filter(c=>!c._deleted);
-  const approvedCount=P.criteria.filter(c=>!c._deleted&&c.review_status==="human_validated").length;
 
-  const leftCol=h("div",{});
-  const vw = viewers.main || (viewers.main=makeViewer({height:"620px", onBoxClick:(l)=>{ if(S.pickLine) S.pickLine(l.id,"fromImg"); }}));
-  view.append(h("div",{class:"grid2b"},leftCol,
-    h("div",{style:"position:sticky;top:12px;align-self:start"},
-      h("div",{class:"kv",style:"margin-bottom:6px"},"공고 이미지"),vw.root)));
-
-  /* 승인 게이트가 먼저다 — 이 화면에서 내리는 결정이 그것이기 때문이다.
-     서랍(점검용)은 그 아래 한 줄로 접혀 있고, 톤을 확실히 다르게 둔다. */
-  leftCol.append(h("div",{class:"gatenote",
+  /* 승인 게이트 바 — 이 화면의 결정과 실행 버튼이 맨 위 한 상자에 있다 */
+  const gateDescEl=h("div",{class:"d"});
+  const gateDesc=()=>{
+    const total=P.criteria.filter(c=>!c._deleted).length;
+    const ok=P.criteria.filter(c=>!c._deleted&&c.review_status==="human_validated").length;
+    gateDescEl.textContent=`AI가 공고에서 뽑은 초안 ${total}개 · 승인 ${ok} · 필수↔우대 뒤집기와 삭제만 할 수 있고, 가중치는 조정할 수 없습니다`;
+  };
+  gateDesc();
+  const ctaLabel=()=>{
+    const drafts=P.criteria.filter(c=>!c._deleted&&c.review_status!=="human_validated").length;
+    return drafts?`남은 초안 ${drafts}개 일괄 승인하고 채점 →`:"승인 완료 — 채점 시작 →";
+  };
+  /* 채점 진행 — 별도 화면이 아니라 게이트 바로 아래 뜬다 */
+  const runSlot=h("div",{});
+  const cta=h("button",{class:"btn primary",onclick:async()=>{
+    cta.disabled=true;
+    const drafts=P.criteria.filter(c=>!c._deleted&&c.review_status!=="human_validated");
+    try{
+      if (drafts.length){
+        const res=await api("/approve",{body:{posting_id:P.posting_id,posting_revision:P.posting_revision,
+          decisions:drafts.map(c=>({criterion_id:c.id,action:"approve"}))}});
+        for (const u of res.criteria){ const c=P.criteria.find(x=>x.id===u.criterion_id); if(c){ c.review_status=u.review_status; c._deleted=u.deleted; } }
+        P.approved_at=res.approved_at;
+      }
+      gateDesc();
+      startScore(runSlot);
+    }catch(e){ cta.disabled=false; renderError(e); }
+  }},ctaLabel());
+  view.append(h("div",{class:"gatebar",
     title:"prepare가 만든 것은 전부 AI 초안이고, score는 승인 없이는 409로 거부한다"},
-    h("b",{},"승인 게이트"), " — 여기서 승인해야 채점이 시작된다"));
+    h("div",{class:"tx"},
+      h("div",{class:"t"},"승인 게이트 — 여기서 승인해야 채점이 시작됩니다"),
+      gateDescEl),
+    (S.run?h("button",{class:"btn",onclick:()=>go(3)},"저장된 랭킹 보기 →"):null), cta),
+    runSlot);
 
-  /* 파싱 확인 = 접힌 서랍. 「▸ 자세히」로는 아무도 안 연다 — 안에 뭐가 있는지 숫자로 예고한다 */
-  const drawer=h("details",{class:"drawer"});
-  if (S.drawerOpen) drawer.setAttribute("open","");
-  drawer.append(h("summary",{},
-    h("span",{class:"tri"},"▸"), "이미지에서 어떻게 읽었나",
-    h("span",{class:"hint"},"("+drawerHint()+")")));
-  drawer.addEventListener("toggle",()=>{ S.drawerOpen=drawer.open; if(drawer.open) vw.layout(); });
-  drawer.append(parseDrawerBody(vw));
-  leftCol.append(drawer);
-
-  const card=h("div",{class:"card"},
-    h("h2",{},`조건 ${live.length}`),
-    h("div",{class:"kv",style:"margin-bottom:12px"},`승인 ${approvedCount} / ${P.criteria.length}`));
-  leftCol.append(card);
-  const listCol=h("div",{});
-  card.append(listCol);
+  const leftCol=h("div",{style:"min-width:0"});
+  const vw = viewers.main || (viewers.main=makeViewer({height:"calc(100vh - 140px)", onBoxClick:(l)=>{ if(S.pickLine) S.pickLine(l.id,"fromImg"); }}));
+  view.append(h("div",{class:"grid2b"},leftCol,
+    h("div",{style:"position:sticky;top:16px;align-self:start;min-width:0"},
+      h("div",{class:"ivcap"},"공고 이미지 — 조건을 누르면 위치를 표시합니다"),vw.root)));
   vw.mount(S.trace,S.imgUrl);
 
   const reqOf=c=>idx.get(c.requirement_id)||null;
@@ -1635,22 +1759,28 @@ function v2(){
     const row=h("div",{class:"crit"+(c._deleted?" deleted":"")});
     const canFlip = kind==="required"||kind==="preferred";
     const flipLabel = kind==="required"?"우대로":"필수로";
+    const more=h("div",{class:"more",hidden:true});
+    const moreBtn=h("button",{class:"btn sm ghost",title:"루브릭·근거 상세",
+      onclick:(e)=>{e.stopPropagation();more.hidden=!more.hidden;moreBtn.textContent=more.hidden?"▼":"▲";}},"▼");
     const acts = c._deleted ? [h("span",{class:"chip neutral"},"삭제됨")] : [
-      h("button",{class:"btn sm",onclick:async(e)=>{e.stopPropagation();await decide(c,"approve",row);}},
+      h("button",{class:"btn sm approve",onclick:async(e)=>{e.stopPropagation();await decide(c,"approve",row);}},
         c.review_status==="human_validated"?"승인됨 ✓":"승인"),
       (canFlip?h("button",{class:"btn sm",title:"필수↔우대만 뒤집습니다. 게이트·담당업무는 뒤집을 수 없습니다",
         onclick:async(e)=>{e.stopPropagation();await decide(c,"flip",row);}},flipLabel):null),
-      h("button",{class:"btn sm danger",onclick:async(e)=>{e.stopPropagation();await decide(c,"delete",row);}},"삭제")];
-    const more=h("div",{class:"more",hidden:true});
+      h("button",{class:"btn sm danger",onclick:async(e)=>{e.stopPropagation();await decide(c,"delete",row);}},"삭제"),
+      moreBtn];
     row.append(
       h("div",{class:"head"},
-        h("span",{class:"kindtag "+(kind||"duty")},kind?KIND_KO[kind]:"판정 없음"),
-        h("div",{class:"rtext",title:"누르면 공고 이미지에서 위치 표시",
-          onclick:()=>{ if(r&&r.source_bbox) vw.focusBBox(r.source_bbox); }},
-          r?r.text:`(조건 ${c.requirement_id}을 응답에서 찾지 못했습니다)`),
-        egBadge(r?r.evidence_grade:null), statusChip(c.review_status),
-        h("div",{class:"acts"},...acts.filter(Boolean)),
-        h("button",{class:"btn sm",onclick:()=>{more.hidden=!more.hidden;}},"자세히")),
+        h("span",{class:"kindtag "+(kind||"duty"),style:"margin-top:1px;flex:none"},kind?KIND_KO[kind]:"판정 없음"),
+        h("div",{class:"body"},
+          h("div",{class:"rtext",title:"누르면 공고 이미지에서 위치를 표시합니다",
+            onclick:()=>{ if(r&&r.source_bbox) vw.focusBBox(r.source_bbox); }},
+            r?r.text.replace(/\n/g," "):`(조건 ${c.requirement_id}을 응답에서 찾지 못했습니다)`),
+          h("div",{class:"subline"},
+            h("span",{},"루브릭: "+c.label),
+            h("span",{},"가중치 ",h("b",{},String(c.weight)),"점"),
+            egBadge(r?r.evidence_grade:null), statusChip(c.review_status))),
+        h("div",{class:"acts",style:"align-items:center"},...acts.filter(Boolean))),
       more);
     const bb=r&&r.source_bbox;
     more.append(
@@ -1661,7 +1791,9 @@ function v2(){
         (r&&r.ladder_step>=3)?h("span",{class:"chip warn",style:"margin-left:6px"},h("span",{class:"dot"}),"모호함"):null),
       h("div",{style:"margin-top:6px"},h("b",{},"채점 기준점"),
         ...Object.entries(c.anchors||{}).map(([k,v])=>h("div",{class:"anchor"},h("span",{class:"k"},k),h("span",{},v)))),
-      h("div",{class:"kv",style:"margin-top:6px"},"bbox ",
+      h("div",{class:"kv",style:"margin-top:6px"},"공고 원문 그대로: ",
+        h("span",{class:"mono"},r?r.text.replace(/\n/g," ⏎ "):"없음")),
+      h("div",{class:"kv",style:"margin-top:2px"},"bbox ",
         bb?h("span",{class:"mono"},`${bb.page}쪽 (${bb.x1},${bb.y1})–(${bb.x2},${bb.y2}) / 기준 ${bb.img_w}x${bb.img_h}`)
           :h("span",{class:"miss"},"없음 — 검산 G4가 막았어야 합니다"),
         r&&r.source_span?[" · 문자 오프셋 ",h("span",{class:"mono"},`${r.source_span.start}–${r.source_span.end}`)]:null));
@@ -1680,37 +1812,36 @@ function v2(){
       P.approved_at=res.approved_at;
       row.replaceWith(critRow(c));
       cta.textContent=ctaLabel();
+      gateDesc();
     }catch(e){ renderError(e); }
   }
-  for (const c of conds) listCol.append(critRow(c));
-  if (duties.length){
-    listCol.append(h("div",{class:"sect",
-      title:"지원자의 자격이 아니라 「입사 후 할 일」이다. 게이트·사실 채점에는 안 들어가고 판단 층의 관련성 자로만 쓰인다. 필수↔우대 뒤집기는 못 한다"},
-      "담당업무에서 나온 항목"));
-    for (const c of duties) listCol.append(critRow(c));
+  /* 조건 묶음 — 종류가 곧 묶음이다. 빈 묶음은 그리지 않는다 */
+  const byKind={gate:[],required:[],preferred:[],other:[]};
+  for (const c of conds){ const r=reqOf(c); const k=r?r.kind:"other"; (byKind[k]||byKind.other).push(c); }
+  const groups=[
+    {name:"게이트 조건", hint:"미충족 시 채점 없이 탈락", items:byKind.gate},
+    {name:"필수 조건", hint:"미충족 시 큰 감점", items:byKind.required.concat(byKind.other)},
+    {name:"우대 조건", hint:"있으면 가점", items:byKind.preferred},
+    {name:"담당업무", hint:"직무 관련성만 봅니다 · 뒤집기 불가", items:duties,
+     title:"지원자의 자격이 아니라 「입사 후 할 일」이다. 게이트·사실 채점에는 안 들어가고 판단 층의 관련성 자로만 쓰인다"},
+  ];
+  for (const g of groups){
+    if (!g.items.length) continue;
+    leftCol.append(h("div",{class:"ghead",title:g.title||undefined},
+      h("span",{class:"nm"},g.name),
+      h("span",{class:"ct"},String(g.items.filter(c=>!c._deleted).length)),
+      h("span",{class:"hint2"},g.hint)));
+    for (const c of g.items) leftCol.append(critRow(c));
   }
-  /* 채점 진행 — 별도 화면이 아니라 이 자리에 뜬다 */
-  const runSlot=h("div",{});
-  const ctaLabel=()=>{
-    const drafts=P.criteria.filter(c=>!c._deleted&&c.review_status!=="human_validated").length;
-    return drafts?`남은 초안 ${drafts}개 일괄 승인하고 채점 →`:"승인 완료 — 채점 시작 →";
-  };
-  const cta=h("button",{class:"btn primary",onclick:async()=>{
-    cta.disabled=true;
-    const drafts=P.criteria.filter(c=>!c._deleted&&c.review_status!=="human_validated");
-    try{
-      if (drafts.length){
-        const res=await api("/approve",{body:{posting_id:P.posting_id,posting_revision:P.posting_revision,
-          decisions:drafts.map(c=>({criterion_id:c.id,action:"approve"}))}});
-        for (const u of res.criteria){ const c=P.criteria.find(x=>x.id===u.criterion_id); if(c){ c.review_status=u.review_status; c._deleted=u.deleted; } }
-        P.approved_at=res.approved_at;
-      }
-      startScore(runSlot);
-    }catch(e){ cta.disabled=false; renderError(e); }
-  }},ctaLabel());
-  const ctaRow=h("div",{class:"footctas"},
-    (S.run?h("button",{class:"btn",onclick:()=>go(3)},"저장된 랭킹 보기 →"):null), cta);
-  leftCol.append(ctaRow, runSlot);
+  /* 파싱 확인 = 접힌 서랍. 「▸ 자세히」로는 아무도 안 연다 — 안에 뭐가 있는지 숫자로 예고한다 */
+  const drawer=h("details",{class:"drawer",style:"margin-top:14px"});
+  if (S.drawerOpen) drawer.setAttribute("open","");
+  drawer.append(h("summary",{},
+    h("span",{class:"tri"},"▸"), "이미지에서 어떻게 읽었나",
+    h("span",{class:"hint"},"("+drawerHint()+")")));
+  drawer.addEventListener("toggle",()=>{ S.drawerOpen=drawer.open; if(drawer.open) vw.layout(); });
+  drawer.append(parseDrawerBody(vw));
+  leftCol.append(drawer);
   if (S.scoring) startScore(runSlot);   /* 진행 중에 화면을 다시 그린 경우 */
 }
 
@@ -1806,68 +1937,89 @@ function axisSums(c){
 }
 function v3(){
   const R=S.run;
-  const card=h("div",{class:"card"},h("h2",{},"랭킹"));
-  if (R.unapproved) card.prepend(h("div",{class:"banner warn",
-    title:"사람 승인 없이 채점된 결과다. 조건을 승인한 뒤 다시 채점해야 한다"},h("b",{},"미승인")));
-  if (isDemo(R.source_kind)) card.prepend(h("div",{class:"banner info"},demoChip(R.source_kind),
-    `source_kind=${R.source_kind}`));
-  if (R.revision_checked===false) card.prepend(h("div",{class:"banner info",
-    title:"레지스트리(사람인 API)가 없어 검산 G7을 실행하지 못했다. 「검사해서 통과」가 아니라 「검사 못 함」이다"},
-    h("b",{},"공고 수정 여부 미검사 (검산 G7)")));
-  card.append(h("div",{class:"diag",style:"margin:0 0 14px"},
-    h("div",{},"이 결과: "+fmtCost(R.cost)),
-    h("div",{},"run ",h("span",{class:"mono"},R.run_id),
-      R.created_at?[" · 채점 시각 ",h("span",{class:"mono"},String(R.created_at).replace("T"," ").slice(0,19))]:null),
-    h("div",{},"승인: ",
-      R.approved_at?[h("span",{class:"mono"},String(R.approved_at).replace("T"," ").slice(0,19)),
-        " · ",(R.approved_by||"승인자 미기록")]:h("span",{class:"miss"},"없음"))));
-
   const passed=R.ranked.filter(c=>c.rank!=null);
   const gated=R.ranked.filter(c=>c.rank==null);
+  /* 1위는 기본으로 펼쳐 둔다 — 이 화면의 첫 질문이 「1위는 왜 1위인가」다.
+     run 객체에 표시를 남겨 접은 뒤 다시 렌더돼도 강제로 다시 펴지 않는다 */
+  if (passed.length && !S.openCands.size && !R._autoOpened){ R._autoOpened=true; S.openCands.add(passed[0].candidate_id); }
+
+  const head=h("div",{class:"rankhd"},
+    h("h2",{},`랭킹 — 지원자 ${R.ranked.length}명`),
+    h("span",{class:"meta"},
+      (R.created_at?String(R.created_at).replace("T"," ").slice(0,19)+" 채점 · ":"")+
+      (R.approved_at?"승인됨":"승인 없음")+" · "+fmtCost(R.cost)));
+  if (R.unapproved) head.append(h("span",{class:"chip warn",
+    title:"사람 승인 없이 채점된 결과다. 조건을 승인한 뒤 다시 채점해야 한다"},h("span",{class:"dot"}),"미승인"));
+  if (isDemo(R.source_kind)) head.append(demoChip(R.source_kind));
+  if (R.revision_checked===false) head.append(h("span",{class:"chip info",style:"cursor:help",
+    title:"레지스트리(사람인 API)가 없어 검산 G7을 실행하지 못했다. 「검사해서 통과」가 아니라 「검사 못 함」이다"},
+    h("span",{class:"dot"}),"공고 수정 여부 미검사"));
+  view.append(head);
+
+  /* 매칭 유형 묶음 — 화면 표시용 눈금이다(파이프라인 값이 아니다).
+     kt-b2c 실측에서 유형 사이가 32.74 · 16.66점씩 벌어져 80 · 50이 그 사이를 가른다 */
+  const TIER=t=>t>=80?0:t>=50?1:2;
+  const tiers=[
+    {name:"완벽 매칭", color:"var(--brand)"},
+    {name:"부분 매칭", color:"var(--warning)"},
+    {name:"미스매칭", color:"var(--danger)"},
+  ];
   const rowFor=(c,gate)=>{
-    const ax=axisSums(c);
-    const wrap=h("div",{class:"rankwrap"});
-    const acc=h("div",{class:"acc",hidden:true});
-    const head=gate
-      ? h("div",{class:"rank",style:"opacity:.85"},
-          h("span",{class:"rk"},"랭킹 제외"),
-          h("span",{class:"cid"},c.candidate_id),
-          h("span",{class:"tot",style:"color:var(--text3)"},Number(c.total).toFixed(1)),
-          h("div",{},h("span",{class:"chip danger"},h("span",{class:"dot"}),"게이트 탈락")),
-          h("span",{class:"axes",style:"color:var(--danger)"},
-            (c.gate&&c.gate.reasons&&c.gate.reasons.length)?c.gate.reasons.join(" · "):"사유 기록 없음"))
-      : h("div",{class:"rank"},
-          h("span",{class:"rk"},c.rank+"위"),
-          h("span",{class:"cid"},c.candidate_id),
-          h("span",{class:"tot"},Number(c.total).toFixed(1)),
-          h("div",{class:"bar",title:`총점 ${Number(c.total).toFixed(1)} / 100`},
-            h("span",{class:"f",style:`width:${Math.max(0,Math.min(100,ax.f))}%`,title:`사실 ${ax.f}`}),
-            h("span",{class:"j",style:`width:${Math.max(0,Math.min(100,ax.j))}%`,title:`판단 ${ax.j}`})),
-          h("span",{class:"axes"},`사실 ${ax.f}/${ax.fm} · 판단 ${ax.j}/${ax.jm}`));
-    head.addEventListener("click",()=>{
+    const total=Number(c.total);
+    const tier=gate?null:tiers[TIER(total)];
+    const wrap=h("div",{class:"rc"});
+    const acc=h("div",{class:"rcbody",hidden:true});
+    const full5=(c.breakdown||[]).filter(b=>b.layer==="judgment"&&b.raw>=5).length;
+    const meta=gate
+      ? ((c.gate&&c.gate.reasons&&c.gate.reasons.length)?c.gate.reasons.join(" · "):"사유 기록 없음")
+      : `항목 ${(c.breakdown||[]).length}개 중 만점 ${full5}개 · 게이트 통과`;
+    const chev=h("span",{class:"rcchev"},"▼ 근거 보기");
+    const hd=h("div",{class:"rchead"},
+      h("span",{class:"rcnum"+(gate?" out":(c.rank===1?" top":""))},gate?"제외":String(c.rank)),
+      h("div",{class:"rcmain"},
+        h("div",{class:"rcline"},
+          h("span",{class:"rcid"},c.candidate_id),
+          gate?h("span",{class:"chip danger"},h("span",{class:"dot"}),"게이트 탈락"):null,
+          h("span",{class:"rcmeta"},meta)),
+        h("div",{class:"pbar",title:`총점 ${total.toFixed(1)} / 100`},
+          h("i",{style:`width:${Math.max(0,Math.min(100,total))}%;background:${gate?"var(--text3)":tier.color}`}))),
+      h("div",{class:"rctot"},h("b",{},total.toFixed(1)),h("span",{}," /100")),
+      chev);
+    hd.addEventListener("click",()=>{
       const open=acc.hidden;
-      acc.hidden=!open; head.classList.toggle("open",open);
+      acc.hidden=!open; chev.textContent=open?"▲ 접기":"▼ 근거 보기";
       if (open){
         S.openCands.add(c.candidate_id);
         if (!acc.childElementCount) acc.append(candidateDetail(c));
       } else S.openCands.delete(c.candidate_id);
     });
-    wrap.append(head,acc);
-    if (S.openCands.has(c.candidate_id)){ acc.hidden=false; head.classList.add("open"); acc.append(candidateDetail(c)); }
+    wrap.append(hd,acc);
+    if (S.openCands.has(c.candidate_id)){ acc.hidden=false; chev.textContent="▲ 접기"; acc.append(candidateDetail(c)); }
     return wrap;
   };
-  for (const c of passed) card.append(rowFor(c,false));
-  card.append(h("div",{class:"sect",title:"랭킹에서 분리되지만 채점은 끝까지 했다"},"게이트 탈락"));
-  if (!gated.length) card.append(h("div",{class:"kv"},"게이트 탈락자 없음"));
-  for (const c of gated) card.append(rowFor(c,true));
-  view.append(card);
+  tiers.forEach((t,i)=>{
+    const items=passed.filter(c=>TIER(Number(c.total))===i);
+    if (!items.length) return;
+    view.append(h("div",{class:"tierhead"},
+      h("span",{class:"tdot",style:"background:"+t.color}),
+      h("span",{class:"nm"},t.name),h("span",{class:"ct"},items.length+"명"),h("span",{class:"ln"})));
+    for (const c of items) view.append(rowFor(c,false));
+  });
+  view.append(h("div",{class:"tierhead",title:"랭킹에서 분리되지만 채점은 끝까지 했다 — 게이트가 틀렸을 때 되돌릴 근거를 남기기 위해서다"},
+    h("span",{class:"tdot",style:"background:var(--danger)"}),
+    h("span",{class:"nm"},"게이트 탈락"),h("span",{class:"ct"},gated.length+"명"),h("span",{class:"ln"})));
+  if (!gated.length) view.append(h("div",{class:"kv"},"게이트 탈락자 없음"));
+  for (const c of gated) view.append(rowFor(c,true));
+
   const R2=parseReportOf();
-  if (R2) view.append(h("div",{class:"card",style:"margin-top:16px"},
-    h("h2",{title:"줄 단위 대조는 「조건 확인·승인」의 파싱 서랍에 있다"},"이 결과가 나온 파싱"),
-    h("div",{class:"diag",style:"margin:0"},
-      `파싱 경로 ${R2.parse_mode||"없음"} · OCR 엔진 ${R2.ocr_engine||"없음"} · 줄 ${R2.line_count!=null?R2.line_count:"없음"}개 · LLM 호출 ${R2.llm_calls!=null?R2.llm_calls:"없음"}회`,
-      h("div",{},`판정 내역: `+(R2.role_counts?Object.entries(R2.role_counts).map(([k,v])=>`${ROLE_KO[k]||k} ${v}`).join(" · "):"없음")),
-      h("div",{},`제외 블록: ${(R2.excluded_blocks&&R2.excluded_blocks.length)?R2.excluded_blocks.join(", "):"없음"}`))));
+  view.append(h("div",{class:"runfoot"},
+    h("div",{},"run ",h("span",{class:"mono"},R.run_id)," · 이 결과: "+fmtCost(R.cost),
+      R.approved_at?[" · 승인 ",h("span",{class:"mono"},String(R.approved_at).replace("T"," ").slice(0,19)),
+        " · ",(R.approved_by||"승인자 미기록")]:" · 승인 없음"),
+    R2?h("div",{},
+      `파싱: ${R2.parse_mode||"없음"}(${R2.ocr_engine||"엔진 없음"}) · 줄 ${R2.line_count!=null?R2.line_count:"없음"}개 · LLM 호출 ${R2.llm_calls!=null?R2.llm_calls:"없음"}회 · `+
+      `판정 내역 ${R2.role_counts?Object.entries(R2.role_counts).map(([k,v])=>`${ROLE_KO[k]||k} ${v}`).join(" · "):"없음"} · `+
+      `제외 블록 ${(R2.excluded_blocks&&R2.excluded_blocks.length)?R2.excluded_blocks.join(", "):"없음"} — 줄 단위 대조는 「조건 승인」의 서랍에 있습니다`):null));
 }
 
 /* ==================== 지원자 상세 — ③ 랭킹 행의 아코디언 ==================== */
@@ -1971,43 +2123,68 @@ function candidateDetail(C){
     } else warnNoBBox();
   }
 
-  /* 점수 표 */
-  const tblCard=h("div",{},h("div",{class:"sect",
-    title:"원점수 척도가 층마다 다르다 — 사실 0~1 · 판단 1~5 · 게이트 통과/탈락. 막대는 weighted/만점 비율이다"},"항목별 점수"));
-  const tb=h("table",{class:"t"},
-    h("tr",{},h("th",{},"항목"),h("th",{},"층"),h("th",{},"원점수"),h("th",{},"가중 점수"),h("th",{},"만점"),h("th",{style:"width:110px"},"비율"),h("th",{},"근거")));
+  /* 항목별 점수 — 줄을 누르면 심사위원 근거 카드가 열린다 */
+  const leftPane=h("div",{style:"min-width:0"},
+    h("div",{class:"sect",style:"margin-top:0",
+      title:"원점수 척도가 층마다 다르다 — 사실 0~1 · 판단 1~5 · 게이트 통과/탈락. 점 5개는 판단 층에만 그린다"},
+      "항목별 점수 — 누르면 심사위원 근거가 열립니다"));
   for (const a of (C.breakdown||[])){
-    const ratio=a.max_weighted?a.weighted/a.max_weighted:0;
     const evs=(a.evidence_ids||[]).map(id=>eidx.get(id)).filter(Boolean);
     const missing=(a.evidence_ids||[]).length-evs.length;
-    const det=h("tr",{hidden:true},h("td",{colspan:"7",style:"padding:0 8px 12px"},
-      h("div",{class:"rationale"},a.rationale||"근거 문단 없음"),
-      h("div",{style:"margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"},
-        ...evs.map(e=>h("button",{class:"qlink",title:"이력서 문자 오프셋 "+e.span.start+"–"+e.span.end,
-          onclick:()=>onQuote(e,a.criterion_id)},"인용 "+e.id+" 「"+String(e.quote).slice(0,34)+(String(e.quote).length>34?"…":"")+"」")),
-        (!evs.length && !(a.evidence_ids||[]).length)?h("span",{class:"kv"},"이 항목에 연결된 이력서 인용이 없습니다"):null,
-        missing>0?h("span",{class:"kv",style:"color:var(--warning)"},`근거 id ${missing}개가 그래프에 없습니다`):null),
-      h("div",{class:"kv",style:"margin-top:8px"},"공고 조건: ",
-        (()=>{const c=cidx.get(a.criterion_id); const r=c?ridx.get(c.requirement_id):null;
-          return r? h("span",{class:"mono"},`${r.id} (${KIND_KO[r.kind]||r.kind})`) : h("span",{class:"miss"},"그래프에서 못 찾음");})())));
-    const row=h("tr",{style:"cursor:pointer"},
-      h("td",{},a.label," ",egBadge(a.evidence_grade)," ",statusChip(a.review_status)),
-      h("td",{},h("span",{title:LAYER_KO[a.layer]},LAYER_SHORT[a.layer]||a.layer),
-        h("div",{class:"kv",style:"font-size:10.5px"},LAYER_SCALE[a.layer]||"")),
-      h("td",{class:"num"},`${a.raw} / ${a.layer==="judgment"?5:1}`),
-      h("td",{class:"num"},Number(a.weighted).toFixed(2)),
-      h("td",{class:"num"},String(a.max_weighted)),
-      h("td",{},h("div",{class:"minibar"},h("i",{style:`width:${Math.max(0,Math.min(100,ratio*100)).toFixed(0)}%`}))),
-      h("td",{},evs.length?h("span",{class:"kv"},evs.map(e=>e.id).join(", ")):h("span",{class:"kv"},"—")));
-    row.addEventListener("click",()=>{det.hidden=!det.hidden;});
-    tb.append(row,det);
+    const crit=cidx.get(a.criterion_id);
+    const req=crit?ridx.get(crit.requirement_id):null;
+    /* 점 5개는 판단 층(1~5)에만 — 사실(0~1)·게이트에 그리면 눈금이 거짓말을 한다 */
+    const dots=a.layer==="judgment"
+      ? h("div",{class:"dots",title:`원점수 ${a.raw} / 5`},
+          ...[1,2,3,4,5].map(i=>h("i",{class:i<=Math.round(a.raw)?"on":""})))
+      : null;
+    const det=h("div",{class:"jcard",hidden:true});
+    const row=h("div",{class:"srow",onclick:()=>{det.hidden=!det.hidden;}},
+      h("div",{style:"flex:1;min-width:0"},
+        h("div",{class:"lb"},a.label," ",egBadge(a.evidence_grade)),
+        h("div",{class:"sb"},
+          [req?(KIND_KO[req.kind]||req.kind):"조건 못 찾음",
+           LAYER_SHORT[a.layer]||a.layer,
+           `원점수 ${a.raw} / ${LAYER_SCALE[a.layer]||"5"}`].join(" · "))),
+      dots,
+      h("span",{class:"wnum"},h("b",{},Number(a.weighted).toFixed(1)),
+        h("span",{}," /"+(+Number(a.max_weighted).toFixed(1)))));
+    /* 심사위원 근거 카드 — 인용이 먼저, 판단 문장이 그다음, 사슬 정보가 바닥 */
+    const rat=String(a.rationale||"");
+    const judgeM=rat.match(/심사위원 ([\w-]+)/);
+    det.append(h("div",{class:"jline"},
+      (judgeM?("심사위원 "+judgeM[1]+" · "):"")+
+      `${LAYER_SHORT[a.layer]||a.layer}층 (${LAYER_SCALE[a.layer]||""}) · 원점수 ${a.raw} → 가중 ${Number(a.weighted).toFixed(1)} / ${+Number(a.max_weighted).toFixed(1)}점`));
+    const qcol=h("div",{class:"qcol"});
+    evs.forEach((e,qi)=>qcol.append(h("button",{class:"qbtn",title:"이력서 문자 오프셋 "+e.span.start+"–"+e.span.end,
+      onclick:(ev)=>{ev.stopPropagation();onQuote(e,a.criterion_id);}},
+      h("span",{class:"qn"},String(qi+1)),
+      h("span",{class:"qbody"},
+        h("span",{class:"qt"},String(e.quote).trim()),
+        h("span",{class:"qc"},`이력서 ${e.span.start}–${e.span.end}번째 글자 · 누르면 원문에서 하이라이트`)))));
+    if (!evs.length && !(a.evidence_ids||[]).length)
+      qcol.append(h("span",{class:"kv"},"이 항목에 연결된 이력서 인용이 없습니다"));
+    if (missing>0) qcol.append(h("span",{class:"kv",style:"color:var(--warning)"},`근거 id ${missing}개가 그래프에 없습니다`));
+    det.append(qcol);
+    /* 기계 조립 문구(항목명·점수 반복, 인용 재나열)를 걷어내고 남는 판단 문장만.
+       못 걷어내는 형식이면 원문 그대로 둔다 — 지우는 것보다 겹치는 쪽이 낫다 */
+    let remainder=rat.replace(/^\[C-\d+\][\s\S]*?지원자 [\w-]+\)\.\s*/, "");
+    remainder=remainder.replace(/근거로 삼은 이력서 구간:[\s\S]*$/, "").trim();
+    if (remainder||rat) det.append(h("div",{class:"jrat"},remainder||rat));
+    det.append(h("div",{class:"jfoot"},"공고 조건 ",
+      req?h("span",{class:"mono"},`${req.id} (${KIND_KO[req.kind]||req.kind})`):h("span",{class:"miss"},"그래프에서 못 찾음"),
+      " · 근거 등급 ",egBadge(a.evidence_grade)," · ",statusChip(a.review_status)));
+    leftPane.append(row,det);
   }
-  if (!(C.breakdown||[]).length) tb.append(h("tr",{},h("td",{colspan:"7",class:"kv"},"항목별 점수가 없습니다")));
-  tblCard.append(h("div",{class:"tscroll"},tb));
-  const right=h("div",{},
-    h("div",{class:"sect",title:"인용을 누르면 그 구간이 하이라이트된다"},"이력서 원문 (마스킹)"),resumePane,
-    h("div",{class:"sect",title:"인용을 누르면 그 점수의 근거가 된 조건 위치에 네모가 쳐진다"},"공고 이미지"),bboxWarn,vw.root);
-  root.append(h("div",{class:"grid2b"},tblCard,right));
+  if (!(C.breakdown||[]).length) leftPane.append(h("div",{class:"kv"},"항목별 점수가 없습니다"));
+  const right=h("div",{style:"min-width:0"},
+    h("div",{class:"sect",style:"margin-top:0",title:"인용을 누르면 그 구간이 하이라이트된다"},
+      "이력서 원문 — 인용을 누르면 하이라이트됩니다"),
+    h("div",{class:"masknote"},"■ 는 채점 전에 가린 자리 (이름·생년월일·성별·연락처·학교명 등)"),
+    resumePane,
+    h("div",{class:"sect",title:"인용을 누르면 그 점수의 근거가 된 조건 위치에 네모가 쳐진다"},
+      "공고 이미지 — 근거가 된 조건 위치"),bboxWarn,vw.root);
+  root.append(h("div",{class:"grid2b"},leftPane,right));
   /* 뷰어는 DOM에 붙은 뒤 layout이 돌아야 한다 */
   setTimeout(()=>vw.mount(S.trace,S.imgUrl),0);
   loadResume(C.candidate_id).then(rec=>{
